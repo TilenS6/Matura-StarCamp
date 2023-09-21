@@ -1,7 +1,8 @@
 #include "phisics/phisics.h"
 
-PhLineObst::PhLineObst() {
-    collisionGroup = 0;
+PhLineObst::PhLineObst(double x1, double y1, double x2, double y2, int coll_group) {
+    line = {{x1, y1}, {x2, y2}};
+    collisionGroup = coll_group;
 }
 
 void PhLineObst::render(Camera *cam) {

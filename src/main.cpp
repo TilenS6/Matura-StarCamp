@@ -12,7 +12,7 @@ using namespace std;
 
 #define PHISICS_SUBSTEPS 20
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     Camera cam;
     debCam = &cam;
 
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
         printf("Error initializing SDL: %s\n", SDL_GetError());
         return 0;
     }
-    SDL_Window *wind = SDL_CreateWindow("But we have AI at home...", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0); // SDL_WINDOW_BORDERLESS namesto 0
+    SDL_Window* wind = SDL_CreateWindow("But we have AI at home...", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0); // SDL_WINDOW_BORDERLESS namesto 0
     if (!wind) {
         printf("Error creating window: %s\n", SDL_GetError());
         SDL_Quit();
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     SDL_SetRenderDrawBlendMode(cam.r, SDL_BLENDMODE_BLEND);
 
     TTF_Init();
-    TTF_Font *Sans = TTF_OpenFont("fonts/open-sans/OpenSans-Regular.ttf", 24);
+    TTF_Font* Sans = TTF_OpenFont("fonts/open-sans/OpenSans-Regular.ttf", 24);
     // SDL_Surface *textSurface;
     // textSurface = TTF_RenderText_Blended(Sans, "Hello world!", SDL_Color({255, 255, 255})); //use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
     // SDL_Texture *textTexture = SDL_CreateTextureFromSurface(r, textSurface);
@@ -58,9 +58,9 @@ int main(int argc, char *argv[]) {
     phisics.createNewPoint(4, -5, 1);
     phisics.createNewPoint(3, -3, 1);
 
-    phisics.createNewLinkBetween(0, 1);
-    phisics.createNewLinkBetween(2, 0);
-    phisics.createNewMuscleBetween(1, 2);
+    phisics.createNewLinkBetween(0, 1, 30, 1, 50, 50);
+    phisics.createNewLinkBetween(2, 0, 30, 1, 50, 50);
+    phisics.createNewMuscleBetween(1, 2, 50, 15, .3, 200, 200);
 
     // phisics.points.at(0)->collisionGroups.pop_back();
 
@@ -100,11 +100,6 @@ int main(int argc, char *argv[]) {
                     running = false;
                     break;
 
-                case SDL_SCANCODE_SPACE:
-                    phisics.points.at(0)->move(0, -2);
-                    phisics.points.at(0)->accel = {1, 5};
-                    break;
-
                 default:
                     break;
                 }
@@ -134,35 +129,35 @@ int main(int argc, char *argv[]) {
         }
 
         if (kb.get(SDL_SCANCODE_UP)) {
-            phisics.muscles.at(0)->expand();
+            phisics.muscles.at_index(0)->expand();
         }
         if (kb.get(SDL_SCANCODE_DOWN)) {
-            phisics.muscles.at(0)->contract();
+            phisics.muscles.at_index(0)->contract();
         }
         if (kb.get(SDL_SCANCODE_LEFT)) {
-            phisics.muscles.at(0)->relax();
+            phisics.muscles.at_index(0)->relax();
         }
 
         double dtPerStep = dt / PHISICS_SUBSTEPS;
         for (int i = 0; i < PHISICS_SUBSTEPS; ++i) {
             if (kb.get(SDL_SCANCODE_W)) {
                 for (int i = 0; i < phisics.points.size; ++i) {
-                    phisics.points.at(i)->force.y += 15;
+                    phisics.points.at_index(i)->force.y += 15;
                 }
             }
             if (kb.get(SDL_SCANCODE_S)) {
                 for (int i = 0; i < phisics.points.size; ++i) {
-                    phisics.points.at(i)->force.y -= 15;
+                    phisics.points.at_index(i)->force.y -= 15;
                 }
             }
             if (kb.get(SDL_SCANCODE_A)) {
                 for (int i = 0; i < phisics.points.size; ++i) {
-                    phisics.points.at(i)->force.x -= 15;
+                    phisics.points.at_index(i)->force.x -= 15;
                 }
             }
             if (kb.get(SDL_SCANCODE_D)) {
                 for (int i = 0; i < phisics.points.size; ++i) {
-                    phisics.points.at(i)->force.x += 15;
+                    phisics.points.at_index(i)->force.x += 15;
                 }
             }
 

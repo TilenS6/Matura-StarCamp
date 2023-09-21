@@ -1,6 +1,6 @@
 #include "phisics/phisics.h"
 
-PhMuscle::PhMuscle(PhPoint *a, PhPoint *b, double spring_koef = 100, double damp_koef = 10) : PhLink(a, b, spring_koef, damp_koef) {
+PhMuscle::PhMuscle(FastCont<PhPoint>* points, int a, int b, double spring_koef = 100, double damp_koef = 10) : PhLink(points, a, b, spring_koef, damp_koef) {
     orgLenPow2 = lenPow2;
     minLenPow2 = lenPow2;
     maxLenPow2 = lenPow2;

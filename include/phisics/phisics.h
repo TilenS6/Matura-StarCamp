@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <fstream>
 #include "FastCont/FastCont.h" // vector-like class FastCont<>
 #include "camera/camera.h"     // Camera
 #include "shapes/shapes.h"     // Point, Line, Circle
@@ -11,7 +12,7 @@ using namespace std;
 #define PIh PI / 2
 #define PI2 PI * 2
 
-Camera *debCam = nullptr;
+Camera* debCam = nullptr;
 
 class PhLineObst;
 class PhPoint;
@@ -23,9 +24,9 @@ public:
     Line line;
     int collisionGroup;
 
-    PhLineObst();
+    PhLineObst(double, double, double, double, int);
 
-    void render(Camera *);
+    void render(Camera*);
 };
 
 class PhPoint {
@@ -40,12 +41,13 @@ public:
     FastCont<int> collisionGroups;
 
     PhPoint(double, double, double, int, double, double);
+    PhPoint(double, double, double, FastCont<int>, double, double);
     void move(double, double);
 
-    void resolveCollisions(double, FastCont<PhLineObst> *);
+    void resolveCollisions(double, FastCont<PhLineObst>*);
     void applyChanges(double);
 
-    void render(Camera *);
+    void render(Camera*);
 
     friend class PhWorld;
     friend class PhLink;
@@ -53,7 +55,8 @@ public:
 
 class PhLink {
 protected:
-    PhPoint *pointA, *pointB;
+    FastCont<PhPoint>* points;
+    int idPointA, idPointB;
     double lenPow2;
 
     double lastDist;
@@ -61,17 +64,25 @@ protected:
     double springKoef;
     double dampKoef;
 
+    bool hasMaxComp;
+    double maxCompression, maxStretch;
 public:
-    PhLink(PhPoint *, PhPoint *, double, double);
-    void update(double);
-    void render(Camera *);
+    double currentForce;
+
+    PhLink(FastCont<PhPoint>*, int, int, double, double);
+    void setMaxComp(double, double);
+    void makeUnbreakable();
+    bool update(double);
+    void render(Camera*);
+
+    friend class PhWorld;
 };
 
 class PhMuscle : public PhLink {
     double orgLenPow2, minLenPow2, maxLenPow2;
 
 public:
-    PhMuscle(PhPoint *, PhPoint *, double, double);
+    PhMuscle(FastCont<PhPoint>*, int, int, double, double);
     void setRange(double); // 0- no movement, 1- completelly contract, extract to 2xlen
 
     void expand();
@@ -88,10 +99,11 @@ public:
     FastCont<PhMuscle> muscles;
     double gravity_accel = 9.81;
 
-    int createNewPoint(double, double, double, int);
-    int createNewLineObst(double, double, double, double);
-    int createNewLinkBetween(int, int);
-    int createNewMuscleBetween(int, int);
+    uint32_t createNewPoint(double, double, double, int, double, double);
+    uint32_t createNewPoint(double, double, double, FastCont<int>, double, double);
+    uint32_t createNewLinkBetween(int, int, double, double, double, double);
+    uint32_t createNewMuscleBetween(int, int, double, double, double, double, double);
+    uint32_t createNewLineObst(double, double, double, double, int);
 
     void removePointByPosition(double, double, double);
     void removePointById(int);
@@ -99,7 +111,11 @@ public:
     void applyGravity();
     void update(double);
 
-    void render(Camera *);
+    void render(Camera*);
+
+    void saveWorldToFile(string);
+    int loadWorldFromFile(string, uint8_t);
+    string loadWorldFromFile_getErrorMessage(int);
 };
 
 #include "phisics/phlineobst.cpp"
@@ -107,5 +123,3 @@ public:
 #include "phisics/phlink.cpp"
 #include "phisics/phmuscle.cpp"
 #include "phisics/phworld.cpp"
-
-#include "phisics/files_operations.cpp"
