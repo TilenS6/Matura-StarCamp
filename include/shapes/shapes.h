@@ -45,5 +45,3 @@ public:
 
 #include "shapes/shapes.cpp"
 #include "shapes/collisions.cpp"
-
-// TODO to in shapes.cpp (koda iz collisions.cpp)

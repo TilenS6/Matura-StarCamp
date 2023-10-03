@@ -11,24 +11,25 @@ using namespace std;
 #define HEIGHT 480
 
 #define PHISICS_SUBSTEPS 20
+// TODO neki general multithreading: input events -- physics updating(?) -- rendering -- multiplayer handeling (?)
 
 int main(int argc, char* argv[]) {
     Camera cam;
     debCam = &cam;
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        printf("Error initializing SDL: %s\n", SDL_GetError());
+        cout << "Error initializing SDL: " << SDL_GetError() << endl;
         return 0;
     }
-    SDL_Window* wind = SDL_CreateWindow("But we have AI at home...", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0); // SDL_WINDOW_BORDERLESS namesto 0
+    SDL_Window* wind = SDL_CreateWindow("Physics engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0); // SDL_WINDOW_BORDERLESS namesto 0
     if (!wind) {
-        printf("Error creating window: %s\n", SDL_GetError());
+        cout << "Error creating window: " << SDL_GetError() << endl;
         SDL_Quit();
         return 0;
     }
     cam.assignRenderer(SDL_CreateRenderer(wind, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
     if (!cam.r) {
-        printf("Error creating renderer: %s\n", SDL_GetError());
+        cout << "Error creating renderer: " << SDL_GetError() << endl;
         SDL_DestroyWindow(wind);
         SDL_Quit();
         return 0;
@@ -58,9 +59,9 @@ int main(int argc, char* argv[]) {
     phisics.createNewPoint(4, -5, 1);
     phisics.createNewPoint(3, -3, 1);
 
-    phisics.createNewLinkBetween(0, 1, 30, 1, 50, 50);
-    phisics.createNewLinkBetween(2, 0, 30, 1, 50, 50);
-    phisics.createNewMuscleBetween(1, 2, 50, 15, .3, 200, 200);
+    phisics.createNewLinkBetween(0, 1, 1000, 10, 500, 1000);
+    phisics.createNewLinkBetween(2, 0, 1000, 10, 500, 1000);
+    phisics.createNewMuscleBetween(1, 2, 1000, 150, .3, 2000, 2000);
 
     // phisics.points.at(0)->collisionGroups.pop_back();
 
@@ -99,6 +100,22 @@ int main(int argc, char* argv[]) {
                 case SDL_SCANCODE_ESCAPE:
                     running = false;
                     break;
+                    
+                case SDL_SCANCODE_I:
+                    phisics.saveWorldToFile("test.wrd");
+                    break;
+                    
+                case SDL_SCANCODE_O: {
+                    phisics.links.clear();
+                    phisics.points.clear();
+                    phisics.muscles.clear();
+                    phisics.lineObst.clear();
+                    int ret = phisics.loadWorldFromFile("test.wrd", loadFromFileFlags::LOAD_ALL, {0, 0}, .5);
+                    if (ret != 0)
+                        cout << "loading result(s): " << phisics.loadWorldFromFile_getErrorMessage(ret) << endl;
+
+                    break;
+                }
 
                 default:
                     break;
@@ -129,7 +146,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (kb.get(SDL_SCANCODE_UP)) {
-            phisics.muscles.at_index(0)->expand();
+            phisics.muscles.at_index(0)->expand(); // TODO smoother expand / contract (aka transision)
         }
         if (kb.get(SDL_SCANCODE_DOWN)) {
             phisics.muscles.at_index(0)->contract();

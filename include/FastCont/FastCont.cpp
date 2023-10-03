@@ -1,27 +1,5 @@
 #include "FastCont/FastCont.h"
 
-/*
-template <class T>
-class FastCont {
-    uint32_t alloc_size = 0;
-    T *p = nullptr;
-
-public:
-    ~FastCont();
-    uint32_t size = 0;
-
-    void push_back(T);
-    void pop_back();
-
-    void remove(uint32_t);
-    void insert(T, uint32_t);
-
-    void clear();
-
-    T operator[](uint32_t); // returns element
-    T *at(uint32_t); // returns pointer
-};
-*/
 template <class T, class id_data_type>
 FastContElement<T, id_data_type>::FastContElement(T _data, id_data_type _id) :
     data(_data),
@@ -30,7 +8,7 @@ FastContElement<T, id_data_type>::FastContElement(T _data, id_data_type _id) :
 
 template <class T, class id_data_type>
 id_data_type FastCont<T, id_data_type>::push_back(T _a) {
-    FastContElement<T, id_data_type> a(_a, rollingID++);
+    // FastContElement<T, id_data_type> a(_a, rollingID++);
 
     if (alloc_size == 0) {
         alloc_size = 1;
@@ -40,7 +18,8 @@ id_data_type FastCont<T, id_data_type>::push_back(T _a) {
         p = (FastContElement<T, id_data_type> *)realloc(p, sizeof(FastContElement<T, id_data_type>) * alloc_size);
     }
 
-    *(p + size) = a;
+    (p + size)->id = rollingID++;
+    (p + size)->data = _a;
     ++size;
 
     return rollingID - 1;
@@ -111,8 +90,51 @@ id_data_type FastCont<T, id_data_type>::get_id_at_index(uint32_t index) {
     return (p + index)->id;
 }
 
+template <class T, class id_data_type>
+void FastCont<T, id_data_type>::reserve_n_spots(uint32_t n) {
+    if (alloc_size==0) alloc_size=1;
+    while (alloc_size<n)
+        alloc_size *= 2;
+        
+    p = (FastContElement<T, id_data_type> *)realloc(p, sizeof(FastContElement<T, id_data_type>) * alloc_size);
+}
 
-// template <class T>
-// FastCont<T>::~FastCont() {
-//     free(p);
-// }
+template <class T, class id_data_type>
+void FastCont<T, id_data_type>::reset() {
+    rollingID=0;
+}
+
+
+template <class T, class id_data_type>
+int64_t FastCont<T, id_data_type>::find_and_return_index(T a) {
+    for (uint32_t i=0; i<size; ++i) {
+        if ((p+i)->data == a) return i;
+    }
+    return -1;
+}
+template <class T, class id_data_type>
+void FastCont<T, id_data_type>::set_memory_leak_safety(bool a) {
+    memory_leak_safety = a;
+}
+
+template <class T, class id_data_type>
+FastCont<T, id_data_type>::FastCont(bool _memory_leak_safety) {
+    memory_leak_safety = _memory_leak_safety;
+    p = nullptr;
+    rollingID=0;
+    alloc_size=0;
+    size = 0;
+}
+template <class T, class id_data_type>
+FastCont<T, id_data_type>::FastCont() {
+    memory_leak_safety = true;
+    p = nullptr;
+    rollingID=0;
+    alloc_size=0;
+    size = 0;
+}
+template <class T, class id_data_type>
+FastCont<T, id_data_type>::~FastCont() {
+    if (memory_leak_safety)
+        free(p);
+}

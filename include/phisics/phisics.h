@@ -57,7 +57,7 @@ class PhLink {
 protected:
     FastCont<PhPoint>* points;
     int idPointA, idPointB;
-    double lenPow2;
+    double lenPow2, orgLenPow2;
 
     double lastDist;
 
@@ -66,10 +66,13 @@ protected:
 
     bool hasMaxComp;
     double maxCompression, maxStretch;
+
+    double breakingAverage = 0; // breakingAverage = (val*.2)+(breakingAverage_old*.8)  --> s tem preprecim da bi se dolocen PhLink "uncil" ce je momentalno prezivel vecjo moc (1=prezivlja maxCompr. / maxStr.)
+    double breakingAverage_smoothingKoef = 10;
 public:
     double currentForce;
 
-    PhLink(FastCont<PhPoint>*, int, int, double, double);
+    PhLink(FastCont<PhPoint>*, int, int, double, double, double);
     void setMaxComp(double, double);
     void makeUnbreakable();
     bool update(double);
@@ -79,16 +82,18 @@ public:
 };
 
 class PhMuscle : public PhLink {
-    double orgLenPow2, minLenPow2, maxLenPow2;
+    double minLenPow2, maxLenPow2;
 
 public:
-    PhMuscle(FastCont<PhPoint>*, int, int, double, double);
+    PhMuscle(FastCont<PhPoint>*, int, int, double, double, double);
     void setRange(double); // 0- no movement, 1- completelly contract, extract to 2xlen
 
     void expand();
     void contract();
     void relax();
     void setMuscle(double); // min(0)-max(1)
+
+    friend class PhWorld;
 };
 
 class PhWorld {
@@ -97,12 +102,14 @@ public:
     FastCont<PhLineObst> lineObst;
     FastCont<PhLink> links;
     FastCont<PhMuscle> muscles;
-    double gravity_accel = 9.81;
+    double gravity_accel;
+
+    PhWorld();
 
     uint32_t createNewPoint(double, double, double, int, double, double);
     uint32_t createNewPoint(double, double, double, FastCont<int>, double, double);
-    uint32_t createNewLinkBetween(int, int, double, double, double, double);
-    uint32_t createNewMuscleBetween(int, int, double, double, double, double, double);
+    uint32_t createNewLinkBetween(int, int, double, double, double, double, double);
+    uint32_t createNewMuscleBetween(int, int, double, double, double, double, double, double);
     uint32_t createNewLineObst(double, double, double, double, int);
 
     void removePointByPosition(double, double, double);
@@ -114,7 +121,7 @@ public:
     void render(Camera*);
 
     void saveWorldToFile(string);
-    int loadWorldFromFile(string, uint8_t);
+    int loadWorldFromFile(string, uint8_t, Point, double);
     string loadWorldFromFile_getErrorMessage(int);
 };
 
