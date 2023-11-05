@@ -6,7 +6,7 @@ class Point {
 public:
     double x, y;
 
-    void render(Camera *);
+    void render(Camera*);
 
     Point operator+(Point);
     Point operator-(Point);
@@ -14,6 +14,8 @@ public:
     Point operator/(double);
     void operator+=(Point);
     void operator-=(Point);
+    void operator+=(double);
+    void operator-=(double);
     void operator*=(double);
     void operator/=(double);
 
@@ -25,7 +27,7 @@ public:
 class Line {
 public:
     Point a, b;
-    void render(Camera *);
+    void render(Camera*);
 
     bool operator==(Line);
     bool operator!=(Line);
@@ -40,7 +42,13 @@ public:
     Point a;
     void setRadius(double);
     double getRadius();
-    void render(Camera *);
+    void render(Camera*);
+};
+
+class Rectangle {
+public:
+    Point a; // one corner
+    Point dimensions; // (width/height), should be + 
 };
 
 #include "shapes/shapes.cpp"

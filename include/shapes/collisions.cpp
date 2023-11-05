@@ -8,7 +8,6 @@
 bool collisionLineLine(Line l1, Line l2, Point *intersection = nullptr) {
     if (l1 == l2)
         return true;
-    
 
     double uA = ((l2.b.x - l2.a.x) * (l1.a.y - l2.a.y) - (l2.b.y - l2.a.y) * (l1.a.x - l2.a.x)) / ((l2.b.y - l2.a.y) * (l1.b.x - l1.a.x) - (l2.b.x - l2.a.x) * (l1.b.y - l1.a.y));
     double uB = ((l1.b.x - l1.a.x) * (l1.a.y - l2.a.y) - (l1.b.y - l1.a.y) * (l1.a.x - l2.a.x)) / ((l2.b.y - l2.a.y) * (l1.b.x - l1.a.x) - (l2.b.x - l2.a.x) * (l1.b.y - l1.a.y));
@@ -31,7 +30,7 @@ bool collisionPointCircle(Point p, Circle c) {
 }
 
 // LINE/CIRLCE
-bool collisionLineCircle(Line l, Circle c, Point *closest = nullptr) {
+bool collisionLineCircle(Line l, Circle c, Point *closest = nullptr, double *dot_product = nullptr) {
     bool vRobovih = collisionPointCircle(l.a, c) || collisionPointCircle(l.b, c);
     if (vRobovih && closest == nullptr) return true;
 
@@ -41,13 +40,14 @@ bool collisionLineCircle(Line l, Circle c, Point *closest = nullptr) {
 
     // dot product
     double dot = (((c.a.x - l.a.x) * (l.b.x - l.a.x)) + ((c.a.y - l.a.y) * (l.b.y - l.a.y))) / lenPow2;
-
+    if (dot_product != nullptr) *dot_product = dot;
+    
     // najblizja tocka na crti
     double closestX = l.a.x + (dot * (l.b.x - l.a.x));
     double closestY = l.a.y + (dot * (l.b.y - l.a.y));
 
     if (closest != nullptr) {
-        // ! to zna povzrocat tezva (se snappat na rob crte)
+        // ! to zna povzrocat tezave (se snappat na rob crte)
         if (dot < 0) {
             *closest = l.a;
         } else if (dot > 1) {
@@ -58,9 +58,8 @@ bool collisionLineCircle(Line l, Circle c, Point *closest = nullptr) {
         }
     }
     if (vRobovih) return true;
-    
+
     if (dot < 0 || dot > 1) return false;
-    
 
     distX = closestX - c.a.x;
     distY = closestY - c.a.y;
@@ -69,6 +68,7 @@ bool collisionLineCircle(Line l, Circle c, Point *closest = nullptr) {
     return distancePow2 <= c.rPow2;
 }
 
+// CIRCLE/CIRCLE
 bool collisionCircleCircle(Circle c1, Circle c2) {
     double dx = c1.a.x - c2.a.x;
     double dy = c1.a.y - c2.a.y;
@@ -77,4 +77,29 @@ bool collisionCircleCircle(Circle c1, Circle c2) {
     minDistPow2 *= minDistPow2;
 
     return distPow2 <= minDistPow2;
+}
+
+// LINE/RECTANGLE
+bool collisionLineRectangle(Line l, Rectangle b) {
+    if (l.a.x > b.a.x && l.a.x < b.a.x + b.dimensions.x && l.a.y > b.a.y && l.a.y < b.a.y + b.dimensions.y) return true; // both points inside rect.
+    Line tmp;
+
+    // top
+    tmp.a = b.a;
+    tmp.b = {b.a.x + b.dimensions.x, b.a.y};
+    if (collisionLineLine(l, tmp)) return true;
+    // right
+    tmp.a = {b.a.x + b.dimensions.x, b.a.y};
+    tmp.b = {b.a.x + b.dimensions.x, b.a.y + b.dimensions.y};
+    if (collisionLineLine(l, tmp)) return true;
+    // bottom
+    tmp.a = {b.a.x + b.dimensions.x, b.a.y + b.dimensions.y};
+    tmp.b = {b.a.x, b.a.y + b.dimensions.y};
+    if (collisionLineLine(l, tmp)) return true;
+    // left
+    tmp.a = {b.a.x, b.a.y + b.dimensions.y};
+    tmp.b = b.a;
+    if (collisionLineLine(l, tmp)) return true;
+
+    return false;
 }

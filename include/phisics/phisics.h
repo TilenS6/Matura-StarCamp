@@ -12,11 +12,12 @@ using namespace std;
 #define PIh PI / 2
 #define PI2 PI * 2
 
-Camera* debCam = nullptr;
+Camera *debCam = nullptr;
 
 class PhLineObst;
 class PhPoint;
 class PhLink;
+class PhLinkObst;
 class PhWorld;
 
 class PhLineObst {
@@ -26,12 +27,13 @@ public:
 
     PhLineObst(double, double, double, double, int);
 
-    void render(Camera*);
+    void render(Camera *);
 };
 
 class PhPoint {
     Point pos; // x: -levo +desno  ;  y: -DOL +GOR
     FastCont<bool> touchingList;
+    FastCont<bool> touchingLinksList;
     double KoF_static;
     double KoF_kinetic;
 
@@ -44,10 +46,12 @@ public:
     PhPoint(double, double, double, FastCont<int>, double, double);
     void move(double, double);
 
-    void resolveCollisions(double, FastCont<PhLineObst>*);
+    void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLinkObst>*);
     void applyChanges(double);
 
-    void render(Camera*);
+    void render(Camera *);
+
+    Point getPos() { return pos; }
 
     friend class PhWorld;
     friend class PhLink;
@@ -55,7 +59,7 @@ public:
 
 class PhLink {
 protected:
-    FastCont<PhPoint>* points;
+    FastCont<PhPoint> *points;
     int idPointA, idPointB;
     double lenPow2, orgLenPow2;
 
@@ -69,15 +73,17 @@ protected:
 
     double breakingAverage = 0; // breakingAverage = (val*.2)+(breakingAverage_old*.8)  --> s tem preprecim da bi se dolocen PhLink "uncil" ce je momentalno prezivel vecjo moc (1=prezivlja maxCompr. / maxStr.)
     double breakingAverage_smoothingKoef = 10;
+
 public:
     double currentForce;
 
-    PhLink(FastCont<PhPoint>*, int, int, double, double, double);
+    PhLink(FastCont<PhPoint> *, int, int, double, double, double);
     void setMaxComp(double, double);
     void makeUnbreakable();
     bool update(double);
-    void render(Camera*);
+    void render(Camera *);
 
+    friend class PhLinkObst;
     friend class PhWorld;
 };
 
@@ -85,7 +91,7 @@ class PhMuscle : public PhLink {
     double minLenPow2, maxLenPow2;
 
 public:
-    PhMuscle(FastCont<PhPoint>*, int, int, double, double, double);
+    PhMuscle(FastCont<PhPoint> *, int, int, double, double, double);
     void setRange(double); // 0- no movement, 1- completelly contract, extract to 2xlen
 
     void expand();
@@ -96,12 +102,22 @@ public:
     friend class PhWorld;
 };
 
+class PhLinkObst {
+public:
+int collisionGroup;
+    PhLink *link;
+
+    PhLinkObst();
+    void render(Camera *);
+};
+
 class PhWorld {
 public:
     FastCont<PhPoint> points;
     FastCont<PhLineObst> lineObst;
     FastCont<PhLink> links;
     FastCont<PhMuscle> muscles;
+    FastCont<PhLinkObst> linkObst;
     double gravity_accel;
 
     PhWorld();
@@ -111,14 +127,20 @@ public:
     uint32_t createNewLinkBetween(int, int, double, double, double, double, double);
     uint32_t createNewMuscleBetween(int, int, double, double, double, double, double, double);
     uint32_t createNewLineObst(double, double, double, double, int);
+    uint32_t createNewLinkObst(int);
 
     void removePointByPosition(double, double, double);
     void removePointById(int);
+    bool removeLinkByIds(int, int);   // ret: TRUE on succesfull deletion
+    bool removeMuscleByIds(int, int); // ret: TRUE on succesfull deletion
+    bool removeLineObstById(int);     // ret: TRUE on succesfull deletion
+
+    void translateEverything(Point);
 
     void applyGravity();
     void update(double);
 
-    void render(Camera*);
+    void render(Camera *);
 
     void saveWorldToFile(string);
     int loadWorldFromFile(string, uint8_t, Point, double);
@@ -129,4 +151,5 @@ public:
 #include "phisics/phpoint.cpp"
 #include "phisics/phlink.cpp"
 #include "phisics/phmuscle.cpp"
+#include "phisics/phlinkobst.cpp"
 #include "phisics/phworld.cpp"

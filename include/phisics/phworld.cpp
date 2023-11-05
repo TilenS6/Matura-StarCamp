@@ -16,6 +16,13 @@ uint32_t PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> 
     tmp.collisionGroups.set_memory_leak_safety(false);
     return points.push_back(tmp);
 }
+uint32_t PhWorld::createNewLinkObst(int linkId) {
+    PhLinkObst tmp;
+    PhLink *l = links.at_id(linkId);
+    if (l == nullptr) return -1;
+    tmp.link = l;
+    return linkObst.push_back(tmp);
+}
 
 void PhWorld::removePointByPosition(double x, double y, double near = .5) {
     double nearPow2 = near * near;
@@ -33,21 +40,24 @@ void PhWorld::removePointByPosition(double x, double y, double near = .5) {
 
     if (minAt == points.size) return; // nothing is close to specified loc
 
-
     points.remove_index(minAt);
 }
 
 void PhWorld::removePointById(int id) {
-    points.remove_id(id);
-
     for (int i = 0; i < links.size; ++i) {
-        if (id == links.at_index(i)->idPointA || id == links.at_index(i)->idPointB)
+        if (id == links.at_index(i)->idPointA || id == links.at_index(i)->idPointB) {
             links.remove_index(i);
+            --i;
+        }
     }
     for (int i = 0; i < muscles.size; ++i) {
-        if (id == muscles.at_index(i)->idPointA || id == muscles.at_index(i)->idPointB)
-            links.remove_index(i);
+        if (id == muscles.at_index(i)->idPointA || id == muscles.at_index(i)->idPointB) {
+            muscles.remove_index(i);
+            --i;
+        }
     }
+
+    points.remove_id(id);
 }
 
 uint32_t PhWorld::createNewLineObst(double x1, double y1, double x2, double y2, int coll_group = 0) {
@@ -76,7 +86,7 @@ uint32_t PhWorld::createNewMuscleBetween(int idA, int idB, double spring_koef = 
 
 void PhWorld::applyGravity() {
     for (int i = 0; i < points.size; ++i) {
-        PhPoint* pt = points.at_index(i);
+        PhPoint *pt = points.at_index(i);
         pt->force.y -= pt->mass * gravity_accel;
     }
 }
@@ -161,7 +171,7 @@ void PhWorld::update(double dt) {
     }
 }
 
-void PhWorld::render(Camera* cam) {
+void PhWorld::render(Camera *cam) {
     for (int i = 0; i < links.size; ++i) {
         SDL_SetRenderDrawColor(cam->r, 100, 100, 100, 255);
         links.at_index(i)->render(cam);
@@ -176,6 +186,8 @@ void PhWorld::render(Camera* cam) {
         points.at_index(i)->render(cam);
     for (int i = 0; i < lineObst.size; ++i)
         lineObst.at_index(i)->render(cam);
+    for (int i = 0; i < linkObst.size; ++i)
+        linkObst.at_index(i)->render(cam);
 }
 
 //  -------- FILE OPERATIONS --------
@@ -207,47 +219,47 @@ struct PhyWorldFileHeader {
     nLineObst-times for OBSTICLES: (double)x1, (double)y1, (double)x2, (double)y2, (int)collision_group
 */
 
-int PhWorld::loadWorldFromFile(string fileName, uint8_t flags = LOAD_ALL, Point translation = {0, 0}, double scale = 0) { // TODO flags
+int PhWorld::loadWorldFromFile(string fileName, uint8_t flags = LOAD_ALL, Point translation = {0, 0}, double scale = 1) { // TODO flags
     int ret = 0;
 
     ifstream in(fileName, ios::in | ios::binary);
     if (!in.is_open()) return -1;
 
     PhyWorldFileHeader fileHeader;
-    if (!in.read((char*)&fileHeader.phyFileCode, sizeof(fileHeader.phyFileCode))) {
+    if (!in.read((char *)&fileHeader.phyFileCode, sizeof(fileHeader.phyFileCode))) {
         in.close();
         return -2;
     }
-    
+
     if (fileHeader.phyFileCode != 43433) {
         in.close();
         return -3;
     }
-    // zdej sem siguren da je to moja datoteka in struktura
+    // zdej sem sigurn da je to moja datoteka in struktura
 
-    in.read((char*)&fileHeader.fileVersion, sizeof(fileHeader.fileVersion));
+    in.read((char *)&fileHeader.fileVersion, sizeof(fileHeader.fileVersion));
     if (fileHeader.fileVersion != FILE_VERSION) {
         in.close();
         return -4;
     }
 
-    if (!in.read((char*)&fileHeader.nPoints, sizeof(fileHeader.nPoints))) {
+    if (!in.read((char *)&fileHeader.nPoints, sizeof(fileHeader.nPoints))) {
         in.close();
         return -5;
     }
-    if (!in.read((char*)&fileHeader.nLinks, sizeof(fileHeader.nLinks))) {
+    if (!in.read((char *)&fileHeader.nLinks, sizeof(fileHeader.nLinks))) {
         in.close();
         return -5;
     }
-    if (!in.read((char*)&fileHeader.nMusceles, sizeof(fileHeader.nMusceles))) {
+    if (!in.read((char *)&fileHeader.nMusceles, sizeof(fileHeader.nMusceles))) {
         in.close();
         return -5;
     }
-    if (!in.read((char*)&fileHeader.nLineObst, sizeof(fileHeader.nLineObst))) {
+    if (!in.read((char *)&fileHeader.nLineObst, sizeof(fileHeader.nLineObst))) {
         in.close();
         return -5;
     }
-    if (!in.read((char*)&fileHeader.globalGravity, sizeof(fileHeader.globalGravity))) {
+    if (!in.read((char *)&fileHeader.globalGravity, sizeof(fileHeader.globalGravity))) {
         in.close();
         return -5;
     }
@@ -257,34 +269,34 @@ int PhWorld::loadWorldFromFile(string fileName, uint8_t flags = LOAD_ALL, Point 
     for (uint32_t i = 0; i < fileHeader.nPoints; ++i) { //  (double)x, (double)y, (double)mass, (double)KoF_static, (double)KoF_kinetic, (int)collision_group
         double x, y, mass, KoF_static, KoF_kinetic;
         FastCont<int> collisionGroups(false);
-        if (!in.read((char*)&x, sizeof(x))) {
+        if (!in.read((char *)&x, sizeof(x))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&y, sizeof(y))) {
+        if (!in.read((char *)&y, sizeof(y))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&mass, sizeof(mass))) {
+        if (!in.read((char *)&mass, sizeof(mass))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&KoF_static, sizeof(KoF_static))) {
+        if (!in.read((char *)&KoF_static, sizeof(KoF_static))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&KoF_kinetic, sizeof(KoF_kinetic))) {
+        if (!in.read((char *)&KoF_kinetic, sizeof(KoF_kinetic))) {
             in.close();
             return -5;
         }
         uint32_t collisionGroupN;
-        if (!in.read((char*)&collisionGroupN, sizeof(collisionGroupN))) {
+        if (!in.read((char *)&collisionGroupN, sizeof(collisionGroupN))) {
             in.close();
             return -5;
         }
         for (uint32_t j = 0; j < collisionGroupN; ++j) {
             int tmp;
-            if (!in.read((char*)&tmp, sizeof(tmp))) {
+            if (!in.read((char *)&tmp, sizeof(tmp))) {
                 in.close();
                 return -5;
             }
@@ -294,6 +306,7 @@ int PhWorld::loadWorldFromFile(string fileName, uint8_t flags = LOAD_ALL, Point 
         y *= scale;
         x += translation.x;
         y += translation.y;
+
         pointsIDs.push_back(createNewPoint(x, y, mass, collisionGroups, KoF_static, KoF_kinetic));
     }
 
@@ -301,31 +314,31 @@ int PhWorld::loadWorldFromFile(string fileName, uint8_t flags = LOAD_ALL, Point 
     for (uint32_t i = 0; i < fileHeader.nLinks; ++i) { //  (uint32_t)p1, (uint32_t)p2, (double)spring_koef, (double)damp_koef, (double)original_length, (double)max_compression, (double)max_stretch
         uint32_t p1, p2;
         double spring_koef, damp_koef, original_length, max_compression, max_stretch;
-        if (!in.read((char*)&p1, sizeof(p1))) {
+        if (!in.read((char *)&p1, sizeof(p1))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&p2, sizeof(p2))) {
+        if (!in.read((char *)&p2, sizeof(p2))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&spring_koef, sizeof(spring_koef))) {
+        if (!in.read((char *)&spring_koef, sizeof(spring_koef))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&damp_koef, sizeof(damp_koef))) {
+        if (!in.read((char *)&damp_koef, sizeof(damp_koef))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&original_length, sizeof(original_length))) {
+        if (!in.read((char *)&original_length, sizeof(original_length))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&max_compression, sizeof(max_compression))) {
+        if (!in.read((char *)&max_compression, sizeof(max_compression))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&max_stretch, sizeof(max_stretch))) {
+        if (!in.read((char *)&max_stretch, sizeof(max_stretch))) {
             in.close();
             return -5;
         }
@@ -341,41 +354,41 @@ int PhWorld::loadWorldFromFile(string fileName, uint8_t flags = LOAD_ALL, Point 
         }
         createNewLinkBetween(*pointsIDs.at_index(p1), *pointsIDs.at_index(p2), spring_koef, damp_koef, max_compression, max_stretch, original_length);
     }
-    
+
     //  MUSCELES
     for (uint32_t i = 0; i < fileHeader.nMusceles; ++i) { //  (uint32_t)p1, (uint32_t)p2, (double)spring_koef, (double)damp_koef, (double)original_length, (double)max_compression, (double)max_stretch, (double)muscle_range
         uint32_t p1, p2;
         double spring_koef, damp_koef, muscle_range, original_length, max_compression, max_stretch;
-        if (!in.read((char*)&p1, sizeof(p1))) {
+        if (!in.read((char *)&p1, sizeof(p1))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&p2, sizeof(p2))) {
+        if (!in.read((char *)&p2, sizeof(p2))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&spring_koef, sizeof(spring_koef))) {
+        if (!in.read((char *)&spring_koef, sizeof(spring_koef))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&damp_koef, sizeof(damp_koef))) {
+        if (!in.read((char *)&damp_koef, sizeof(damp_koef))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&original_length, sizeof(original_length))) {
+        if (!in.read((char *)&original_length, sizeof(original_length))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&max_compression, sizeof(max_compression))) {
+        if (!in.read((char *)&max_compression, sizeof(max_compression))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&max_stretch, sizeof(max_stretch))) {
+        if (!in.read((char *)&max_stretch, sizeof(max_stretch))) {
             in.close();
             return -5;
         }
         max_stretch *= -1;
-        if (!in.read((char*)&muscle_range, sizeof(muscle_range))) {
+        if (!in.read((char *)&muscle_range, sizeof(muscle_range))) {
             in.close();
             return -5;
         }
@@ -389,28 +402,28 @@ int PhWorld::loadWorldFromFile(string fileName, uint8_t flags = LOAD_ALL, Point 
         }
         createNewMuscleBetween(*pointsIDs.at_index(p1), *pointsIDs.at_index(p2), spring_koef, damp_koef, muscle_range, max_compression, max_stretch, original_length);
     }
-    
+
     //  OBSTICLES
     for (uint32_t i = 0; i < fileHeader.nLineObst; ++i) { //  (double)x1, (double)y1, (double)x2, (double)y2, (int)collision_group
         double x1, y1, x2, y2;
         int col_group;
-        if (!in.read((char*)&x1, sizeof(x1))) {
+        if (!in.read((char *)&x1, sizeof(x1))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&y1, sizeof(y1))) {
+        if (!in.read((char *)&y1, sizeof(y1))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&x2, sizeof(x2))) {
+        if (!in.read((char *)&x2, sizeof(x2))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&y2, sizeof(y2))) {
+        if (!in.read((char *)&y2, sizeof(y2))) {
             in.close();
             return -5;
         }
-        if (!in.read((char*)&col_group, sizeof(col_group))) {
+        if (!in.read((char *)&col_group, sizeof(col_group))) {
             in.close();
             return -5;
         }
@@ -449,30 +462,30 @@ string PhWorld::loadWorldFromFile_getErrorMessage(int ret) {
 void PhWorld::saveWorldToFile(string fileName) {
     ofstream out(fileName, ios::out | ios::binary);
     uint32_t fileCode = 43433;
-    out.write((char*)&fileCode, sizeof(fileCode));
+    out.write((char *)&fileCode, sizeof(fileCode));
     uint32_t fileV = FILE_VERSION;
-    out.write((char*)&fileV, sizeof(fileV));
+    out.write((char *)&fileV, sizeof(fileV));
 
-    out.write((char*)&points.size, sizeof(points.size));
-    out.write((char*)&links.size, sizeof(links.size));
-    out.write((char*)&muscles.size, sizeof(muscles.size));
-    out.write((char*)&lineObst.size, sizeof(lineObst.size));
+    out.write((char *)&points.size, sizeof(points.size));
+    out.write((char *)&links.size, sizeof(links.size));
+    out.write((char *)&muscles.size, sizeof(muscles.size));
+    out.write((char *)&lineObst.size, sizeof(lineObst.size));
 
-    out.write((char*)&gravity_accel, sizeof(gravity_accel));
+    out.write((char *)&gravity_accel, sizeof(gravity_accel));
 
     // TODO ce IDji niso poravnani je problem ker se LOADa po INDEXih, sava pa po IDjih
     // POINTS
     FastCont<int> pointIDs;
     for (uint32_t i = 0; i < points.size; ++i) {
-        out.write((char*)&points.at_index(i)->pos.x, sizeof(points.at_index(i)->pos.x));
-        out.write((char*)&points.at_index(i)->pos.y, sizeof(points.at_index(i)->pos.y));
-        out.write((char*)&points.at_index(i)->mass, sizeof(points.at_index(i)->mass));
-        out.write((char*)&points.at_index(i)->KoF_static, sizeof(points.at_index(i)->KoF_static));
-        out.write((char*)&points.at_index(i)->KoF_kinetic, sizeof(points.at_index(i)->KoF_kinetic));
-        out.write((char*)&points.at_index(i)->collisionGroups.size, sizeof(points.at_index(i)->collisionGroups.size));
+        out.write((char *)&points.at_index(i)->pos.x, sizeof(points.at_index(i)->pos.x));
+        out.write((char *)&points.at_index(i)->pos.y, sizeof(points.at_index(i)->pos.y));
+        out.write((char *)&points.at_index(i)->mass, sizeof(points.at_index(i)->mass));
+        out.write((char *)&points.at_index(i)->KoF_static, sizeof(points.at_index(i)->KoF_static));
+        out.write((char *)&points.at_index(i)->KoF_kinetic, sizeof(points.at_index(i)->KoF_kinetic));
+        out.write((char *)&points.at_index(i)->collisionGroups.size, sizeof(points.at_index(i)->collisionGroups.size));
         for (uint32_t j = 0; j < points.at_index(i)->collisionGroups.size; ++j)
-            out.write((char*)points.at_index(i)->collisionGroups.at_index(j), sizeof(*points.at_index(i)->collisionGroups.at_index(j)));
-            
+            out.write((char *)points.at_index(i)->collisionGroups.at_index(j), sizeof(*points.at_index(i)->collisionGroups.at_index(j)));
+
         pointIDs.push_back(points.get_id_at_index(i));
     }
 
@@ -480,39 +493,77 @@ void PhWorld::saveWorldToFile(string fileName) {
     for (uint32_t i = 0; i < links.size; ++i) {
         int a = pointIDs.find_and_return_index(links.at_index(i)->idPointA);
         int b = pointIDs.find_and_return_index(links.at_index(i)->idPointB);
-        out.write((char*)&a, sizeof(a));
-        out.write((char*)&b, sizeof(b));
-        out.write((char*)&links.at_index(i)->springKoef, sizeof(links.at_index(i)->springKoef));
-        out.write((char*)&links.at_index(i)->dampKoef, sizeof(links.at_index(i)->dampKoef));
+        out.write((char *)&a, sizeof(a));
+        out.write((char *)&b, sizeof(b));
+        out.write((char *)&links.at_index(i)->springKoef, sizeof(links.at_index(i)->springKoef));
+        out.write((char *)&links.at_index(i)->dampKoef, sizeof(links.at_index(i)->dampKoef));
         double len = sqrt(links.at_index(i)->orgLenPow2);
-        out.write((char*)&len, sizeof(len));
-        out.write((char*)&links.at_index(i)->maxCompression, sizeof(links.at_index(i)->maxCompression));
-        out.write((char*)&links.at_index(i)->maxStretch, sizeof(links.at_index(i)->maxStretch));
+        out.write((char *)&len, sizeof(len));
+        out.write((char *)&links.at_index(i)->maxCompression, sizeof(links.at_index(i)->maxCompression));
+        out.write((char *)&links.at_index(i)->maxStretch, sizeof(links.at_index(i)->maxStretch));
     }
 
     // MUSCLES
     for (uint32_t i = 0; i < muscles.size; ++i) {
-        out.write((char*)&muscles.at_index(i)->idPointA, sizeof(muscles.at_index(i)->idPointA));
-        out.write((char*)&muscles.at_index(i)->idPointB, sizeof(muscles.at_index(i)->idPointB));
-        out.write((char*)&muscles.at_index(i)->springKoef, sizeof(muscles.at_index(i)->springKoef));
-        out.write((char*)&muscles.at_index(i)->dampKoef, sizeof(muscles.at_index(i)->dampKoef));
+        int a = pointIDs.find_and_return_index(muscles.at_index(i)->idPointA);
+        int b = pointIDs.find_and_return_index(muscles.at_index(i)->idPointB);
+        out.write((char *)&a, sizeof(a));
+        out.write((char *)&b, sizeof(b));
+        out.write((char *)&muscles.at_index(i)->springKoef, sizeof(muscles.at_index(i)->springKoef));
+        out.write((char *)&muscles.at_index(i)->dampKoef, sizeof(muscles.at_index(i)->dampKoef));
         double len = sqrt(muscles.at_index(i)->orgLenPow2);
-        out.write((char*)&len, sizeof(len));
-        out.write((char*)&muscles.at_index(i)->maxCompression, sizeof(muscles.at_index(i)->maxCompression));
-        out.write((char*)&muscles.at_index(i)->maxStretch, sizeof(muscles.at_index(i)->maxStretch));
+        out.write((char *)&len, sizeof(len));
+        out.write((char *)&muscles.at_index(i)->maxCompression, sizeof(muscles.at_index(i)->maxCompression));
+        out.write((char *)&muscles.at_index(i)->maxStretch, sizeof(muscles.at_index(i)->maxStretch));
         double min = sqrt(muscles.at_index(i)->minLenPow2);
         double max = sqrt(muscles.at_index(i)->maxLenPow2);
-        double org = (min+max)/2;
-        double range = max/org - 1;
-        out.write((char*)&range, sizeof(range));
+        double org = (min + max) / 2;
+        double range = max / org - 1;
+        out.write((char *)&range, sizeof(range));
     }
 
     // LINE OBSTICLES
     for (uint32_t i = 0; i < lineObst.size; ++i) {
-        out.write((char*)&lineObst.at_index(i)->line.a.x, sizeof(lineObst.at_index(i)->line.a.x));
-        out.write((char*)&lineObst.at_index(i)->line.a.y, sizeof(lineObst.at_index(i)->line.a.y));
-        out.write((char*)&lineObst.at_index(i)->line.b.x, sizeof(lineObst.at_index(i)->line.b.x));
-        out.write((char*)&lineObst.at_index(i)->line.b.y, sizeof(lineObst.at_index(i)->line.b.y));
-        out.write((char*)&lineObst.at_index(i)->collisionGroup, sizeof(lineObst.at_index(i)->collisionGroup));
+        out.write((char *)&lineObst.at_index(i)->line.a.x, sizeof(lineObst.at_index(i)->line.a.x));
+        out.write((char *)&lineObst.at_index(i)->line.a.y, sizeof(lineObst.at_index(i)->line.a.y));
+        out.write((char *)&lineObst.at_index(i)->line.b.x, sizeof(lineObst.at_index(i)->line.b.x));
+        out.write((char *)&lineObst.at_index(i)->line.b.y, sizeof(lineObst.at_index(i)->line.b.y));
+        out.write((char *)&lineObst.at_index(i)->collisionGroup, sizeof(lineObst.at_index(i)->collisionGroup));
+    }
+}
+
+bool PhWorld::removeLinkByIds(int idA, int idB) {
+    for (int i = 0; i < links.size; ++i) {
+        PhLink *l = links.at_index(i);
+        if ((l->idPointA == idA && l->idPointB == idB) || (l->idPointA == idB && l->idPointB == idA)) {
+            links.remove_index(i);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool PhWorld::removeMuscleByIds(int idA, int idB) {
+    for (int i = 0; i < muscles.size; ++i) {
+        PhLink *l = muscles.at_index(i);
+        if ((l->idPointA == idA && l->idPointB == idB) || (l->idPointA == idB && l->idPointB == idA)) {
+            muscles.remove_index(i);
+            return true;
+        }
+    }
+    return false;
+}
+bool PhWorld::removeLineObstById(int id) {
+    lineObst.remove_id(id);
+    return true;
+}
+
+void PhWorld::translateEverything(Point d) {
+    for (int i = 0; i < points.size; ++i) {
+        points.at_index(i)->pos += d;
+    }
+    for (int i = 0; i < lineObst.size; ++i) {
+        lineObst.at_index(i)->line.a += d;
+        lineObst.at_index(i)->line.b += d;
     }
 }
