@@ -39,6 +39,14 @@ void Point::operator-=(Point a) {
     x -= a.x;
     y -= a.y;
 }
+void Point::operator+=(double a) {
+    x += a;
+    y += a;
+}
+void Point::operator-=(double a) {
+    x -= a;
+    y -= a;
+}
 void Point::operator*=(double a) {
     x *= a;
     y *= a;
@@ -87,7 +95,8 @@ void Circle::setRadius(double _r) {
 double Circle::getRadius() { return r; }
 void Circle::render(Camera *cam) {
     double ax = (a.x - cam->x) * cam->scale;
-    double ay = (a.y - cam->y) * cam->scale;
+    double ay = cam->h - (a.y - cam->y) * cam->scale;
+    if (ax - r > cam->w || ax + r < 0 || ay - r > cam->h || ay + r < 0) return;
     for (int y = -r; y <= r; ++y)
         for (int x = -r; x <= r; ++x)
             if (x * x + y * y <= rPow2)

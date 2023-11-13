@@ -5,11 +5,11 @@ PhLink::PhLink(FastCont<PhPoint>* ps, int idA, int idB, double spring_koef = 50,
     idPointA = idA;
     idPointB = idB;
 
-    if (original_len!=0)
-        lenPow2 = original_len*original_len;
+    if (original_len != 0)
+        lenPow2 = original_len * original_len;
     else
         lenPow2 = distancePow2(ps->at_id(idA)->pos, ps->at_id(idB)->pos);
-        
+
     lastDist = lenPow2;
     orgLenPow2 = lenPow2;
 
@@ -49,14 +49,14 @@ bool PhLink::update(double dt) { // returns: true on request to be deleted
 
     if (hasMaxComp) {
         double val;
-        if (F >= 0) val = F/maxCompression;
-        else val = F/maxStretch;
+        if (F >= 0) val = F / maxCompression;
+        else val = F / maxStretch;
 
         double k = val * dt * breakingAverage_smoothingKoef;
-        if (k>1) k = 1;
-        else if (k<-1) k = -1;
+        if (k > 1) k = 1;
+        else if (k < -1) k = -1;
 
-        breakingAverage = val*k + breakingAverage*(1.-k);
+        breakingAverage = val * k + breakingAverage * (1. - k);
 
         if (breakingAverage >= 1.)
             return true;
@@ -79,10 +79,15 @@ void PhLink::render(Camera* cam) {
         else SDL_SetRenderDrawColor(cam->r, 25, 25, 25 + (clipped) * 220, 255);
     }
     PhPoint* pointA = points->at_id(idPointA), * pointB = points->at_id(idPointB);
-    double ax = (pointA->pos.x - cam->x) * cam->scale;
-    double ay = cam->h - ((pointA->pos.y - cam->y) * cam->scale);
-    double bx = (pointB->pos.x - cam->x) * cam->scale;
-    double by = cam->h - ((pointB->pos.y - cam->y) * cam->scale);
-    if (ax < 0 || ay < 0 || bx < 0 || by < 0 || ax >= cam->w || ay >= cam->h || bx >= cam->w || by >= cam->h) return;
-    SDL_RenderDrawLine(cam->r, ax, ay, bx, by);
+
+    Line l;
+    l.a = { (pointA->pos.x - cam->x) * cam->scale, cam->h - ((pointA->pos.y - cam->y) * cam->scale) };
+    l.b = { (pointB->pos.x - cam->x) * cam->scale, cam->h - ((pointB->pos.y - cam->y) * cam->scale) };
+
+    Rectangle rec;
+    rec.a = { 0, 0 };
+    rec.dimensions = { (double)cam->w, (double)cam->h };
+    if (!collisionLineRectangle(l, rec)) return;
+
+    SDL_RenderDrawLine(cam->r, l.a.x, l.a.y, l.b.x, l.b.y);
 }
