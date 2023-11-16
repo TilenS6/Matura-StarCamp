@@ -162,15 +162,8 @@ void PhPoint::render(Camera *cam) {
 
     if (r < 1) r = 1;
     if (r > 100) r = 100;
-<<<<<<< HEAD
-
     int rPow2 = r * r;
     if (ax - r > cam->w || ax + r < 0 || ay - r > cam->h || ay + r < 0) return;
-
-=======
-    int rPow2 = r * r;
-    if (ax - r > cam->w || ax + r < 0 || ay - r > cam->h || ay + r < 0) return;
->>>>>>> dev
     for (int y = -r; y <= r; ++y)
         for (int x = -r; x <= r; ++x)
             if (x * x + y * y <= rPow2)
