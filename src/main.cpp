@@ -12,6 +12,7 @@ using namespace std;
 
 #define PHISICS_SUBSTEPS 20
 // TODO neki general multithreading: input events -- physics updating(?) -- rendering -- multiplayer handeling (?)
+// 1
 
 int main(int argc, char *argv[]) {
     Camera cam;
@@ -52,6 +53,7 @@ int main(int argc, char *argv[]) {
     PhWorld phisics;
 
     phisics.loadWorldFromFile("test.wrd");
+<<<<<<< HEAD
 
     phisics.createNewLinkObst(3);
     phisics.createNewLinkObst(4);
@@ -74,6 +76,34 @@ int main(int argc, char *argv[]) {
     // phisics.createNewPoint(2, -5, 1);
     // phisics.createNewPoint(4, -5, 1);
     // phisics.createNewPoint(3, -3, 1);
+=======
+
+    phisics.createNewLinkObst(3);
+    phisics.createNewLinkObst(4);
+    phisics.createNewLinkObst(5);
+    phisics.createNewLinkObst(6);
+
+    // phisics.createNewLineObst(-.1, -7, 6.1, -7);
+    // phisics.createNewLineObst(0, -.9, 0, -7.1);
+    // phisics.createNewLineObst(6, -7.1, 6, -.9);
+    // phisics.createNewLineObst(6.1, -1, -.1, -1);
+// 
+    // phisics.createNewPoint(2, -5, 1);
+    // phisics.createNewPoint(4, -5, 1);
+    // phisics.createNewPoint(3, -3, 1);
+// 
+    // phisics.createNewLinkBetween(0, 1, 1000, 10, 500, 1000);
+    // phisics.createNewLinkBetween(2, 0, 1000, 10, 500, 1000);
+    // phisics.createNewMuscleBetween(1, 2, 1000, 150, .3, 2000, 2000);
+// 
+    // phisics.createNewPoint(2, -5, 1);
+    // phisics.createNewPoint(4, -5, 1);
+    // phisics.createNewPoint(3, -3, 1);
+
+
+
+
+>>>>>>> dev
 
     // phisics.points.at(0)->collisionGroups.pop_back();
 

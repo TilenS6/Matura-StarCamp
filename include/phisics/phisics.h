@@ -47,7 +47,11 @@ public:
     PhPoint(double, double, double, FastCont<int>, double, double);
     void move(double, double);
 
+<<<<<<< HEAD
     void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLinkObst> *);
+=======
+    void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLinkObst>*);
+>>>>>>> dev
     void applyChanges(double);
 
     void render(Camera *);
@@ -105,7 +109,11 @@ public:
 
 class PhLinkObst {
 public:
+<<<<<<< HEAD
     int collisionGroup;
+=======
+int collisionGroup;
+>>>>>>> dev
     PhLink *link;
 
     PhLinkObst();
