@@ -12,7 +12,7 @@ using namespace std;
 
 #define PHISICS_SUBSTEPS 20
 // TODO neki general multithreading: input events -- physics updating(?) -- rendering -- multiplayer handeling (?)
-// test 2, this is dev
+// learn this: https://www.atlassian.com/git/tutorials/syncing/git-push
 
 int main(int argc, char *argv[]) {
     Camera cam;
