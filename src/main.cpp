@@ -12,7 +12,7 @@ using namespace std;
 
 #define PHISICS_SUBSTEPS 20
 // TODO neki general multithreading: input events -- physics updating(?) -- rendering -- multiplayer handeling (?)
-// 1
+// test 2, this is dev
 
 int main(int argc, char *argv[]) {
     Camera cam;
