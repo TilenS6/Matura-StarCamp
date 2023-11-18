@@ -36,6 +36,7 @@ class PhPoint {
     FastCont<bool> touchingLinksList;
     double KoF_static;
     double KoF_kinetic;
+    void calculateCollisions(FastCont<bool> *, int, Line, Line, Line, double);
 
 public:
     Point force, accel;
@@ -46,7 +47,7 @@ public:
     PhPoint(double, double, double, FastCont<int>, double, double);
     void move(double, double);
 
-    void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLinkObst>*);
+    void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLinkObst> *);
     void applyChanges(double);
 
     void render(Camera *);
@@ -104,7 +105,7 @@ public:
 
 class PhLinkObst {
 public:
-int collisionGroup;
+    int collisionGroup;
     PhLink *link;
 
     PhLinkObst();

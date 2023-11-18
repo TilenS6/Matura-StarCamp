@@ -53,7 +53,6 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
 
     Point nextPos = pos + (accel + (force / mass) * dt) * dt;
     Line movement = {pos, nextPos};
-    Point closest;
     for (int i = 0; i < obst->size; ++i) {
         // ali je v istem collision groupu
         bool found = false;
@@ -65,83 +64,91 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
         }
         if (!found) continue;
 
-        bool foundCollision = false;
-        Line obsticle = obst->at_index(i)->line;
+        Line obstacle = obst->at_index(i)->line;
         Line obstAccel = {{0, 0}, {0, 0}};
-        if (*touchingList.at_index(i)) { // se je prej ze dotikal
-            Circle nowCircle;
-            nowCircle.a = pos;
-            nowCircle.setRadius(max(.01, distancePow2(movement.a, movement.b)));
-            double dot;
-            if (collisionLineCircle(obst->at_index(i)->line, nowCircle, &closest, &dot)) {
-                foundCollision = true;
-                double lineDir = atan2(obsticle.a.y - obsticle.b.y, obsticle.a.x - obsticle.b.x);
-                double sinLineDir = sin(lineDir), cosLineDir = cos(lineDir);
-                double Fs = cosLineDir * force.y - sinLineDir * force.x;
-
-                // if point is lifted from obsticle (with some sticking force, to prevent "lifting" a point from a vertical obsticle with no input)
-                if (Fs < -.001) {
-                    // *touchingList.at(i) = false;
-                    // cout << "removed " << i << endl;
-                    continue;
-                }
-
-                // keeping only dinamic force/acceleration
-                double Fd = sinLineDir * force.y + cosLineDir * force.x;
-                double Ad = sinLineDir * accel.y + cosLineDir * accel.x;
-
-                // friction force
-                double Ff = 0;
-                if (abs(Ad) > .02) { // if it is moving and is to use kinetic fritction
-                    Ff = Fs * KoF_kinetic;
-                    if (Ad > 0) Ff *= -1; // point to oposite direction of acceleration
-                } else {
-                    if (abs(Fd) <= KoF_static * Fs) {
-                        Ff = -Fd;
-                        Ad = 0;
-                    }
-                }
-                double Fx = Fd + Ff;
-
-                force = {Fx * cosLineDir, Fx * sinLineDir};
-
-                // same for acceleration
-                accel = {Ad * cosLineDir, Ad * sinLineDir};
-
-                pos = closest;
-            }
-        } else {                                                   // se se ni dotaknil
-            if (collisionLineLine(movement, obsticle, &closest)) { // ce se je dotaknil prvic
-                double lineDir = atan2(obsticle.a.y - obsticle.b.y, obsticle.a.x - obsticle.b.x);
-                double sinLineDir = sin(lineDir), cosLineDir = cos(lineDir);
-                double As = cosLineDir * accel.y - sinLineDir * accel.x;
-                if (As < 0) continue; // if it is moving from wrong direction, in same way as normal (normal collision face/side of obsticle)
-
-                // cout << "new at " << i << endl;
-                foundCollision = true;
-                *touchingList.at_index(i) = true;
-
-                // keeping only dinamic force
-                double Fd = sinLineDir * force.y + cosLineDir * force.x;
-                force = {Fd * cosLineDir, Fd * sinLineDir};
-
-                // same for acceleration
-                double Ad = sinLineDir * accel.y + cosLineDir * accel.x;
-                accel = {Ad * cosLineDir, Ad * sinLineDir};
-
-                // snap on the closest point on line -> prevent fazing trough it
-                pos = closest;
-            }
-        }
-
-        if (!foundCollision && *touchingList.at_index(i)) {
-            *touchingList.at_index(i) = false;
-            // cout << "removed " << i << ": slided of\n";
-        }
+        calculateCollisions(&touchingList, i, movement, obstacle, obstAccel, dt);
     }
 
     accel += (force / mass) * dt;
     force = {0, 0};
+}
+
+void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line movement, Line obstacle, Line obstAccel, double dt) {
+    bool foundCollision = false;
+    Point closest;
+    if (*touchingList->at_index(i)) { // se je prej ze dotikal
+        Circle nowCircle;
+        nowCircle.a = pos;
+        nowCircle.setRadius(max(.01, distancePow2(movement.a, movement.b)));
+        double dot;
+        if (collisionLineCircle(obstacle, nowCircle, &closest, &dot)) {
+            Point obstAccelAtColl = {obstAccel.a.x * dot + obstAccel.b.x * (1 - dot), obstAccel.a.y * dot + obstAccel.b.y * (1 - dot)};
+
+            foundCollision = true;
+            double lineDir = atan2(obstacle.a.y - obstacle.b.y, obstacle.a.x - obstacle.b.x);
+            double sinLineDir = sin(lineDir), cosLineDir = cos(lineDir);
+            double Fs = cosLineDir * force.y - sinLineDir * force.x;
+
+            // if point is lifted from obstacle (with some sticking force, to prevent "lifting" a point from a vertical obstacle with no input)
+            if (Fs < -.001) {
+                // *touchingList.at(i) = false;
+                // cout << "removed " << i << endl;
+                return;
+            }
+
+            // keeping only dinamic force/acceleration
+            double Fd = sinLineDir * force.y + cosLineDir * force.x;
+            double Ad = sinLineDir * (accel.y - obstAccelAtColl.y) + cosLineDir * (accel.x - obstAccelAtColl.x); // pospesek je relativen na oviro
+
+            // friction force
+            double Ff = 0;
+            if (abs(Ad) > .02) { // if it is moving and is to use kinetic fritction
+                Ff = Fs * KoF_kinetic;
+                if (Ad > 0)
+                    Ff *= -1; // point to oposite direction of acceleration
+            } else {
+                if (abs(Fd) <= KoF_static * Fs) {
+                    Ff = -Fd;
+                    Ad = 0;
+                }
+            }
+            double Fx = Fd + Ff;
+
+            force = {Fx * cosLineDir, Fx * sinLineDir};
+
+            // same for acceleration
+            accel = {Ad * cosLineDir, Ad * sinLineDir};
+
+            pos = closest;
+        }
+    } else {                                                   // se se ni dotaknil
+        if (collisionLineLine(movement, obstacle, &closest)) { // ce se je dotaknil prvic
+            double lineDir = atan2(obstacle.a.y - obstacle.b.y, obstacle.a.x - obstacle.b.x);
+            double sinLineDir = sin(lineDir), cosLineDir = cos(lineDir);
+            double As = cosLineDir * accel.y - sinLineDir * accel.x;
+            if (As < 0) return; // if it is moving from wrong direction, in same way as normal (normal collision face/side of obstacle)
+
+            // cout << "new at " << i << endl;
+            foundCollision = true;
+            *touchingList->at_index(i) = true;
+
+            // keeping only dinamic force
+            double Fd = sinLineDir * force.y + cosLineDir * force.x;
+            force = {Fd * cosLineDir, Fd * sinLineDir};
+
+            // same for acceleration
+            double Ad = sinLineDir * accel.y + cosLineDir * accel.x;
+            accel = {Ad * cosLineDir, Ad * sinLineDir};
+
+            // snap on the closest point on line -> prevent fazing trough it
+            pos = closest;
+        }
+    }
+
+    if (!foundCollision && *touchingList->at_index(i)) {
+        *touchingList->at_index(i) = false;
+        // cout << "removed " << i << ": slided of\n";
+    }
 }
 
 void PhPoint::applyChanges(double dt) {
@@ -152,6 +159,7 @@ void PhPoint::render(Camera *cam) {
     double ax = (pos.x - cam->x) * cam->scale;
     double ay = cam->h - ((pos.y - cam->y) * cam->scale);
     int r = .05 * mass * cam->scale;
+
     if (r < 1) r = 1;
     if (r > 100) r = 100;
     int rPow2 = r * r;
