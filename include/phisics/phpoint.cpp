@@ -28,7 +28,7 @@ void PhPoint::move(double x, double y) {
         *touchingLinksList.at_index(i) = false;
 }
 
-void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<PhLinkObst> *linkObst) {
+void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<PhLinkObst> *linkObst, FastCont<PhPoint> *points) {
     while (obst->size > touchingList.size) {
         touchingList.push_back(false);
     }
@@ -66,6 +66,23 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
 
         Line obstacle = obst->at_index(i)->line;
         Line obstAccel = {{0, 0}, {0, 0}};
+        calculateCollisions(&touchingList, i, movement, obstacle, obstAccel, dt);
+    }
+    for (int i = 0; i < linkObst->size; ++i) {
+        // ali je v istem collision groupu
+        bool found = false;
+        for (int j = 0; j < collisionGroups.size; ++j) {
+            if (*collisionGroups.at_index(j) == linkObst->at_index(i)->collisionGroup) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) continue;
+
+        PhPoint a = *(points->at_id(linkObst->at_index(i)->link->idPointA));
+        PhPoint b = *(points->at_id(linkObst->at_index(i)->link->idPointB));
+        Line obstacle = {a.pos, b.pos};
+        Line obstAccel = {a.accel, b.accel};
         calculateCollisions(&touchingList, i, movement, obstacle, obstAccel, dt);
     }
 
@@ -117,12 +134,19 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
             force = {Fx * cosLineDir, Fx * sinLineDir};
 
             // same for acceleration
-            accel = {Ad * cosLineDir, Ad * sinLineDir};
+            accel = {Ad * cosLineDir + obstAccelAtColl.x, Ad * sinLineDir + obstAccelAtColl.y};
 
             pos = closest;
         }
     } else {                                                   // se se ni dotaknil
         if (collisionLineLine(movement, obstacle, &closest)) { // ce se je dotaknil prvic
+            double dx = obstacle.a.x - obstacle.b.x, dy = obstacle.a.y - obstacle.b.y, len = sqrt(dx * dx + dy * dy);
+            dx = obstacle.a.x - closest.x;
+            dy = obstacle.a.y - closest.y;
+            double len2 = sqrt(dx * dx + dy * dy);
+            double dot = len2 / len;
+
+            Point obstAccelAtColl = {obstAccel.a.x * dot + obstAccel.b.x * (1 - dot), obstAccel.a.y * dot + obstAccel.b.y * (1 - dot)};
             double lineDir = atan2(obstacle.a.y - obstacle.b.y, obstacle.a.x - obstacle.b.x);
             double sinLineDir = sin(lineDir), cosLineDir = cos(lineDir);
             double As = cosLineDir * accel.y - sinLineDir * accel.x;
@@ -137,8 +161,8 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
             force = {Fd * cosLineDir, Fd * sinLineDir};
 
             // same for acceleration
-            double Ad = sinLineDir * accel.y + cosLineDir * accel.x;
-            accel = {Ad * cosLineDir, Ad * sinLineDir};
+            double Ad = sinLineDir * (accel.y - obstAccelAtColl.y) + cosLineDir * (accel.x - obstAccelAtColl.x);
+            accel = {Ad * cosLineDir + obstAccelAtColl.x, Ad * sinLineDir + obstAccelAtColl.y};
 
             // snap on the closest point on line -> prevent fazing trough it
             pos = closest;

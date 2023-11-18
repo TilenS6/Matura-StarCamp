@@ -161,7 +161,7 @@ void PhWorld::update(double dt) {
         }
     }
     for (int i = 0; i < points.size; ++i) {
-        points.at_index(i)->resolveCollisions(dt, &lineObst, &linkObst);
+        points.at_index(i)->resolveCollisions(dt, &lineObst, &linkObst, &points);
     }
 
     // Everything is planed, apply those changes

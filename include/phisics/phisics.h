@@ -47,7 +47,7 @@ public:
     PhPoint(double, double, double, FastCont<int>, double, double);
     void move(double, double);
 
-    void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLinkObst> *);
+    void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLinkObst> *, FastCont<PhPoint> *);
     void applyChanges(double);
 
     void render(Camera *);
@@ -61,7 +61,6 @@ public:
 class PhLink {
 protected:
     FastCont<PhPoint> *points;
-    int idPointA, idPointB;
     double lenPow2, orgLenPow2;
 
     double lastDist;
@@ -76,6 +75,7 @@ protected:
     double breakingAverage_smoothingKoef = 10;
 
 public:
+    int idPointA, idPointB;
     double currentForce;
 
     PhLink(FastCont<PhPoint> *, int, int, double, double, double);
