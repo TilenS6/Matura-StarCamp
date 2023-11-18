@@ -41,21 +41,14 @@ bool collisionLineCircle(Line l, Circle c, Point *closest = nullptr, double *dot
     // dot product
     double dot = (((c.a.x - l.a.x) * (l.b.x - l.a.x)) + ((c.a.y - l.a.y) * (l.b.y - l.a.y))) / lenPow2;
     if (dot_product != nullptr) *dot_product = dot;
-    
+
     // najblizja tocka na crti
     double closestX = l.a.x + (dot * (l.b.x - l.a.x));
     double closestY = l.a.y + (dot * (l.b.y - l.a.y));
 
     if (closest != nullptr) {
-        // ! to zna povzrocat tezave (se snappat na rob crte)
-        if (dot < 0) {
-            *closest = l.a;
-        } else if (dot > 1) {
-            *closest = l.b;
-        } else {
-            closest->x = closestX;
-            closest->y = closestY;
-        }
+        closest->x = closestX;
+        closest->y = closestY;
     }
     if (vRobovih) return true;
 
