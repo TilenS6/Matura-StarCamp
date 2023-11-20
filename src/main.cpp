@@ -13,7 +13,6 @@ using namespace std;
 #define PHISICS_SUBSTEPS 20
 // TODO neki general multithreading: input events -- physics updating(?) -- rendering -- multiplayer handeling (?)
 // learn this: https://www.atlassian.com/git/tutorials/syncing/git-push
-// TODO neki cresha, sicer je ves phpoint collision "narjen" ampak ne testeran zarad nekga bugga
 
 int main(int argc, char *argv[]) {
     Camera cam;
