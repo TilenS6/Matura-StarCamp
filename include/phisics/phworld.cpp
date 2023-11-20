@@ -2,6 +2,11 @@
 
 PhWorld::PhWorld() {
     gravity_accel = 9.81;
+    points.set_memory_leak_safety(false);
+    lineObst.set_memory_leak_safety(false);
+    links.set_memory_leak_safety(false);
+    muscles.set_memory_leak_safety(false);
+    linkObst.set_memory_leak_safety(false);
 }
 
 uint32_t PhWorld::createNewPoint(double x, double y, double mass, int collisionGroup = 0, double static_koef = 1., double kinetic_koef = .7) {
@@ -16,11 +21,12 @@ uint32_t PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> 
     tmp.collisionGroups.set_memory_leak_safety(false);
     return points.push_back(tmp);
 }
-uint32_t PhWorld::createNewLinkObst(int linkId) {
+uint32_t PhWorld::createNewLinkObst(int linkId, int collG = 0) {
     PhLinkObst tmp;
     PhLink *l = links.at_id(linkId);
     if (l == nullptr) return -1;
     tmp.link = l;
+    tmp.collisionGroup = collG;
     return linkObst.push_back(tmp);
 }
 

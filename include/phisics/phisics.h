@@ -36,7 +36,7 @@ class PhPoint {
     FastCont<bool> touchingLinksList;
     double KoF_static;
     double KoF_kinetic;
-    void calculateCollisions(FastCont<bool> *, int, Line, Line, Line, double);
+    void calculateCollisions(FastCont<bool> *, int, Line, Line, Line, double, Line *);
 
 public:
     Point force, accel;
@@ -128,7 +128,7 @@ public:
     uint32_t createNewLinkBetween(int, int, double, double, double, double, double);
     uint32_t createNewMuscleBetween(int, int, double, double, double, double, double, double);
     uint32_t createNewLineObst(double, double, double, double, int);
-    uint32_t createNewLinkObst(int);
+    uint32_t createNewLinkObst(int, int);
 
     void removePointByPosition(double, double, double);
     void removePointById(int);
