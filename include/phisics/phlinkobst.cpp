@@ -1,12 +1,13 @@
 #include "phisics/phisics.h"
 
-PhLinkObst::PhLinkObst() {
-    link = nullptr;
+PhLinkObst::PhLinkObst(FastCont<PhLink> *p) {
+    links = p;
+    linkId = -1;
     collisionGroup = 0;
 }
 
 void PhLinkObst::render(Camera *cam) {
-    if (link == nullptr) return;
+    if (linkId == -1) return;
     SDL_SetRenderDrawColor(cam->r, 255, 255, 255, 255);
-    link->render(cam);
+    links->at_id(linkId)->render(cam);
 }

@@ -134,7 +134,7 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
     }
 }
 
-void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<PhLinkObst> *linkObst, FastCont<PhPoint> *points) {
+void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<PhLink> *links, FastCont<PhLinkObst> *linkObst, FastCont<PhPoint> *points) {
     while (obst->size > touchingList.size) {
         touchingList.push_back(false);
     }
@@ -185,8 +185,8 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
         }
         if (!found) continue;
 
-        PhPoint *a = (points->at_id(linkObst->at_index(i)->link->idPointA));
-        PhPoint *b = (points->at_id(linkObst->at_index(i)->link->idPointB));
+        PhPoint *a = (points->at_id(links->at_id(linkObst->at_index(i)->linkId)->idPointA));
+        PhPoint *b = (points->at_id(links->at_id(linkObst->at_index(i)->linkId)->idPointB));
         if (a == nullptr || b == nullptr) cout << "!E: ne dobim ID pointa, phisics > resolveCollision\n";
         Line obstacle = {a->pos, b->pos};
         Line obstAccel = {a->accel, b->accel};

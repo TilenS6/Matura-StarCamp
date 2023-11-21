@@ -47,7 +47,7 @@ public:
     PhPoint(double, double, double, FastCont<int>, double, double);
     void move(double, double);
 
-    void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLinkObst> *, FastCont<PhPoint> *);
+    void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLink> *, FastCont<PhLinkObst> *, FastCont<PhPoint> *);
     void applyChanges(double);
 
     void render(Camera *);
@@ -104,11 +104,13 @@ public:
 };
 
 class PhLinkObst {
+    FastCont<PhLink> *links;
+
 public:
     int collisionGroup;
-    PhLink *link;
+    int linkId;
 
-    PhLinkObst();
+    PhLinkObst(FastCont<PhLink> *);
     void render(Camera *);
 };
 
@@ -123,6 +125,8 @@ public:
 
     PhWorld();
 
+    void resetWorld();
+
     uint32_t createNewPoint(double, double, double, int, double, double);
     uint32_t createNewPoint(double, double, double, FastCont<int>, double, double);
     uint32_t createNewLinkBetween(int, int, double, double, double, double, double);
@@ -130,11 +134,11 @@ public:
     uint32_t createNewLineObst(double, double, double, double, int);
     uint32_t createNewLinkObst(int, int);
 
-    void removePointByPosition(double, double, double);
     void removePointById(int);
-    bool removeLinkByIds(int, int);   // ret: TRUE on succesfull deletion
-    bool removeMuscleByIds(int, int); // ret: TRUE on succesfull deletion
-    bool removeLineObstById(int);     // ret: TRUE on succesfull deletion
+    bool removeLinkByIds(int, int);     // ret: TRUE on succesfull deletion
+    bool removeMuscleByIds(int, int);   // ret: TRUE on succesfull deletion
+    bool removeLineObstById(int);       // ret: TRUE on succesfull deletion
+    bool removeLinkObstByIds(int, int); // ret: TRUE on succesfull deletion
 
     void translateEverything(Point);
 
