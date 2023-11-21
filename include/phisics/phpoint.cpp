@@ -190,12 +190,13 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
         if (a == nullptr || b == nullptr) cout << "!E: ne dobim ID pointa, phisics > resolveCollision\n";
         Line obstacle = {a->pos, b->pos};
         Line obstAccel = {a->accel, b->accel};
-        Point avgMovement = ((obstAccel.a + obstAccel.b) / 2) * dt * dt;
 
-        Line result;
+        // TODO to ne dela neki najbols... ampak je ok...
+        Point avgMovement = ((obstAccel.a + obstAccel.b) / 2) * dt * dt;
         Line movementToObst = {movement.a - avgMovement * 2, movement.b};
 
-        calculateCollisions(&touchingLinksList, i, movementToObst, obstacle, obstAccel, dt, &result); // TODO movement arg je mal narobe... more bit glede na lineObst, ne pa glede na world... mal se postuderi tole
+        Line result;
+        calculateCollisions(&touchingLinksList, i, movementToObst, obstacle, obstAccel, dt, &result);
 
         // 3. Newtonov zakon
         a->force -= result.a;
