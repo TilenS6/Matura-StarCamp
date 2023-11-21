@@ -7,8 +7,8 @@
 
 using namespace std;
 
-#define WIDTH 640
-#define HEIGHT 480
+#define WIDTH 1920 / 2
+#define HEIGHT 1080 / 2
 
 #define PHISICS_SUBSTEPS 20
 // TODO neki general multithreading: input events -- physics updating(?) -- rendering -- multiplayer handeling (?)
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 
     PhWorld phisics;
 
-    phisics.loadWorldFromFile("test.wrd");
+    phisics.loadWorldFromFile("TEST.WRD");
 
     phisics.points.at_id(0)->collisionGroups.push_back(1);
     phisics.points.at_id(1)->collisionGroups.push_back(1);
@@ -61,11 +61,6 @@ int main(int argc, char *argv[]) {
     // phisics.points.at_id(0)->mass = 2;
     // phisics.points.at_id(1)->mass = 2;
     // phisics.points.at_id(2)->mass = 2;
-
-    phisics.createNewLinkObst(3, 1);
-    phisics.createNewLinkObst(4, 1);
-    phisics.createNewLinkObst(5, 1);
-    phisics.createNewLinkObst(6, 1);
 
     // phisics.createNewLineObst(-.1, -7, 6.1, -7);
     // phisics.createNewLineObst(0, -.9, 0, -7.1);
@@ -102,7 +97,7 @@ int main(int argc, char *argv[]) {
     // phisics.createNewLinkBetween(2, 4);
     // phisics.createNewLinkBetween(3, 4);
 
-    cam.scale = 50;
+    cam.scale = 30;
     cam.x = -(cam.w / cam.scale) / 2;
     cam.y = -(cam.h / cam.scale) / 2;
 
@@ -127,23 +122,15 @@ int main(int argc, char *argv[]) {
                     break;
 
                 case SDL_SCANCODE_O: {
-                    phisics.links.clear();
-                    phisics.points.clear();
-                    phisics.muscles.clear();
-                    phisics.lineObst.clear();
-                    phisics.linkObst.clear();
-                    int ret = phisics.loadWorldFromFile("test.wrd", loadFromFileFlags::LOAD_ALL, {0, 0}, 1.);
-
+                    phisics.resetWorld();
+                    int ret = phisics.loadWorldFromFile("TEST.WRD");
+                    if (ret != 0) {
+                        cout << "loading result(s): " << phisics.loadWorldFromFile_getErrorMessage(ret) << endl;
+                        break;
+                    }
                     phisics.points.at_id(0)->collisionGroups.push_back(1);
                     phisics.points.at_id(1)->collisionGroups.push_back(1);
                     phisics.points.at_id(2)->collisionGroups.push_back(1);
-
-                    phisics.createNewLinkObst(3, 1);
-                    phisics.createNewLinkObst(4, 1);
-                    phisics.createNewLinkObst(5, 1);
-                    phisics.createNewLinkObst(6, 1);
-                    if (ret != 0)
-                        cout << "loading result(s): " << phisics.loadWorldFromFile_getErrorMessage(ret) << endl;
 
                     break;
                 }
