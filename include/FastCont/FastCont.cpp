@@ -1,9 +1,8 @@
 #include "FastCont/FastCont.h"
 
 template <class T, class id_data_type>
-FastContElement<T, id_data_type>::FastContElement(T _data, id_data_type _id) :
-    data(_data),
-    id(_id) {
+FastContElement<T, id_data_type>::FastContElement(T _data, id_data_type _id) : data(_data),
+                                                                               id(_id) {
 }
 
 template <class T, class id_data_type>
@@ -40,7 +39,7 @@ void FastCont<T, id_data_type>::remove_index(uint32_t at) {
 }
 template <class T, class id_data_type>
 void FastCont<T, id_data_type>::remove_id(id_data_type id) {
-    for (uint32_t i = 0;i < size;++i) {
+    for (uint32_t i = 0; i < size; ++i) {
         if ((p + i)->id == id) {
             remove_index(i);
         }
@@ -66,18 +65,20 @@ void FastCont<T, id_data_type>::insert(T a, uint32_t at) {
 }
 template <class T, class id_data_type>
 void FastCont<T, id_data_type>::clear() {
-    free(p);
+    if (p != nullptr)
+        free(p);
+    p = nullptr;
     alloc_size = 0;
     size = 0;
 }
 template <class T, class id_data_type>
-T* FastCont<T, id_data_type>::at_index(uint32_t at) {
+T *FastCont<T, id_data_type>::at_index(uint32_t at) {
     return &((p + at)->data);
 }
 
 template <class T, class id_data_type>
-T* FastCont<T, id_data_type>::at_id(id_data_type searchForID) {
-    for (uint32_t i = 0;i < size;++i) {
+T *FastCont<T, id_data_type>::at_id(id_data_type searchForID) {
+    for (uint32_t i = 0; i < size; ++i) {
         if ((p + i)->id == searchForID) {
             return &((p + i)->data);
         }
@@ -92,23 +93,22 @@ id_data_type FastCont<T, id_data_type>::get_id_at_index(uint32_t index) {
 
 template <class T, class id_data_type>
 void FastCont<T, id_data_type>::reserve_n_spots(uint32_t n) {
-    if (alloc_size==0) alloc_size=1;
-    while (alloc_size<n)
+    if (alloc_size == 0) alloc_size = 1;
+    while (alloc_size < n)
         alloc_size *= 2;
-        
+
     p = (FastContElement<T, id_data_type> *)realloc(p, sizeof(FastContElement<T, id_data_type>) * alloc_size);
 }
 
 template <class T, class id_data_type>
 void FastCont<T, id_data_type>::reset() {
-    rollingID=0;
+    rollingID = 0;
 }
-
 
 template <class T, class id_data_type>
 int64_t FastCont<T, id_data_type>::find_and_return_index(T a) {
-    for (uint32_t i=0; i<size; ++i) {
-        if ((p+i)->data == a) return i;
+    for (uint32_t i = 0; i < size; ++i) {
+        if ((p + i)->data == a) return i;
     }
     return -1;
 }
@@ -121,20 +121,20 @@ template <class T, class id_data_type>
 FastCont<T, id_data_type>::FastCont(bool _memory_leak_safety) {
     memory_leak_safety = _memory_leak_safety;
     p = nullptr;
-    rollingID=0;
-    alloc_size=0;
+    rollingID = 0;
+    alloc_size = 0;
     size = 0;
 }
 template <class T, class id_data_type>
 FastCont<T, id_data_type>::FastCont() {
     memory_leak_safety = true;
     p = nullptr;
-    rollingID=0;
-    alloc_size=0;
+    rollingID = 0;
+    alloc_size = 0;
     size = 0;
 }
 template <class T, class id_data_type>
 FastCont<T, id_data_type>::~FastCont() {
-    if (memory_leak_safety)
+    if (memory_leak_safety && p != nullptr)
         free(p);
 }
