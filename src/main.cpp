@@ -10,7 +10,7 @@ using namespace std;
 #define WIDTH 1920 / 2
 #define HEIGHT 1080 / 2
 
-#define PHISICS_SUBSTEPS 20
+#define PHISICS_SUBSTEPS 5
 // TODO neki general multithreading: input events -- physics updating(?) -- rendering -- multiplayer handeling (?)
 // learn this: https://www.atlassian.com/git/tutorials/syncing/git-push
 
@@ -57,6 +57,10 @@ int main(int argc, char *argv[]) {
     phisics.points.at_id(0)->collisionGroups.push_back(1);
     phisics.points.at_id(1)->collisionGroups.push_back(1);
     phisics.points.at_id(2)->collisionGroups.push_back(1);
+
+    phisics.createNewThrOn(0, 1, 20);
+    phisics.createNewThrOn(1, 2, 20);
+    phisics.createNewThrOn(2, 0, 20);
 
     // phisics.points.at_id(0)->mass = 2;
     // phisics.points.at_id(1)->mass = 2;
@@ -132,6 +136,10 @@ int main(int argc, char *argv[]) {
                     phisics.points.at_id(1)->collisionGroups.push_back(1);
                     phisics.points.at_id(2)->collisionGroups.push_back(1);
 
+                    phisics.createNewThrOn(0, 1, 20000);
+                    phisics.createNewThrOn(1, 2, 20000);
+                    phisics.createNewThrOn(2, 0, 20000);
+
                     break;
                 }
 
@@ -163,18 +171,20 @@ int main(int argc, char *argv[]) {
             cout << "R click at " << m.x << ", " << m.y << endl;
         }
 
-        if (kb.get(SDL_SCANCODE_UP)) {
-            phisics.muscles.at_index(0)->expand();
-        }
-        if (kb.get(SDL_SCANCODE_DOWN)) {
-            phisics.muscles.at_index(0)->contract();
-        }
-        if (kb.get(SDL_SCANCODE_LEFT)) {
-            phisics.muscles.at_index(0)->relax();
-        }
+        // if (kb.get(SDL_SCANCODE_UP)) {
+        //     phisics.muscles.at_index(0)->expand();
+        // }
+        // if (kb.get(SDL_SCANCODE_DOWN)) {
+        //     phisics.muscles.at_index(0)->contract();
+        // }
+        // if (kb.get(SDL_SCANCODE_LEFT)) {
+        //     phisics.muscles.at_index(0)->relax();
+        // }
 
         double dtPerStep = dt / PHISICS_SUBSTEPS;
         for (int i = 0; i < PHISICS_SUBSTEPS; ++i) {
+            phisics.applyGravity();
+
             if (kb.get(SDL_SCANCODE_W)) {
                 for (int i = 0; i < 3; ++i) {
                     phisics.points.at_index(i)->force.y += 15 * (1 + kb.get(SDL_SCANCODE_LSHIFT) * 5);
@@ -195,8 +205,10 @@ int main(int argc, char *argv[]) {
                     phisics.points.at_index(i)->force.x += 15 * (1 + kb.get(SDL_SCANCODE_LSHIFT) * 5);
                 }
             }
+            phisics.rocketThrs.at_id(0)->setState(kb.get(SDL_SCANCODE_UP));
+            phisics.rocketThrs.at_id(1)->setState(kb.get(SDL_SCANCODE_UP));
+            phisics.rocketThrs.at_id(2)->setState(kb.get(SDL_SCANCODE_UP));
 
-            phisics.applyGravity();
             phisics.update(dtPerStep);
         }
 

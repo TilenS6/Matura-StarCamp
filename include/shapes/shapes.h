@@ -36,7 +36,6 @@ public:
 
 class Circle {
     double r;
-
 public:
     double rPow2;
     Point a;
@@ -47,8 +46,9 @@ public:
 
 class Rectangle {
 public:
-    Point a; // one corner
+    Point a; // top left corner
     Point dimensions; // (width/height), should be + 
+    void render(Camera*);
 };
 
 #include "shapes/shapes.cpp"

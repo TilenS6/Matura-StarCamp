@@ -2,7 +2,7 @@
 
 void Point::render(Camera *cam) {
     double tx = (x - cam->x) * cam->scale;
-    double ty = (y - cam->y) * cam->scale;
+    double ty = cam->h - (y - cam->y) * cam->scale;
     if (tx < 0 || ty < 0 || tx >= cam->w || ty >= cam->h) return;
     SDL_RenderDrawPoint(cam->r, tx, ty);
 }
@@ -69,9 +69,9 @@ void Point::operator=(Point a) {
 
 void Line::render(Camera *cam) {
     double ax = (a.x - cam->x) * cam->scale;
-    double ay = (a.y - cam->y) * cam->scale;
+    double ay = cam->h - (a.y - cam->y) * cam->scale;
     double bx = (b.x - cam->x) * cam->scale;
-    double by = (b.y - cam->y) * cam->scale;
+    double by = cam->h - (b.y - cam->y) * cam->scale;
     if (ax < 0 || ay < 0 || bx < 0 || by < 0 || ax >= cam->w || ay >= cam->h || bx >= cam->w || by >= cam->h) return;
     SDL_RenderDrawLine(cam->r, ax, ay, bx, by);
 }
@@ -102,7 +102,18 @@ void Circle::render(Camera *cam) {
             if (x * x + y * y <= rPow2)
                 SDL_RenderDrawPoint(cam->r, ax + x, ay + y);
 }
-
+void Rectangle::render(Camera *cam) {
+    SDL_Rect rect;
+    rect.x = (a.x - cam->x) * cam->scale;
+    if (rect.x > cam->w) return;
+    rect.y = cam->h - (a.y - cam->y) * cam->scale;
+    if (rect.y > cam->h) return;
+    rect.w = dimensions.x * cam->scale;
+    if (rect.x + rect.w < 0) return;
+    rect.h = dimensions.y * cam->scale;
+    if (rect.y + rect.h < 0) return;
+    SDL_RenderFillRect(cam->r, &rect);
+}
 double distancePow2(Point a, Point b) {
     double dx = a.x - b.x, dy = a.y - b.y;
     return dx * dx + dy * dy;

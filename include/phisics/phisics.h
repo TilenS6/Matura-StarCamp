@@ -114,6 +114,21 @@ public:
     void render(Camera *);
 };
 
+class PhRocketThr {
+    int attachedPID;
+    int facingPID;
+
+public:
+    double currentThrust;
+    double maxThrust; // [N]
+
+    PhRocketThr(int, int, double);
+    void relocate(int, int);
+    void setState(double); // 0-1
+    void update(FastCont<PhPoint> *);
+    void render(Camera *, FastCont<PhPoint> *);
+};
+
 class PhWorld {
 public:
     FastCont<PhPoint> points;
@@ -121,6 +136,7 @@ public:
     FastCont<PhLink> links;
     FastCont<PhMuscle> muscles;
     FastCont<PhLinkObst> linkObst;
+    FastCont<PhRocketThr> rocketThrs;
     double gravity_accel;
 
     PhWorld();
@@ -133,6 +149,7 @@ public:
     uint32_t createNewMuscleBetween(int, int, double, double, double, double, double, double);
     uint32_t createNewLineObst(double, double, double, double, int);
     uint32_t createNewLinkObst(int, int);
+    uint32_t createNewThrOn(int, int, double);
 
     void removePointById(int);
     bool removeLinkByIds(int, int);     // ret: TRUE on succesfull deletion
@@ -157,4 +174,5 @@ public:
 #include "phisics/phlink.cpp"
 #include "phisics/phmuscle.cpp"
 #include "phisics/phlinkobst.cpp"
+#include "phisics/phrocketthr.cpp"
 #include "phisics/phworld.cpp"
