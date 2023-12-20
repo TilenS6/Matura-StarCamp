@@ -190,7 +190,7 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
 
         // TODO to ne dela neki najbols... ampak je ok...
         Point avgMovement = ((obstAccel.a + obstAccel.b) / 2) * dt * dt;
-        Line movementToObst = {movement.a + avgMovement * 5, movement.b};
+        Line movementToObst = {movement.a - avgMovement * 5, movement.b};
 
         Line result = {0, 0};
         calculateCollisions(&touchingLinksList, i, movementToObst, obstacle, obstAccel, dt, &result); // zakaj vcasih kr skoci cez zid, you may ask... movement je samo prediction, ne pa to kam res gre, zato se lahko malo spremeni in je pol... grozno
