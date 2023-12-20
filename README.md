@@ -1,8 +1,2 @@
-# Physics Engine
-Soft body 2D physics engine created for games and simple animations
-
-## Physics engine contains:
-- Points
-- Links (between points, customizable spring and damp coeficient)
-- Muscles (similar to Links with variable length)
-- Line Obsticles (solid "walls", collides with points and only on it's left side of the line when you draw it from point A to B)
+# StarCamp
+Igra v SDL2 na podlagi 2D fizike. Dogaja se v vesolju, podpira tudi možnost igranja z več igralci na centraliziranem serverju
