@@ -45,7 +45,7 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
             double Fs = cosLineDir * force.y - sinLineDir * force.x;
 
             // if point is lifted from obstacle (with some sticking force, to prevent "lifting" a point from a vertical obstacle with no input)
-            if (Fs < -.001) {
+            if (Fs < -.001) { // TODO to zafrkava pa dela tezave na obst
                 // *touchingList.at(i) = false;
                 // cout << "removed " << i << endl;
                 return;
@@ -190,9 +190,9 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
 
         // TODO to ne dela neki najbols... ampak je ok...
         Point avgMovement = ((obstAccel.a + obstAccel.b) / 2) * dt * dt;
-        Line movementToObst = {movement.a - avgMovement * 2, movement.b};
+        Line movementToObst = {movement.a + avgMovement * 5, movement.b};
 
-        Line result = {0,0};
+        Line result = {0, 0};
         calculateCollisions(&touchingLinksList, i, movementToObst, obstacle, obstAccel, dt, &result); // zakaj vcasih kr skoci cez zid, you may ask... movement je samo prediction, ne pa to kam res gre, zato se lahko malo spremeni in je pol... grozno
 
         // 3. Newtonov zakon
