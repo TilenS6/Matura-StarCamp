@@ -45,7 +45,7 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
             double Fs = cosLineDir * force.y - sinLineDir * force.x;
 
             // if point is lifted from obstacle (with some sticking force, to prevent "lifting" a point from a vertical obstacle with no input)
-            if (Fs < -.001) { // TODO to zafrkava pa dela tezave na obst
+            if (Fs < -.1) { // TODO to zafrkava pa dela tezave na obst
                 // *touchingList.at(i) = false;
                 // cout << "removed " << i << endl;
                 return;
