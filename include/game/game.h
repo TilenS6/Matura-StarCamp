@@ -10,25 +10,34 @@
 #define PHISICS_SUBSTEPS 5
 
 using namespace std;
-
+class Player;
 class Game {
     Camera cam;
     SDL_Window *wind;
-	
+
     Mouse m;
     Keyboard kb;
     Timer t;
 
     PhWorld phisics;
-	
+
     bool running;
-	bool drawRuller = false;
+    bool drawRuller = false;
+
 public:
     Game();
-	~Game();
-	void update();
+    ~Game();
+    void update();
 
-	bool looping() { return running; }
+    bool looping() { return running; }
+};
+
+class Player {
+    int idP;
+
+public:
+    Player();
+    void update();
 };
 
 #include "game/game.cpp"
