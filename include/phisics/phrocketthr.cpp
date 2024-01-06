@@ -1,10 +1,11 @@
 #include "phisics/phisics.h"
 
-PhRocketThr::PhRocketThr(int attachedTo, int facing, double maxThr) {
+PhRocketThr::PhRocketThr(int attachedTo, int facing, double maxThr, double _dirOffset = 0) {
     attachedPID = attachedTo;
     facingPID = facing;
     maxThrust = maxThr;
     currentThrust = 0;
+    dirOffset = _dirOffset;
 }
 void PhRocketThr::relocate(int attachedTo, int facing) {
     attachedPID = attachedTo;
@@ -28,11 +29,12 @@ void PhRocketThr::update(FastCont<PhPoint> *points) {
 
     Point attached = p1->getPos();
     Point facing = p2->getPos();
-    double dir = atan2(attached.y - facing.y, attached.x - facing.x) + PI;
+    double dir = atan2(attached.y - facing.y, attached.x - facing.x) + PI + dirOffset;
 
     p1->force += {cos(dir) * currentThrust, sin(dir) * currentThrust};
 }
 void PhRocketThr::render(Camera *cam, FastCont<PhPoint> *points) {
+    if (currentThrust == 0) return;
     PhPoint *p1 = points->at_id(attachedPID);
     if (p1 == nullptr) {
         cout << "E: @ phRocketThr.cpp: update (attachedPID is non-existant)\n";
@@ -46,13 +48,13 @@ void PhRocketThr::render(Camera *cam, FastCont<PhPoint> *points) {
 
     Point attached = p1->getPos();
     Point facing = p2->getPos();
-    double dir = atan2(attached.y - facing.y, attached.x - facing.x) + PI;
+    double dir = atan2(attached.y - facing.y, attached.x - facing.x) + PI + dirOffset;
 
     Rectangle rect;
     rect.a = attached;
-    rect.a.x -= .1;
-    rect.a.y += .1;
-    rect.dimensions = {.2, .2};
+    rect.a.x -= .05;
+    rect.a.y += .05;
+    rect.dimensions = {.1, .1};
     rect.render(cam);
 
     Line whereThr;

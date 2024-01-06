@@ -36,19 +36,23 @@ class PhPoint {
     FastCont<bool> touchingLinksList;
     double KoF_static;
     double KoF_kinetic;
+    bool virt;
     void calculateCollisions(FastCont<bool> *, int, Line, Line, Line, double, Line *);
 
 public:
     Point force, accel;
     double mass;
     FastCont<int> collisionGroups;
+    FastCont<int> virtAvgPoints;
 
     PhPoint(double, double, double, int, double, double);
     PhPoint(double, double, double, FastCont<int>, double, double);
+    void setVirtual(bool);
     void move(double, double);
 
     void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLink> *, FastCont<PhLinkObst> *, FastCont<PhPoint> *);
     void applyChanges(double);
+    void updateVirtual(PhWorld *);
 
     void render(Camera *);
 
@@ -117,12 +121,13 @@ public:
 class PhRocketThr {
     int attachedPID;
     int facingPID;
+    double dirOffset;
 
 public:
     double currentThrust;
     double maxThrust; // [N]
 
-    PhRocketThr(int, int, double);
+    PhRocketThr(int, int, double, double);
     void relocate(int, int);
     void setState(double); // 0-1
     void update(FastCont<PhPoint> *);
@@ -138,6 +143,7 @@ public:
     FastCont<PhLinkObst> linkObst;
     FastCont<PhRocketThr> rocketThrs;
     double gravity_accel;
+    double accel_mult_second;
 
     PhWorld();
 
@@ -149,7 +155,7 @@ public:
     uint32_t createNewMuscleBetween(int, int, double, double, double, double, double, double);
     uint32_t createNewLineObst(double, double, double, double, int);
     uint32_t createNewLinkObst(int, int);
-    uint32_t createNewThrOn(int, int, double);
+    uint32_t createNewThrOn(int, int, double, double);
 
     void removePointById(int);
     bool removeLinkByIds(int, int);     // ret: TRUE on succesfull deletion

@@ -8,6 +8,7 @@ PhPoint::PhPoint(double x, double y, double _mass = 1., int collisionGroup = 0, 
 
     KoF_static = static_koef;
     KoF_kinetic = kinetic_koef;
+    virt = false;
     collisionGroups.push_back(collisionGroup);
 }
 PhPoint::PhPoint(double x, double y, double _mass, FastCont<int> collisionGroupCont, double static_koef = 1., double kinetic_koef = .7) { // koef. for: concrete-rubber
@@ -18,6 +19,7 @@ PhPoint::PhPoint(double x, double y, double _mass, FastCont<int> collisionGroupC
 
     KoF_static = static_koef;
     KoF_kinetic = kinetic_koef;
+    virt = false;
     collisionGroups = collisionGroupCont;
 }
 void PhPoint::move(double x, double y) {
@@ -26,6 +28,9 @@ void PhPoint::move(double x, double y) {
         *touchingList.at_index(i) = false;
     for (int i = 0; i < touchingLinksList.size; ++i)
         *touchingLinksList.at_index(i) = false;
+}
+void PhPoint::setVirtual(bool isVirtual) {
+    virt = isVirtual;
 }
 
 void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line movement, Line obstacle, Line obstAccel, double dt, Line *res = nullptr) {
@@ -132,6 +137,7 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
 }
 
 void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<PhLink> *links, FastCont<PhLinkObst> *linkObst, FastCont<PhPoint> *points) {
+    if (virt) return;
     while (obst->size > touchingList.size) {
         touchingList.push_back(false);
     }
@@ -205,13 +211,26 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
 }
 
 void PhPoint::applyChanges(double dt) {
+    if (virt) return;
+    // samo za NE virtual
     pos += accel * dt;
+}
+
+void PhPoint::updateVirtual(PhWorld *world) {
+    if (!virt) return;
+    // samo za virtual
+    pos = {0, 0};
+    for (int i = 0; i < virtAvgPoints.size; ++i)
+        pos += world->points.at_id(*virtAvgPoints.at_index(i))->getPos();
+
+    pos /= virtAvgPoints.size;
+    return;
 }
 
 void PhPoint::render(Camera *cam) {
     double ax = (pos.x - cam->x) * cam->scale;
     double ay = cam->h - ((pos.y - cam->y) * cam->scale);
-    int r = .05 * mass * cam->scale;
+    int r = .003 * mass * cam->scale;
 
     if (r < 1) r = 1;
     if (r > 100) r = 100;

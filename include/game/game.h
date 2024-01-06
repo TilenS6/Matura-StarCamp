@@ -11,6 +11,22 @@
 
 using namespace std;
 class Player;
+class Game;
+
+
+class Player {
+    PhWorld *w;
+    Keyboard *kb;
+    int centerId;
+    FastCont<int> ids; // 8+1
+    FastCont<int> thrs; // 8
+
+public:
+    void init(PhWorld *, Keyboard *, double, double);
+    void update();
+};
+
+
 class Game {
     Camera cam;
     SDL_Window *wind;
@@ -20,6 +36,8 @@ class Game {
     Timer t;
 
     PhWorld phisics;
+
+    Player player;
 
     bool running;
     bool drawRuller = false;
@@ -32,12 +50,5 @@ public:
     bool looping() { return running; }
 };
 
-class Player {
-    int idP;
-
-public:
-    Player();
-    void update();
-};
-
 #include "game/game.cpp"
+#include "game/player.cpp"

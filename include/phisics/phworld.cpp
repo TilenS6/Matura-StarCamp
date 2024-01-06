@@ -2,6 +2,7 @@
 
 PhWorld::PhWorld() {
     gravity_accel = 9.81;
+    accel_mult_second = 1;
     points.set_memory_leak_safety(false);
     lineObst.set_memory_leak_safety(false);
     links.set_memory_leak_safety(false);
@@ -95,8 +96,8 @@ uint32_t PhWorld::createNewMuscleBetween(int idA, int idB, double spring_koef = 
     return muscles.size - 1;
 }
 
-uint32_t PhWorld::createNewThrOn(int attached, int facing, double thrust) {
-    PhRocketThr tmp(attached, facing, thrust);
+uint32_t PhWorld::createNewThrOn(int attached, int facing, double thrust, double shift_direction) {
+    PhRocketThr tmp(attached, facing, thrust, shift_direction);
     return rocketThrs.push_back(tmp);
 }
 
@@ -179,29 +180,39 @@ void PhWorld::update(double dt) {
 
     for (int i = 0; i < points.size; ++i) {
         points.at_index(i)->applyChanges(dt);
+        points.at_index(i)->accel *= 1 - ((1 - accel_mult_second) * dt);
+    }
+    for (int i = 0; i < points.size; ++i) {
+        points.at_index(i)->updateVirtual(this);
     }
 }
 
 void PhWorld::render(Camera *cam) {
     SDL_SetRenderDrawColor(cam->r, 200, 50, 50, 255);
-    for (int i = 0; i < rocketThrs.size; ++i)
+    for (int i = 0; i < rocketThrs.size; ++i) {
         rocketThrs.at_index(i)->render(cam, &points);
+    }
 
     SDL_SetRenderDrawColor(cam->r, 100, 100, 100, 255);
-    for (int i = 0; i < links.size; ++i)
+    for (int i = 0; i < links.size; ++i) {
         links.at_index(i)->render(cam);
+    }
 
     SDL_SetRenderDrawColor(cam->r, 200, 100, 100, 255);
-    for (int i = 0; i < muscles.size; ++i)
+    for (int i = 0; i < muscles.size; ++i) {
         muscles.at_index(i)->render(cam);
+    }
 
     SDL_SetRenderDrawColor(cam->r, 255, 255, 255, 255);
-    for (int i = 0; i < lineObst.size; ++i)
+    for (int i = 0; i < lineObst.size; ++i) {
         lineObst.at_index(i)->render(cam);
-    for (int i = 0; i < points.size; ++i)
+    }
+    for (int i = 0; i < points.size; ++i) {
         points.at_index(i)->render(cam);
-    for (int i = 0; i < linkObst.size; ++i)
+    }
+    for (int i = 0; i < linkObst.size; ++i) {
         linkObst.at_index(i)->render(cam);
+    }
 }
 
 bool PhWorld::removeLinkByIds(int idA, int idB) {

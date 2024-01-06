@@ -4,10 +4,10 @@ Keyboard::Keyboard() {
 }
 
 void Keyboard::down(SDL_Scancode s) {
-    arr[s >> 3] |= (1 << (s % 8)); // s>>3 = s/8  : PERFORMANCE
+    arr[s / 8] |= (1 << (s % 8));
 }
 void Keyboard::up(SDL_Scancode s) {
-    arr[s >> 3] &= ~(1 << (s % 8)); // s>>3 = s/8  : PERFORMANCE
+    arr[s / 8] &= ~(1 << (s % 8));
 }
 void Keyboard::update(SDL_Event e) {
     if (e.type == SDL_KEYDOWN)
@@ -16,5 +16,5 @@ void Keyboard::update(SDL_Event e) {
         up(e.key.keysym.scancode);
 }
 bool Keyboard::get(SDL_Scancode s) {
-    return (arr[s >> 3] & (1 << (s % 8))); // s>>3 = s/8  : PERFORMANCE
+    return (arr[s / 8] & (1 << (s % 8)));
 }

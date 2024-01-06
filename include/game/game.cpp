@@ -1,5 +1,11 @@
+#pragma once
 #include "game/game.h"
 Game::Game() {
+    phisics.gravity_accel = 0; // vesolje
+    phisics.accel_mult_second = .5;
+
+    player.init(&phisics, &kb, 0, 0);
+
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         cout << "Error initializing SDL: " << SDL_GetError() << endl;
         return;
@@ -27,7 +33,7 @@ Game::Game() {
     // SDL_Texture *textTexture = SDL_CreateTextureFromSurface(r, textSurface);
     running = true;
 
-    cam.scale = 30; //  30px = 1m
+    cam.scale = 100; //  __px = 1m
     cam.x = -(cam.w / cam.scale) / 2;
     cam.y = -(cam.h / cam.scale) / 2;
 
@@ -106,6 +112,7 @@ void Game::update() {
     double dtPerStep = dt / PHISICS_SUBSTEPS;
     for (int i = 0; i < PHISICS_SUBSTEPS; ++i) {
         phisics.applyGravity();
+        player.update();
         /*
         if (kb.get(SDL_SCANCODE_W)) {
             for (int i = 0; i < 3; ++i) {
