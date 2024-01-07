@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include "mouse/mouse.h"
 #include "keyboard/keyboard.h"
 #include "phisics/phisics.h"
@@ -14,16 +15,32 @@ class Player;
 class Game;
 
 
-class Player {
+class Player {    
+    double p[8][2] = { // initial points
+        {1, 1},
+        {0, 2},
+        {1, 3},
+        {2, 3},
+        {3, 2},
+        {2, 1},
+        {2, 0.3},
+        {1, 0.3},
+    };
+    Point p_min, p_max, p_avg;
+
+
     PhWorld *w;
     Keyboard *kb;
     int centerId;
     FastCont<int> ids; // 8+1
     FastCont<int> thrs; // 8
 
+    SDL_Texture *texture;
+
 public:
-    void init(PhWorld *, Keyboard *, double, double);
+    void init(PhWorld *, Keyboard *, Camera *, double, double);
     void update();
+    void render(Camera *);
 };
 
 

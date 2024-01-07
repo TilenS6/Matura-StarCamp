@@ -241,3 +241,9 @@ void PhPoint::render(Camera *cam) {
             if (x * x + y * y <= rPow2)
                 SDL_RenderDrawPoint(cam->r, ax + x, ay + y);
 }
+
+Point PhPoint::getRenderPos(Camera *cam) {
+    double ax = (pos.x - cam->x) * cam->scale;
+    double ay = cam->h - ((pos.y - cam->y) * cam->scale);
+    return (Point){ax, ay};
+}

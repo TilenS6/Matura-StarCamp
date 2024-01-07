@@ -57,6 +57,7 @@ public:
     void render(Camera *);
 
     Point getPos() { return pos; }
+    Point getRenderPos(Camera *);
 
     friend class PhWorld;
     friend class PhLink;

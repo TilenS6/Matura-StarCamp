@@ -1,20 +1,10 @@
 #include "game/game.h"
 
-void Player::init(PhWorld *world, Keyboard *keyboard, double off_x, double off_y) {
+void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, double off_y) {
     w = world;
     kb = keyboard;
     double mult = 1. / 3.;
     double spring_hardness = 10000, spring_dampness = 30;
-    double p[8][2] = {
-        {1, 1},
-        {0, 2},
-        {1, 3},
-        {2, 3},
-        {3, 2},
-        {2, 1},
-        {2, 0.3},
-        {1, 0.3},
-    };
 
     // id1, id2, power, rot
     double t[8][4] = {
@@ -23,8 +13,8 @@ void Player::init(PhWorld *world, Keyboard *keyboard, double off_x, double off_y
         {4, 1, 30, PIh},  // BW
         {4, 1, 50, 0},    // L
         {6, 7, 50, 0},    // L
-        {6, 5, 100, 0},    // FW
-        {7, 0, 100, 0},    // FW
+        {6, 5, 100, 0},   // FW
+        {7, 0, 100, 0},   // FW
         {7, 6, 50, 0},    // R
     };
 
@@ -65,6 +55,28 @@ void Player::init(PhWorld *world, Keyboard *keyboard, double off_x, double off_y
         int id = w->createNewThrOn(t[i][0], t[i][1], t[i][2], t[i][3]);
         thrs.push_back(id);
     }
+
+    // teksture
+    texture = IMG_LoadTexture(c->r, "media/astronaut.png");
+    cout << SDL_GetError() << endl;
+
+    p_min = {p[0][0], p[0][1]}, p_max = p_min;
+    p_avg = p_min;
+    for (int i = 1; i < 8; ++i) {
+        p_avg.x += p[i][0];
+        p_avg.y += p[i][1];
+
+        if (p_min.x > p[i][0])
+            p_min.x = p[i][0];
+        if (p_min.y > p[i][1])
+            p_min.y = p[i][1];
+
+        if (p_max.x < p[i][0])
+            p_max.x = p[i][0];
+        if (p_max.y < p[i][1])
+            p_max.y = p[i][1];
+    }
+    p_avg /= 8;
 }
 
 void Player::update() {
@@ -76,4 +88,35 @@ void Player::update() {
     w->rocketThrs.at_id(*thrs.at_index(5))->setState(kb->get(SDL_SCANCODE_W));
     w->rocketThrs.at_id(*thrs.at_index(6))->setState(kb->get(SDL_SCANCODE_W));
     w->rocketThrs.at_id(*thrs.at_index(7))->setState(kb->get(SDL_SCANCODE_D) || kb->get(SDL_SCANCODE_Q));
+}
+
+void Player::render(Camera *cam) {
+    SDL_Vertex vert[9];
+    for (int i = 0; i < 8; ++i) {
+        Point point = {p[i][0], p[i][1]};
+        Point rend = w->points.at_id(*ids.at_index(i))->getRenderPos(cam);
+        vert[i] = {
+            {(float)rend.x, (float)rend.y}, // position on screen
+            {255, 255, 255, 255},           // colour
+            {(float)((point.x - p_min.x) / (p_max.x - p_min.x)), 1 - (float)((point.y - p_min.y) / (p_max.y - p_min.y))},
+        };
+    }
+    Point p = w->points.at_id(centerId)->getRenderPos(cam);
+    vert[8] = {
+        {(float)p.x, (float)p.y}, // position on screen
+        {255, 255, 255, 255},     // colour
+        {(float)((p_avg.x - p_min.x) / (p_max.x - p_min.x)), 1 - (float)((p_avg.y - p_min.y) / (p_max.y - p_min.y))},
+    };
+
+    int ind[24] = {
+        0, 1, 8, // 8 je sredina
+        1, 2, 8,
+        2, 3, 8,
+        3, 4, 8,
+        4, 5, 8,
+        5, 0, 8,
+        0, 5, 6,
+        0, 6, 7};
+
+    SDL_RenderGeometry(cam->r, texture, vert, 9, ind, 24);
 }

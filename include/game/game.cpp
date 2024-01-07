@@ -4,7 +4,6 @@ Game::Game() {
     phisics.gravity_accel = 0; // vesolje
     phisics.accel_mult_second = .5;
 
-    player.init(&phisics, &kb, 0, 0);
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         cout << "Error initializing SDL: " << SDL_GetError() << endl;
@@ -33,7 +32,7 @@ Game::Game() {
     // SDL_Texture *textTexture = SDL_CreateTextureFromSurface(r, textSurface);
     running = true;
 
-    cam.scale = 100; //  __px = 1m
+    cam.scale = 250; //  __px = 1m
     cam.x = -(cam.w / cam.scale) / 2;
     cam.y = -(cam.h / cam.scale) / 2;
 
@@ -46,6 +45,8 @@ Game::Game() {
     // phisics.createNewThrOn(0, 1, 20);
     // phisics.createNewThrOn(1, 2, 20);
     // phisics.createNewThrOn(2, 0, 20);
+    
+    player.init(&phisics, &kb, &cam, 0, 0);
 }
 
 Game::~Game() {
@@ -145,6 +146,7 @@ void Game::update() {
     SDL_RenderClear(cam.r);
 
     phisics.render(&cam);
+    player.render(&cam);
 
     if (drawRuller) {
         for (uint16_t y = 0, y2 = 0; y < cam.h; y += cam.scale) {
