@@ -1,5 +1,3 @@
-#pragma once
-#include <math.h>
 #include "shapes/shapes.h"
 
 #define DEBUG(x) std::cout << #x << " = " << x << std::endl;

@@ -1,12 +1,13 @@
 #pragma once
 #include <iostream>
+#include <math.h>
 #include "camera/camera.h"
 
 class Point {
 public:
     double x, y;
 
-    void render(Camera*);
+    void render(Camera *);
 
     Point operator+(Point);
     Point operator-(Point);
@@ -27,7 +28,7 @@ public:
 class Line {
 public:
     Point a, b;
-    void render(Camera*);
+    void render(Camera *);
 
     bool operator==(Line);
     bool operator!=(Line);
@@ -36,19 +37,20 @@ public:
 
 class Circle {
     double r;
+
 public:
     double rPow2;
     Point a;
     void setRadius(double);
     double getRadius();
-    void render(Camera*);
+    void render(Camera *);
 };
 
 class Rectangle {
 public:
-    Point a; // top left corner
-    Point dimensions; // (width/height), should be + 
-    void render(Camera*);
+    Point a;          // top left corner
+    Point dimensions; // (width/height), should be +
+    void render(Camera *);
 };
 
 #include "shapes/shapes.cpp"

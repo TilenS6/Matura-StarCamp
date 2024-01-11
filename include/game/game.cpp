@@ -142,11 +142,14 @@ void Game::update() {
         phisics.update(dtPerStep);
     }
 
+    particleSystem.update(dt);
+
     SDL_SetRenderDrawColor(cam.r, 5, 5, 5, 255); // r b g a
     SDL_RenderClear(cam.r);
 
     phisics.render(&cam);
     player.render(&cam);
+    particleSystem.render(&cam);
 
     if (drawRuller) {
         for (uint16_t y = 0, y2 = 0; y < cam.h; y += cam.scale) {

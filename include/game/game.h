@@ -12,11 +12,13 @@
 
 using namespace std;
 class Player;
+class Particle;
+class ParticleS;
 class Game;
 
-
-class Player {    
-    double p[8][2] = { // initial points
+class Player {
+    double p[8][2] = {
+        // initial points
         {1, 1},
         {0, 2},
         {1, 3},
@@ -28,11 +30,10 @@ class Player {
     };
     Point p_min, p_max, p_avg;
 
-
     PhWorld *w;
     Keyboard *kb;
     int centerId;
-    FastCont<int> ids; // 8+1
+    FastCont<int> ids;  // 8+1
     FastCont<int> thrs; // 8
 
     SDL_Texture *texture;
@@ -43,6 +44,30 @@ public:
     void render(Camera *);
 };
 
+class Particle {
+    Rectangle r;
+    Point accel;
+    double accel_mult_second; // accel *= 1 - ((1 - accel_mult_second) * dt);
+    double rem_life, init_life;
+    SDL_Colour colour;
+
+public:
+    void init(Point, double, Point, double, double, unsigned char, unsigned char, unsigned char);
+    bool update(double); // return: true=brisi sebe
+    void render(Camera *);
+};
+
+class ParticleS {
+    FastCont<Particle> ps;
+
+public:
+    Point pos;
+    double dir, speed, life;
+    double randDir, randSpeed, randLife; // vse +/-
+    ParticleS(Point, double, double, double);
+    void update(double);
+    void render(Camera *);
+};
 
 class Game {
     Camera cam;
@@ -53,6 +78,7 @@ class Game {
     Timer t;
 
     PhWorld phisics;
+    ParticleS particleSystem;
 
     Player player;
 
