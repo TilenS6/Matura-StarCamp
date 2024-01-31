@@ -97,8 +97,11 @@ uint32_t PhWorld::createNewMuscleBetween(int idA, int idB, double spring_koef = 
 }
 
 uint32_t PhWorld::createNewThrOn(int attached, int facing, double thrust, double shift_direction) {
-    PhRocketThr tmp(attached, facing, thrust, shift_direction);
-    return rocketThrs.push_back(tmp);
+    PhRocketThr tmpThr;
+    tmpThr.ps.ps.set_memory_leak_safety(false);
+    int id = rocketThrs.push_back(tmpThr);
+    rocketThrs.at_id(id)->init(attached, facing, thrust, shift_direction);
+    return id;
 }
 
 void PhWorld::applyGravity() {
@@ -110,7 +113,7 @@ void PhWorld::applyGravity() {
 
 void PhWorld::update(double dt) {
     for (int i = 0; i < rocketThrs.size; ++i) {
-        rocketThrs.at_index(i)->update(&points);
+        rocketThrs.at_index(i)->update(&points, dt);
     }
 
     for (int i = 0; i < links.size; ++i) {

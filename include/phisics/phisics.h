@@ -6,6 +6,8 @@
 #include "camera/camera.h"     // Camera
 #include "shapes/shapes.h"     // Point, Line, Circle
 
+#include "particles/particles.h" // ParticleS
+
 using namespace std;
 
 #define PI 3.14159265358979323
@@ -19,6 +21,8 @@ class PhPoint;
 class PhLink;
 class PhLinkObst;
 class PhWorld;
+
+bool helpers = false;
 
 class PhLineObst {
 public:
@@ -40,7 +44,7 @@ class PhPoint {
     void calculateCollisions(FastCont<bool> *, int, Line, Line, Line, double, Line *);
 
 public:
-    Point force, accel;
+    Point force, accel, currentSpeed;
     double mass;
     FastCont<int> collisionGroups;
     FastCont<int> virtAvgPoints;
@@ -124,15 +128,22 @@ class PhRocketThr {
     int facingPID;
     double dirOffset;
 
+    bool psActive;
+
 public:
+    ParticleS ps;
+
     double currentThrust;
     double maxThrust; // [N]
 
-    PhRocketThr(int, int, double, double);
+    PhRocketThr();
+    void init(int, int, double, double);
     void relocate(int, int);
     void setState(double); // 0-1
-    void update(FastCont<PhPoint> *);
+    void update(FastCont<PhPoint> *, double);
     void render(Camera *, FastCont<PhPoint> *);
+
+    void initPs(double, double, double, double, double, unsigned char, unsigned char, unsigned char);
 };
 
 class PhWorld {

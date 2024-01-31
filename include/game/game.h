@@ -54,7 +54,7 @@ class Game {
     Timer t;
 
     PhWorld phisics;
-    ParticleS particleSystem;
+    FastCont<ParticleS> particleSs;
 
     Player player;
 

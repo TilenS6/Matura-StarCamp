@@ -214,6 +214,7 @@ void PhPoint::applyChanges(double dt) {
     if (virt) return;
     // samo za NE virtual
     pos += accel * dt;
+    currentSpeed = accel;
 }
 
 void PhPoint::updateVirtual(PhWorld *world) {
@@ -228,6 +229,7 @@ void PhPoint::updateVirtual(PhWorld *world) {
 }
 
 void PhPoint::render(Camera *cam) {
+    if (!helpers) return;
     double ax = (pos.x - cam->x) * cam->scale;
     double ay = cam->h - ((pos.y - cam->y) * cam->scale);
     int r = .003 * mass * cam->scale;

@@ -23,22 +23,38 @@ public:
     void init(Point, double, Point, double, double, unsigned char, unsigned char, unsigned char);
     bool update(double); // return: true=brisi sebe
     void render(Camera *);
+
+    friend class ParticleS;
 };
 
 class ParticleS {
-    FastCont<Particle> ps;
-    Particle init;
-    double spwnTimer;
+    double spwnTimer, spwnRate;
+    double randDir, randSpeed, randLife; // vse +/-
+
+    Point __spwnPnt;
+    double __size;
+    // Point __initial_accel;
+    double __speed;
+    double __dir;
+    double __accel_mult_per_second;
+    double __rem_life_seconds;
+    unsigned char __red;
+    unsigned char __grn;
+    unsigned char __blu;
 
 public:
-    double randDir, randSpeed, randLife; // vse +/-
+    FastCont<Particle> ps;
     bool spawning;
-    
-    void setInitial(Particle p); // TODO
-    // TODO void setRandomises(...)
-    // TODO void setSpawning(...)
-    void create(Point, double, Point, double, double, unsigned char, unsigned char, unsigned char, double);
-    void update(double);
+
+    ParticleS();
+    // void setInitial(Particle p);
+    void setSpawnInterval(double);
+    void setRandomises(double, double, double);
+
+    void moveSpawner(Point, double);
+
+    void create(Point, double, double, double, double, double, unsigned char, unsigned char, unsigned char);
+    void update(double, double, Point);
     void render(Camera *);
 };
 
