@@ -73,6 +73,7 @@ void FastCont<T, id_data_type>::clear() {
 }
 template <class T, class id_data_type>
 T *FastCont<T, id_data_type>::at_index(uint32_t at) {
+    if (at >= size) throw invalid_argument("\"at\" out of bounds");
     return &((p + at)->data);
 }
 

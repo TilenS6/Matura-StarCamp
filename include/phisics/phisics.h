@@ -20,9 +20,13 @@ class PhLineObst;
 class PhPoint;
 class PhLink;
 class PhLinkObst;
+class PhWeight;
 class PhWorld;
 
+class FuelCont;
+
 bool helpers = false;
+bool consoleLogging = false;
 
 class PhLineObst {
 public:
@@ -45,7 +49,7 @@ class PhPoint {
 
 public:
     Point force, accel, currentSpeed;
-    double mass;
+    double mass, addedMass;
     FastCont<int> collisionGroups;
     FastCont<int> virtAvgPoints;
 
@@ -130,20 +134,63 @@ class PhRocketThr {
 
     bool psActive;
 
+    int fuelContId;
+    PhWorld *w;
+
 public:
     ParticleS ps;
 
-    double currentThrust;
-    double maxThrust; // [N]
+    double power; // 0-1
+    // double maxThrust; // [N]
+    double fuelConsumption, fuelForceMulti;
 
     PhRocketThr();
-    void init(int, int, double, double);
+    void init(PhWorld *, int, int, double, double, double);
     void relocate(int, int);
     void setState(double); // 0-1
-    void update(FastCont<PhPoint> *, double);
-    void render(Camera *, FastCont<PhPoint> *);
+    void update(double);
+    void render(Camera *);
+
+    void setFuelSource(int);
 
     void initPs(double, double, double, double, double, unsigned char, unsigned char, unsigned char);
+};
+
+class PhWeight {
+    PhWorld *w;
+    int p;
+    double addedMass;
+
+public:
+    PhWeight();
+    void attachTo(PhWorld *, int);
+    void changeWeight(double);
+
+    friend class PhWorld;
+};
+
+class FuelCont {
+    PhWorld *w;
+    double capacity, currentFuel;
+    double recharge;
+
+    double empty_kg, kg_perUnit;
+    double Ns_perUnit;
+
+    int weightIds[4];
+
+public:
+    void init(double, double, PhWorld *, int[4], double, double, double);
+    void setFuel(double);
+    double getFuel();
+
+    void update(double);
+    void render(Camera *);
+
+    /**
+    @return za kolk N goriva je vzel
+    */
+    double take(double, double *);
 };
 
 class PhWorld {
@@ -154,6 +201,8 @@ public:
     FastCont<PhMuscle> muscles;
     FastCont<PhLinkObst> linkObst;
     FastCont<PhRocketThr> rocketThrs;
+    FastCont<PhWeight> weights;
+    FastCont<FuelCont> fuelConts;
     double gravity_accel;
     double accel_mult_second;
 
@@ -161,19 +210,23 @@ public:
 
     void resetWorld();
 
-    uint32_t createNewPoint(double, double, double, int, double, double);
-    uint32_t createNewPoint(double, double, double, FastCont<int>, double, double);
-    uint32_t createNewLinkBetween(int, int, double, double, double, double, double);
-    uint32_t createNewMuscleBetween(int, int, double, double, double, double, double, double);
-    uint32_t createNewLineObst(double, double, double, double, int);
-    uint32_t createNewLinkObst(int, int);
-    uint32_t createNewThrOn(int, int, double, double);
+    int createNewPoint(double, double, double, int, double, double);
+    int createNewPoint(double, double, double, FastCont<int>, double, double);
+    int createNewLinkBetween(int, int, double, double, double, double, double);
+    int createNewMuscleBetween(int, int, double, double, double, double, double, double);
+    int createNewLineObst(double, double, double, double, int);
+    int createNewLinkObst(int, int);
+    int createNewThrOn(int, int, double, double, double, double);
+    int createNewWeightOn(int);
+    int createNewFuelContainer(double, double, int[4], double, double, double);
 
     void removePointById(int);
     bool removeLinkByIds(int, int);     // ret: TRUE on succesfull deletion
     bool removeMuscleByIds(int, int);   // ret: TRUE on succesfull deletion
     bool removeLineObstById(int);       // ret: TRUE on succesfull deletion
     bool removeLinkObstByIds(int, int); // ret: TRUE on succesfull deletion
+    void removeWeightById(int);
+    void removeFuelContById(int);
 
     void translateEverything(Point);
 
@@ -193,4 +246,9 @@ public:
 #include "phisics/phmuscle.cpp"
 #include "phisics/phlinkobst.cpp"
 #include "phisics/phrocketthr.cpp"
+#include "phisics/phweight.cpp"
 #include "phisics/phworld.cpp"
+
+#include "phisics/fuelcont.cpp"
+
+// dodano na fonu: fuelcont, phweight

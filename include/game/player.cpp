@@ -76,12 +76,15 @@ void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, d
     w->createNewLinkBetween(*ids.at_index(0), *ids.at_index(5), spring_hardness, spring_dampness);
 
     // thr
+    int pntTmp[4] = {*ids.at_index(5), *ids.at_index(6), *ids.at_index(7), *ids.at_index(0)};
+    int fuelId = w->createNewFuelContainer(1, .03, pntTmp, 1, 1.5, 2000e3);
     for (int i = 0; i < 8; ++i) {
-        int id = w->createNewThrOn(t[i][0], t[i][1], t[i][2], t[i][3]);
+        int id = w->createNewThrOn(t[i][0], t[i][1], t[i][2], t[i][3], .01, 1);
 
         w->rocketThrs.at_id(id)->initPs(.05, 6, PI, .5, .3, 255, 255, 255);
-        w->rocketThrs.at_id(id)->ps.setSpawnInterval(.03);
+        w->rocketThrs.at_id(id)->ps.setSpawnInterval(.01);
         w->rocketThrs.at_id(id)->ps.setRandomises(PI / 10, 1, .1);
+        w->rocketThrs.at_id(id)->setFuelSource(fuelId);
 
         thrs.push_back(id);
     }

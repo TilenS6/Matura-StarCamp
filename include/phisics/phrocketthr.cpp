@@ -3,28 +3,39 @@
 PhRocketThr::PhRocketThr() {
     psActive = false;
 }
-void PhRocketThr::init(int attachedTo, int facing, double maxThr, double _dirOffset = 0) {
+void PhRocketThr::init(PhWorld *_w, int attachedTo, int facing, double _dirOffset = 0, double _fuelConsumption = 1, double _fuelForceMulti = 1) {
+    w = _w;
     attachedPID = attachedTo;
     facingPID = facing;
-    maxThrust = maxThr;
-    currentThrust = 0;
+    power = 0;
     dirOffset = _dirOffset;
+
+    fuelConsumption = _fuelConsumption;
+    fuelForceMulti = _fuelForceMulti;
+    fuelContId = -1;
+}
+void PhRocketThr::setFuelSource(int id) {
+    fuelContId = id;
 }
 void PhRocketThr::relocate(int attachedTo, int facing) {
     attachedPID = attachedTo;
     facingPID = facing;
 }
 void PhRocketThr::setState(double koef) {
+    if (fuelContId == -1) {
+        cout << "W: @ phRocketThr.cpp: setState (fuel source not set)\n";
+    }
     if (koef <= 1 && koef >= 0)
-        currentThrust = maxThrust * koef;
+        power = koef;
 }
-void PhRocketThr::update(FastCont<PhPoint> *points, double dt) {
-    PhPoint *p1 = points->at_id(attachedPID);
+void PhRocketThr::update(double dt) {
+    if (fuelContId == -1) return;
+    PhPoint *p1 = w->points.at_id(attachedPID);
     if (p1 == nullptr) {
         cout << "E: @ phRocketThr.cpp: update (attachedPID is non-existant)\n";
         return;
     }
-    PhPoint *p2 = points->at_id(facingPID);
+    PhPoint *p2 = w->points.at_id(facingPID);
     if (p2 == nullptr) {
         cout << "E: @ phRocketThr.cpp: update (facingPID is non-existant)\n";
         return;
@@ -34,22 +45,24 @@ void PhRocketThr::update(FastCont<PhPoint> *points, double dt) {
     Point facing = p2->getPos();
     double dir = atan2(attached.y - facing.y, attached.x - facing.x) + PI + dirOffset;
 
+    double koef;
+    double currentThrust = w->fuelConts.at_id(fuelContId)->take(fuelConsumption * dt * power, &koef) * fuelForceMulti;
+
     p1->force += {cos(dir) * currentThrust, sin(dir) * currentThrust};
 
     if (psActive) {
         ps.moveSpawner(attached, dir + PI);
-        double mult = currentThrust / maxThrust;
-        ps.update(dt, mult, p1->currentSpeed);
+        ps.update(dt, koef, p1->currentSpeed);
     }
 }
-void PhRocketThr::render(Camera *cam, FastCont<PhPoint> *points) {
+void PhRocketThr::render(Camera *cam) {
     // if (currentThrust == 0) return;
-    PhPoint *p1 = points->at_id(attachedPID);
+    PhPoint *p1 = w->points.at_id(attachedPID);
     if (p1 == nullptr) {
         cout << "E: @ phRocketThr.cpp: update (attachedPID is non-existant)\n";
         return;
     }
-    PhPoint *p2 = points->at_id(facingPID);
+    PhPoint *p2 = w->points.at_id(facingPID);
     if (p2 == nullptr) {
         cout << "E: @ phRocketThr.cpp: update (facingPID is non-existant)\n";
         return;

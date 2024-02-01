@@ -44,6 +44,8 @@ ParticleS::ParticleS() {
 
 void ParticleS::create(Point spwnPnt, double size, double speed, double dir, double accel_mult_per_second, double rem_life_seconds, unsigned char red, unsigned char grn, unsigned char blu) {
     __spwnPnt = spwnPnt;
+    __spwnPnt.x -= __size / 2;
+    __spwnPnt.y += __size / 2;
     __size = size;
     __speed = speed;
     __dir = dir;
@@ -64,6 +66,8 @@ void ParticleS::setRandomises(double _randDir = 0, double _randSpeed = 0, double
 }
 void ParticleS::moveSpawner(Point new_spwnPoint, double new_dir) {
     __spwnPnt = new_spwnPoint;
+    __spwnPnt.x -= __size / 2;
+    __spwnPnt.y += __size / 2;
     __dir = new_dir;
 }
 
@@ -79,7 +83,7 @@ void ParticleS::update(double dt, double addMult = 1.0, Point relAccel = {0, 0})
 
         double tmpDir = __dir + (randDir * ((rand() % 2001) - 1000) * 0.001);
         double tmpSpd = __speed + (randSpeed * ((rand() % 2001) - 1000) * 0.001);
-        ps.at_id(id)->init(__spwnPnt, __size, {(tmpSpd * cos(tmpDir)) + relAccel.x, (tmpSpd * sin(tmpDir)) + relAccel.y}, __accel_mult_per_second, __rem_life_seconds + (randLife * ((rand() % 2001) - 1000) * 0.001), __red, __grn, __blu);
+        ps.at_id(id)->init(__spwnPnt, __size, {((tmpSpd * cos(tmpDir)) + relAccel.x) * addMult, ((tmpSpd * sin(tmpDir)) + relAccel.y) * addMult}, __accel_mult_per_second, __rem_life_seconds + (randLife * ((rand() % 2001) - 1000) * 0.001), __red, __grn, __blu);
         // ps.at_id(id)->accel = {spd * cos(dir), spd * sin(dir)};
     }
 

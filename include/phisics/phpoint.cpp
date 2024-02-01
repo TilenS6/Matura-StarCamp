@@ -5,6 +5,7 @@ PhPoint::PhPoint(double x, double y, double _mass = 1., int collisionGroup = 0, 
     mass = _mass;
     accel = {0, 0};
     force = {0, 0};
+    addedMass = 0;
 
     KoF_static = static_koef;
     KoF_kinetic = kinetic_koef;
@@ -16,6 +17,7 @@ PhPoint::PhPoint(double x, double y, double _mass, FastCont<int> collisionGroupC
     mass = _mass;
     accel = {0, 0};
     force = {0, 0};
+    addedMass = 0;
 
     KoF_static = static_koef;
     KoF_kinetic = kinetic_koef;
@@ -137,7 +139,9 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
 }
 
 void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<PhLink> *links, FastCont<PhLinkObst> *linkObst, FastCont<PhPoint> *points) {
-    if (virt) return;
+    if (virt) {
+        return;
+    }
     while (obst->size > touchingList.size) {
         touchingList.push_back(false);
     }
@@ -160,7 +164,7 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
             *touchingLinksList.at_index(i) = false;
     }
 
-    Point nextPos = pos + (accel + (force / mass) * dt) * dt;
+    Point nextPos = pos + (accel + (force / (mass + addedMass)) * dt) * dt;
     Line movement = {pos, nextPos};
     for (int i = 0; i < obst->size; ++i) {
         // ali je v istem collision groupu
@@ -206,7 +210,7 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
         b->force -= result.b;
     }
 
-    accel += (force / mass) * dt;
+    accel += (force / (mass + addedMass)) * dt;
     force = {0, 0};
 }
 
@@ -232,7 +236,7 @@ void PhPoint::render(Camera *cam) {
     if (!helpers) return;
     double ax = (pos.x - cam->x) * cam->scale;
     double ay = cam->h - ((pos.y - cam->y) * cam->scale);
-    int r = .003 * mass * cam->scale;
+    int r = .003 * (mass + addedMass) * cam->scale;
 
     if (r < 1) r = 1;
     if (r > 100) r = 100;
