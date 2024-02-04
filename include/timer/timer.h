@@ -8,6 +8,7 @@ class Timer {
 public:
     Timer();
     double interval();
+    double getTime();
 };
 
 #include "timer/timer.cpp"

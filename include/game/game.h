@@ -6,10 +6,12 @@
 #include "phisics/phisics.h"
 #include "timer/timer.h"
 #include "particles/particles.h"
+#include "netagent/netagent.h"
 
 #define WIDTH 1920 / 2
 #define HEIGHT 1080 / 2
 #define PHISICS_SUBSTEPS 5
+#define NETW_REQ_INTERVAL 0.5
 
 using namespace std;
 class Player;
@@ -58,6 +60,9 @@ class Game {
 
     Player player;
 
+    NetClient client;
+    Timer netRequestTimer;
+
     bool running;
     bool drawRuller = false;
 
@@ -67,6 +72,7 @@ public:
     void update();
 
     bool looping() { return running; }
+    bool networkManager();
 };
 
 #include "game/game.cpp"

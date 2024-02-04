@@ -1,3 +1,5 @@
+
+#pragma ignore
 #include "game/game.h"
 /*
     Rectangle r;

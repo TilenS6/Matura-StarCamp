@@ -67,6 +67,11 @@
                 "-lSDL2",
                 "-lSDL2_ttf",
                 "-lSDL2_image",
+
+                "-lWs2_32",
+                "-lMswsock",
+                "-lAdvApi32",
+
                 "-static-libstdc++",
                 "-static-libgcc"
             ],
