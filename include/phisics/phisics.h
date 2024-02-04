@@ -48,7 +48,7 @@ class PhPoint {
     void calculateCollisions(FastCont<bool> *, int, Line, Line, Line, double, Line *);
 
 public:
-    Point force, accel, currentSpeed;
+    Point force, accel, currentSpeed; //currentSpeed = prejsnji accel
     double mass, addedMass;
     FastCont<int> collisionGroups;
     FastCont<int> virtAvgPoints;

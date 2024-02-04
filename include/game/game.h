@@ -7,6 +7,7 @@
 #include "timer/timer.h"
 #include "particles/particles.h"
 #include "netagent/netagent.h"
+#include <thread>
 
 #define WIDTH 1920 / 2
 #define HEIGHT 1080 / 2
@@ -62,8 +63,9 @@ class Game {
 
     NetClient client;
     Timer netRequestTimer;
+    thread networkThr;
 
-    bool running;
+    bool running, networkingActive;
     bool drawRuller = false;
 
 public:
@@ -72,7 +74,12 @@ public:
     void update();
 
     bool looping() { return running; }
-    bool networkManager();
+    static void networkManager(Game *);
+    void requestInitialFromServer();
+    void process_init();
+    void process_update_all();
+    void send_init();
+    void send_update_all();
 };
 
 #include "game/game.cpp"

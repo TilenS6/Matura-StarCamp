@@ -11,7 +11,7 @@
 #include "FastCont/FastCont.h"
 // #include <stdlib.h>
 
-#define MAX_BUF_LEN 512
+#define MAX_BUF_LEN 65536
 
 #define DEFAULT_PORT "27015"
 

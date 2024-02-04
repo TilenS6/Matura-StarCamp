@@ -41,6 +41,8 @@ public:
     T* at_id(id_data_type); // returns pointer to element with certain ID
 
     int64_t find_and_return_index(T); // if not found, returning -1
+
+    
 };
 
 #include "FastCont/FastCont.cpp"
