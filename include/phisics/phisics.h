@@ -69,6 +69,10 @@ public:
 
     friend class PhWorld;
     friend class PhLink;
+    
+    #ifdef GAME_EXISTS
+        friend class Game;
+    #endif
 };
 
 class PhLink {
@@ -99,6 +103,10 @@ public:
 
     friend class PhLinkObst;
     friend class PhWorld;
+
+    #ifdef GAME_EXISTS
+        friend class Game;
+    #endif
 };
 
 class PhMuscle : public PhLink {
@@ -114,6 +122,10 @@ public:
     void setMuscle(double); // min(0)-max(1)
 
     friend class PhWorld;
+
+    #ifdef GAME_EXISTS
+        friend class Game;
+    #endif
 };
 
 class PhLinkObst {
@@ -125,6 +137,10 @@ public:
 
     PhLinkObst(FastCont<PhLink> *);
     void render(Camera *);
+
+    #ifdef GAME_EXISTS
+        friend class Game;
+    #endif
 };
 
 class PhRocketThr {
@@ -154,6 +170,10 @@ public:
     void setFuelSource(int);
 
     void initPs(double, double, double, double, double, unsigned char, unsigned char, unsigned char);
+
+    #ifdef GAME_EXISTS
+        friend class Game;
+    #endif
 };
 
 class PhWeight {
@@ -167,6 +187,10 @@ public:
     void changeWeight(double);
 
     friend class PhWorld;
+
+    #ifdef GAME_EXISTS
+        friend class Game;
+    #endif
 };
 
 class FuelCont {
@@ -177,7 +201,7 @@ class FuelCont {
     double empty_kg, kg_perUnit;
     double Ns_perUnit;
 
-    int weightIds[4];
+    int weightIds[4], pointIDs[4];
 
 public:
     void init(double, double, PhWorld *, int[4], double, double, double);
@@ -191,6 +215,10 @@ public:
     @return za kolk N goriva je vzel
     */
     double take(double, double *);
+
+    #ifdef GAME_EXISTS
+        friend class Game;
+    #endif
 };
 
 class PhWorld {
@@ -210,15 +238,15 @@ public:
 
     void resetWorld();
 
-    int createNewPoint(double, double, double, int, double, double);
-    int createNewPoint(double, double, double, FastCont<int>, double, double);
-    int createNewLinkBetween(int, int, double, double, double, double, double);
-    int createNewMuscleBetween(int, int, double, double, double, double, double, double);
-    int createNewLineObst(double, double, double, double, int);
-    int createNewLinkObst(int, int);
-    int createNewThrOn(int, int, double, double, double, double);
-    int createNewWeightOn(int);
-    int createNewFuelContainer(double, double, int[4], double, double, double);
+    int createNewPoint(double, double, double, int, double, double, int);
+    int createNewPoint(double, double, double, FastCont<int>, double, double, int);
+    int createNewLinkBetween(int, int, double, double, double, double, double, int);
+    int createNewMuscleBetween(int, int, double, double, double, double, double, double, int);
+    int createNewLineObst(double, double, double, double, int, int);
+    int createNewLinkObst(int, int, int);
+    int createNewThrOn(int, int, double, double, double, int);
+    int createNewWeightOn(int, int);
+    int createNewFuelContainer(double, double, int[4], double, double, double, int);
 
     void removePointById(int);
     bool removeLinkByIds(int, int);     // ret: TRUE on succesfull deletion

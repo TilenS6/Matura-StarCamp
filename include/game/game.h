@@ -1,4 +1,6 @@
 #pragma once
+#define GAME_EXISTS
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include "mouse/mouse.h"
@@ -67,6 +69,8 @@ class Game {
 
     bool running, networkingActive;
     bool drawRuller = false;
+
+    bool serverRole;
 
 public:
     Game();

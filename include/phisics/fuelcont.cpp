@@ -10,8 +10,10 @@ void FuelCont::init(double _capacity, double recharge_per_second, PhWorld *_w, i
     kg_perUnit = _kg_perUnit;
     Ns_perUnit = _Ns_perUnit;
 
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 4; ++i) {
+        pointIDs[i] = pointIdsForWeights[i];
         weightIds[i] = w->createNewWeightOn(pointIdsForWeights[i]);
+    }
 }
 
 void FuelCont::setFuel(double val) {

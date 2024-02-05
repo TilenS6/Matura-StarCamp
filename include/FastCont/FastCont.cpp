@@ -139,3 +139,20 @@ FastCont<T, id_data_type>::~FastCont() {
     if (memory_leak_safety && p != nullptr)
         free(p);
 }
+
+template <class T, class id_data_type>
+void FastCont<T, id_data_type>::force_import(id_data_type id, T _a) {
+    if (alloc_size == 0) {
+        alloc_size = 1;
+        p = (FastContElement<T, id_data_type> *)malloc(sizeof(FastContElement<T, id_data_type>));
+    } else if (alloc_size <= size) {
+        alloc_size *= 2;
+        p = (FastContElement<T, id_data_type> *)realloc(p, sizeof(FastContElement<T, id_data_type>) * alloc_size);
+    }
+
+    (p + size)->id = id;
+    (p + size)->data = _a;
+    ++size;
+
+    if (id > rollingID) rollingID = id;
+}

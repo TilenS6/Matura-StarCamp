@@ -42,6 +42,8 @@ public:
 
     int64_t find_and_return_index(T); // if not found, returning -1
 
+    void force_import(id_data_type, T); // false: OK, true: ID already exists
+
     
 };
 

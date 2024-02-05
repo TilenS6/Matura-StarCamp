@@ -9,7 +9,7 @@ PhWorld::PhWorld() {
     muscles.set_memory_leak_safety(false);
     linkObst.set_memory_leak_safety(false);
     rocketThrs.set_memory_leak_safety(false);
-    
+
     weights.set_memory_leak_safety(false);
     fuelConts.set_memory_leak_safety(false);
 }
@@ -37,23 +37,35 @@ void PhWorld::resetWorld() {
     fuelConts.reset();
 }
 
-int PhWorld::createNewPoint(double x, double y, double mass, int collisionGroup = 0, double static_koef = 1., double kinetic_koef = .7) {
+int PhWorld::createNewPoint(double x, double y, double mass, int collisionGroup = 0, double static_koef = 1., double kinetic_koef = .7, int forceId = -1) {
     PhPoint tmp(x, y, mass, collisionGroup, static_koef, kinetic_koef);
     tmp.touchingList.set_memory_leak_safety(false);
     tmp.collisionGroups.set_memory_leak_safety(false);
-    return points.push_back(tmp);
+
+    if (forceId == -1)
+        return points.push_back(tmp);
+    points.force_import(forceId, tmp);
+    return forceId;
 }
-int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7) {
+int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7, int forceId = -1) {
     PhPoint tmp(x, y, mass, collisionGroup, static_koef, kinetic_koef);
     tmp.touchingList.set_memory_leak_safety(false);
     tmp.collisionGroups.set_memory_leak_safety(false);
-    return points.push_back(tmp);
+
+    if (forceId == -1)
+        return points.push_back(tmp);
+    points.force_import(forceId, tmp);
+    return forceId;
 }
-int PhWorld::createNewLinkObst(int linkId, int collG = 0) {
+int PhWorld::createNewLinkObst(int linkId, int collG = 0, int forceId = -1) {
     PhLinkObst tmp(&links);
     tmp.linkId = linkId;
     tmp.collisionGroup = collG;
-    return linkObst.push_back(tmp);
+
+    if (forceId == -1)
+        return linkObst.push_back(tmp);
+    linkObst.force_import(forceId, tmp);
+    return forceId;
 }
 
 void PhWorld::removePointById(int id) {
@@ -85,50 +97,81 @@ void PhWorld::removePointById(int id) {
     points.remove_id(id);
 }
 
-int PhWorld::createNewLineObst(double x1, double y1, double x2, double y2, int coll_group = 0) {
+int PhWorld::createNewLineObst(double x1, double y1, double x2, double y2, int coll_group = 0, int forceId = -1) {
     PhLineObst tmp(x1, y1, x2, y2, coll_group);
-    return lineObst.push_back(tmp);
+
+    if (forceId == -1)
+        return lineObst.push_back(tmp);
+    lineObst.force_import(forceId, tmp);
+    return forceId;
 }
 
-int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
+int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1, double maxCompression = 0, double maxStretch = 0, double originalLength = 0, int forceId = -1) {
     PhLink tmp(&points, idA, idB, spring_koef, damp_koef, originalLength);
     if (maxCompression > 0 && maxStretch > 0)
         tmp.setMaxComp(maxCompression, maxStretch);
 
+    /* // ! prejsnja koda, cudna je (tale "size-1")
     links.push_back(tmp);
     return links.size - 1;
+    */
+
+    if (forceId == -1)
+        return links.push_back(tmp);
+    links.force_import(forceId, tmp);
+    return forceId;
 }
 
-int PhWorld::createNewMuscleBetween(int idA, int idB, double spring_koef = 100, double damp_koef = 10, double muscle_range = .5, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
+int PhWorld::createNewMuscleBetween(int idA, int idB, double spring_koef = 100, double damp_koef = 10, double muscle_range = .5, double maxCompression = 0, double maxStretch = 0, double originalLength = 0, int forceId = -1) {
     PhMuscle tmp(&points, idA, idB, spring_koef, damp_koef, originalLength);
     tmp.setRange(muscle_range);
     if (maxCompression > 0 && maxStretch > 0)
         tmp.setMaxComp(maxCompression, maxStretch);
 
-    muscles.push_back(tmp);
-    return muscles.size - 1;
+    // ! isto ko zgori
+
+    if (forceId == -1)
+        return muscles.push_back(tmp);
+    muscles.force_import(forceId, tmp);
+    return forceId;
 }
 
-int PhWorld::createNewThrOn(int attached, int facing, double thrust, double shift_direction, double fuelConsumption = .3, double forceMult = 1) {
+int PhWorld::createNewThrOn(int attached, int facing, double shift_direction, double fuelConsumption = .3, double forceMult = 1, int forceId = -1) {
     PhRocketThr tmpThr;
     tmpThr.ps.ps.set_memory_leak_safety(false);
-    int id = rocketThrs.push_back(tmpThr);
-    rocketThrs.at_id(id)->init(this, attached, facing, shift_direction, fuelConsumption, forceMult = 1);
-    return id;
+
+    if (forceId == -1) {
+        int id = rocketThrs.push_back(tmpThr);
+        rocketThrs.at_id(id)->init(this, attached, facing, shift_direction, fuelConsumption, forceMult = 1);
+        return id;
+    }
+    rocketThrs.force_import(forceId, tmpThr);
+    rocketThrs.at_id(forceId)->init(this, attached, facing, shift_direction, fuelConsumption, forceMult = 1);
+    return forceId;
 }
 
-int PhWorld::createNewWeightOn(int for_point_id) {
+int PhWorld::createNewWeightOn(int for_point_id, int forceId = -1) {
     PhWeight tmp;
-    int id = weights.push_back(tmp);
-    weights.at_id(id)->attachTo(this, for_point_id);
-    return id;
+    if (forceId == -1) {
+        int id = weights.push_back(tmp);
+        weights.at_id(id)->attachTo(this, for_point_id);
+        return id;
+    }
+    weights.force_import(forceId, tmp);
+    weights.at_id(forceId)->attachTo(this, for_point_id);
+    return forceId;
 }
 
-int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit=50000) {
+int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit = 50000, int forceId = -1) {
     FuelCont tmp;
-    int id = fuelConts.push_back(tmp);
-    fuelConts.at_id(id)->init(_capacity, recharge_per_second, this, pointIdsForWeights, empty_kg, kg_perFuelUnit, Ns_perFuelUnit);
-    return id;
+    if (forceId == -1) {
+        int id = fuelConts.push_back(tmp);
+        fuelConts.at_id(id)->init(_capacity, recharge_per_second, this, pointIdsForWeights, empty_kg, kg_perFuelUnit, Ns_perFuelUnit);
+        return id;
+    }
+    fuelConts.force_import(forceId, tmp);
+    fuelConts.at_id(forceId)->init(_capacity, recharge_per_second, this, pointIdsForWeights, empty_kg, kg_perFuelUnit, Ns_perFuelUnit);
+    return forceId;
 }
 
 void PhWorld::applyGravity() {

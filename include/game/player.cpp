@@ -31,16 +31,16 @@ void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, d
     double mult = 1. / 3.;
     double spring_hardness = 10000, spring_dampness = 30;
 
-    // id1, id2, power, rot
+    // id1, id2, rot
     double t[8][4] = {
-        {1, 4, 50, 0},    // R
-        {1, 4, 30, -PIh}, // BW
-        {4, 1, 30, PIh},  // BW
-        {4, 1, 50, 0},    // L
-        {6, 7, 50, 0},    // L
-        {6, 5, 100, 0},   // FW
-        {7, 0, 100, 0},   // FW
-        {7, 6, 50, 0},    // R
+        {1, 4, 0},    // R
+        {1, 4, -PIh}, // BW
+        {4, 1, PIh},  // BW
+        {4, 1, 0},    // L
+        {6, 7, 0},    // L
+        {6, 5, 0},   // FW
+        {7, 0, 0},   // FW
+        {7, 6, 0},    // R
     };
 
     for (int i = 0; i < 8; ++i) {
@@ -79,7 +79,7 @@ void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, d
     int pntTmp[4] = {*ids.at_index(5), *ids.at_index(6), *ids.at_index(7), *ids.at_index(0)};
     int fuelId = w->createNewFuelContainer(1, .03, pntTmp, 1, 1.5, 2000e3);
     for (int i = 0; i < 8; ++i) {
-        int id = w->createNewThrOn(t[i][0], t[i][1], t[i][2], t[i][3], .01, 1);
+        int id = w->createNewThrOn(t[i][0], t[i][1], t[i][2], .01, 1);
 
         w->rocketThrs.at_id(id)->initPs(.05, 6, PI, .5, .3, 255, 255, 255);
         w->rocketThrs.at_id(id)->ps.setSpawnInterval(.01);
