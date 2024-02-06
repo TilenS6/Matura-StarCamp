@@ -13,6 +13,7 @@ using namespace std;
 #define PI 3.14159265358979323
 #define PIh PI / 2
 #define PI2 PI * 2
+#define SMALL_VAL (double)1e-6
 
 Camera *debCam = nullptr;
 
@@ -26,7 +27,6 @@ class PhWorld;
 class FuelCont;
 
 bool helpers = false;
-bool consoleLogging = false;
 
 class PhLineObst {
 public:

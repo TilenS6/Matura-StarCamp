@@ -84,6 +84,7 @@ T *FastCont<T, id_data_type>::at_id(id_data_type searchForID) {
             return &((p + i)->data);
         }
     }
+    cout << "E: FastCont::at_id\tno ID found!\n";
     return nullptr;
 }
 

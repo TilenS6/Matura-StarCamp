@@ -75,8 +75,9 @@ namespace netagent {
         FastCont<ClientConnection> ClientSockets;
 
     public:
-        NetServer();
         ~NetServer();
+        void init();
+
         int acceptNewClient(); // return: -1 no_new_connection/error,  >= 0 ID of new accepted client
         int recieveData(int);
         int sendData(int, const char *, int);

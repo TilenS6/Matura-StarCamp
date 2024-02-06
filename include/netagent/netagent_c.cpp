@@ -24,7 +24,7 @@
         ZeroMemory(&hints, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
-        hints.ai_protocol = IPPROTO_UDP;
+        hints.ai_protocol = IPPROTO_TCP;
 
         // Resolve the server address and port
         iResult = getaddrinfo(server.c_str(), DEFAULT_PORT, &hints, &result);
@@ -109,13 +109,15 @@
     }
 
     int NetClient::recieveData() {
-        int iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+        int iResult = recv(ConnectSocket, recvbuf, MAX_BUF_LEN, 0);
 
         if (iResult == -1 && WSAGetLastError() == WSAEWOULDBLOCK)
             return recieveData_NO_NEW_DATA;
 
-        if (iResult > 0)
+        if (iResult > 0) {
+            recvbuflen = iResult;
             return recieveData_OK;
+        }
 
         if (iResult == 0) {
             std::cout << "Connection closed\n";

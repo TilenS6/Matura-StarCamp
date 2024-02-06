@@ -14,6 +14,9 @@ PhWorld::PhWorld() {
     fuelConts.set_memory_leak_safety(false);
 }
 void PhWorld::resetWorld() {
+            #ifdef CONSOLE_LOGGING
+    cout << "RESETAM WORLD!!!\n";
+            #endif
     gravity_accel = 9.81;
 
     // remove data
@@ -106,9 +109,9 @@ int PhWorld::createNewLineObst(double x1, double y1, double x2, double y2, int c
     return forceId;
 }
 
-int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1, double maxCompression = 0, double maxStretch = 0, double originalLength = 0, int forceId = -1) {
+int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1.0, double maxCompression = 0.0, double maxStretch = 0.0, double originalLength = 0.0, int forceId = -1) {
     PhLink tmp(&points, idA, idB, spring_koef, damp_koef, originalLength);
-    if (maxCompression > 0 && maxStretch > 0)
+    if (maxCompression > SMALL_VAL && maxStretch > SMALL_VAL)
         tmp.setMaxComp(maxCompression, maxStretch);
 
     /* // ! prejsnja koda, cudna je (tale "size-1")
@@ -192,7 +195,9 @@ void PhWorld::update(double dt) {
     for (int i = 0; i < links.size; ++i) {
         // cout << "upd: " << i << endl;
         if (links.at_index(i)->update(dt)) { // requested self delete
-            if (consoleLogging) cout << "strgam link\n";
+#ifdef CONSOLE_LOGGING
+            cout << "strgam link\n";
+#endif
 
             int a = links.at_index(i)->idPointA, b = links.at_index(i)->idPointB;
             // cout << "gledam za pointe " << a << " in " << b << endl;
@@ -223,7 +228,9 @@ void PhWorld::update(double dt) {
 
     for (int i = 0; i < muscles.size; ++i) {
         if (muscles.at_index(i)->update(dt)) { // requested self delete
-            if (consoleLogging) cout << "strgam muscle\n";
+#ifdef CONSOLE_LOGGING
+            cout << "strgam muscle\n";
+#endif
             int a = muscles.at_index(i)->idPointA, b = muscles.at_index(i)->idPointB;
             muscles.remove_index(i);
             --i;

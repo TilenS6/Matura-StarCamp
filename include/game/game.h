@@ -1,5 +1,6 @@
 #pragma once
 #define GAME_EXISTS
+// #define CONSOLE_LOGGING
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -14,7 +15,8 @@
 #define WIDTH 1920 / 2
 #define HEIGHT 1080 / 2
 #define PHISICS_SUBSTEPS 5
-#define NETW_REQ_INTERVAL 0.5
+#define NETW_REQ_INTERVAL 0.1
+#define MAX_DT 0.005
 
 using namespace std;
 class Player;
@@ -64,6 +66,7 @@ class Game {
     Player player;
 
     NetClient client;
+    NetServer server;
     Timer netRequestTimer;
     thread networkThr;
 
@@ -72,18 +75,24 @@ class Game {
 
     bool serverRole;
 
+    bool halt = false, halting = false;
+
 public:
     Game();
     ~Game();
     void update();
 
     bool looping() { return running; }
-    static void networkManager(Game *);
+    static void networkManagerC(Game *); // static zarad thread-ov
+    static void networkManagerS(Game *); // static zarad thread-ov
+
     void requestInitialFromServer();
     void process_init();
     void process_update_all();
-    void send_init();
-    void send_update_all();
+    void send_init(int = -1);
+    void send_update_all(int = -1);
+
+    void process_updatePlayerControls();
 };
 
 #include "game/game.cpp"
