@@ -1,25 +1,25 @@
 #include "particles/particles.h"
 /*
     Rectangle r;
-    Point accel;
-    double accel_mult_second; // accel
+    Point vel;
+    double vel_mult_second; // vel
     SDL_Colour colour;
 */
-void Particle::init(Point spwnPnt, double size, Point initial_accel, double accel_mult_per_second, double rem_life_seconds, unsigned char red, unsigned char grn, unsigned char blu) {
+void Particle::init(Point spwnPnt, double size, Point initial_vel, double vel_mult_per_second, double rem_life_seconds, unsigned char red, unsigned char grn, unsigned char blu) {
     r.a = spwnPnt;
     r.dimensions.x = size;
     r.dimensions.y = size;
 
-    accel = initial_accel;
-    accel_mult_second = accel_mult_per_second;
+    vel = initial_vel;
+    vel_mult_second = vel_mult_per_second;
     rem_life = rem_life_seconds;
     init_life = rem_life_seconds;
     colour = {red, grn, blu, 255};
 }
 
 bool Particle::update(double dt) {
-    r.a += accel * dt;
-    accel *= 1 - ((1 - accel_mult_second) * dt);
+    r.a += vel * dt;
+    vel *= 1 - ((1 - vel_mult_second) * dt);
     rem_life -= dt;
     return rem_life <= 0;
 }
@@ -42,14 +42,14 @@ ParticleS::ParticleS() {
     ps.reserve_n_spots(256);
 }
 
-void ParticleS::create(Point spwnPnt, double size, double speed, double dir, double accel_mult_per_second, double rem_life_seconds, unsigned char red, unsigned char grn, unsigned char blu) {
+void ParticleS::create(Point spwnPnt, double size, double speed, double dir, double vel_mult_per_second, double rem_life_seconds, unsigned char red, unsigned char grn, unsigned char blu) {
     __spwnPnt = spwnPnt;
     __spwnPnt.x -= __size / 2;
     __spwnPnt.y += __size / 2;
     __size = size;
     __speed = speed;
     __dir = dir;
-    __accel_mult_per_second = accel_mult_per_second;
+    __vel_mult_per_second = vel_mult_per_second;
     __rem_life_seconds = rem_life_seconds;
     __red = red;
     __grn = grn;
@@ -71,7 +71,7 @@ void ParticleS::moveSpawner(Point new_spwnPoint, double new_dir) {
     __dir = new_dir;
 }
 
-void ParticleS::update(double dt, double addMult = 1.0, Point relAccel = {0, 0}) {
+void ParticleS::update(double dt, double addMult = 1.0, Point relvel = {0, 0}) {
     if (spawning) {
         spwnTimer += dt * addMult;
     }
@@ -83,8 +83,8 @@ void ParticleS::update(double dt, double addMult = 1.0, Point relAccel = {0, 0})
 
         double tmpDir = __dir + (randDir * ((rand() % 2001) - 1000) * 0.001);
         double tmpSpd = __speed + (randSpeed * ((rand() % 2001) - 1000) * 0.001);
-        ps.at_id(id)->init(__spwnPnt, __size, {((tmpSpd * cos(tmpDir)) + relAccel.x) * addMult, ((tmpSpd * sin(tmpDir)) + relAccel.y) * addMult}, __accel_mult_per_second, __rem_life_seconds + (randLife * ((rand() % 2001) - 1000) * 0.001), __red, __grn, __blu);
-        // ps.at_id(id)->accel = {spd * cos(dir), spd * sin(dir)};
+        ps.at_id(id)->init(__spwnPnt, __size, {((tmpSpd * cos(tmpDir)) + relvel.x) * addMult, ((tmpSpd * sin(tmpDir)) + relvel.y) * addMult}, __vel_mult_per_second, __rem_life_seconds + (randLife * ((rand() % 2001) - 1000) * 0.001), __red, __grn, __blu);
+        // ps.at_id(id)->vel = {spd * cos(dir), spd * sin(dir)};
     }
 
     for (int i = 0; i < ps.size; ++i) {

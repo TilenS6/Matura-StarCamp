@@ -2,7 +2,7 @@
 
 PhWorld::PhWorld() {
     gravity_accel = 9.81;
-    accel_mult_second = 1;
+    vel_mult_second = 1;
     points.set_memory_leak_safety(false);
     lineObst.set_memory_leak_safety(false);
     links.set_memory_leak_safety(false);
@@ -263,7 +263,7 @@ void PhWorld::update(double dt) {
 
     for (int i = 0; i < points.size; ++i) {
         points.at_index(i)->applyChanges(dt);
-        points.at_index(i)->accel *= 1 - ((1 - accel_mult_second) * dt);
+        points.at_index(i)->vel *= 1 - ((1 - vel_mult_second) * dt);
         auto p = points.at_index(i);
     }
     for (int i = 0; i < points.size; ++i) {

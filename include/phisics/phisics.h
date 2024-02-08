@@ -14,6 +14,7 @@ using namespace std;
 #define PIh PI / 2
 #define PI2 PI * 2
 #define SMALL_VAL (double)1e-6
+#define MAX_CONTROLL_LEN 8
 
 Camera *debCam = nullptr;
 
@@ -48,7 +49,7 @@ class PhPoint {
     void calculateCollisions(FastCont<bool> *, int, Line, Line, Line, double, Line *);
 
 public:
-    Point force, accel, currentSpeed; //currentSpeed = prejsnji accel
+    Point force, vel, currentSpeed; //currentSpeed = prejsnji velocity
     double mass, addedMass;
     FastCont<int> collisionGroups;
     FastCont<int> virtAvgPoints;
@@ -155,6 +156,7 @@ class PhRocketThr {
 
 public:
     ParticleS ps;
+    char controlls[MAX_CONTROLL_LEN];
 
     double power; // 0-1
     // double maxThrust; // [N]
@@ -232,7 +234,7 @@ public:
     FastCont<PhWeight> weights;
     FastCont<FuelCont> fuelConts;
     double gravity_accel;
-    double accel_mult_second;
+    double vel_mult_second;
 
     PhWorld();
 

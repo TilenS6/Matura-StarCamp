@@ -1,42 +1,52 @@
 #include "game/game.h"
 using namespace std;
 
-void Game::networkManagerS(Game *g) {
+void Game::networkManagerS(Game *g)
+{
     cout << "Server ran...\n";
     FastCont<int> clientIds;
-    while (g->running) {
-        if (!g->networkingActive || g->client.getConnectionStatus() != 0) {
+    while (g->running)
+    {
+        if (!g->networkingActive || g->client.getConnectionStatus() != 0)
+        {
             Sleep(1000);
             continue;
         }
 
         int id = g->server.acceptNewClient();
-        if (id >= 0) { // new client
+        if (id >= 0)
+        { // new client
             clientIds.push_back(id);
             cout << "Hello " << id << "!\n";
             g->send_init(id);
         }
 
-        for (int i = 0; i < clientIds.size; ++i) {
+        for (int i = 0; i < clientIds.size; ++i)
+        {
             int id = *clientIds.at_index(i);
             int res = g->server.recieveData(id);
-            switch (res) {
+            switch (res)
+            {
             case recieveData_NO_CLIENT_ERR:
             case recieveData_CONN_CLOSED_BY_CLIENT_ERR:
                 clientIds.remove_index(i);
                 --i;
                 break;
 
-            case recieveData_OK: {
+            case recieveData_OK:
+            {
                 RecievedData *rec = g->server.getLastData(id);
-                if (rec->len < 2) break; // minimum header len
+                if (rec->len < 2)
+                    break; // minimum header len
 
                 // char data[] = {NETSTD_HEADER_REQUEST, NETSTD_INIT};
 
-                switch (g->client.recvbuf[0]) {
+                switch (rec->data[0])
+                {
                 case NETSTD_HEADER_DATA:
                     //! INCOMING DATA
-                    switch (g->client.recvbuf[1]) {
+                    switch (rec->data[1])
+                    {
                     case NETSTD_UPDATE_PLAYER_CONTROLS:
                         g->process_updatePlayerControls();
                         break;
@@ -46,13 +56,17 @@ void Game::networkManagerS(Game *g) {
                     break;
                 case NETSTD_HEADER_REQUEST:
                     //! REQUEST
-                    switch (g->client.recvbuf[1]) {
+
+                    switch (rec->data[1])
+                    {
                     case NETSTD_INIT:
                         cout << "- init requested\n";
                         g->send_init(id);
                         break;
                     case NETSTD_UPDATE_ALL:
+                        cout << "- update all requested\n";
                         g->send_update_all(id);
+                        break;
                     default:
                         break;
                     }
@@ -79,7 +93,8 @@ void Game::networkManagerS(Game *g) {
 
 // poslje vse
 // TODO test
-void Game::send_init(int clientId) {
+void Game::send_init(int clientId)
+{
     char buff[MAX_BUF_LEN];
     // header
     buff[0] = NETSTD_HEADER_DATA;
@@ -91,10 +106,10 @@ void Game::send_init(int clientId) {
     // meta
     /*
         double gravity_accel;
-        double accel_mult_second;
+        double vel_mult_second;
     */
     writeBuff(buff, offset, phisics.gravity_accel);
-    writeBuff(buff, offset, phisics.accel_mult_second);
+    writeBuff(buff, offset, phisics.vel_mult_second);
 
     // points
     /*
@@ -105,7 +120,8 @@ void Game::send_init(int clientId) {
     uint32_t len = phisics.points.size;
     memcpy(&buff[offset], &len, sizeof(len));
     offset += sizeof(len);
-    for (int i = 0; i < phisics.points.size; ++i) {
+    for (int i = 0; i < phisics.points.size; ++i)
+    {
         int tmpid = phisics.points.get_id_at_index(i);
         writeBuff(buff, offset, tmpid);
 
@@ -118,7 +134,8 @@ void Game::send_init(int clientId) {
 
         uint32_t jn = phisics.points.at_index(i)->collisionGroups.size;
         writeBuff(buff, offset, jn);
-        for (int j = 0; j < jn; ++j) {
+        for (int j = 0; j < jn; ++j)
+        {
             int tmp3 = *phisics.points.at_index(i)->collisionGroups.at_index(j);
             writeBuff(buff, offset, tmp3);
         }
@@ -130,10 +147,10 @@ void Game::send_init(int clientId) {
 
         bool tmp3 = phisics.points.at_id(i)->virt;
         writeBuff(buff, offset, tmp3);
-        
-        tmp2 = phisics.points.at_id(i)->accel.x;
+
+        tmp2 = phisics.points.at_id(i)->vel.x;
         writeBuff(buff, offset, tmp2);
-        tmp2 = phisics.points.at_id(i)->accel.y;
+        tmp2 = phisics.points.at_id(i)->vel.y;
         writeBuff(buff, offset, tmp2);
     }
 
@@ -143,7 +160,8 @@ void Game::send_init(int clientId) {
     */
     len = phisics.lineObst.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.lineObst.size; ++i) {
+    for (int i = 0; i < phisics.lineObst.size; ++i)
+    {
         int tmp = phisics.lineObst.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -163,7 +181,8 @@ void Game::send_init(int clientId) {
     */
     len = phisics.links.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.links.size; ++i) {
+    for (int i = 0; i < phisics.links.size; ++i)
+    {
         int tmp = phisics.links.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -192,7 +211,8 @@ void Game::send_init(int clientId) {
     */
     len = phisics.muscles.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.muscles.size; ++i) {
+    for (int i = 0; i < phisics.muscles.size; ++i)
+    {
         int tmp = phisics.muscles.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -223,7 +243,8 @@ void Game::send_init(int clientId) {
     */
     len = phisics.linkObst.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.linkObst.size; ++i) {
+    for (int i = 0; i < phisics.linkObst.size; ++i)
+    {
         int tmp = phisics.linkObst.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -236,10 +257,14 @@ void Game::send_init(int clientId) {
     // rocketThrs
     /*
         int PhWorld::createNewThrOn(int attached, int facing, double shift_direction, double fuelConsumption = .3, double forceMult = 1) {
+            * + double power
+            * + int fuel_source
+            * + char[8] controlls
     */
     len = phisics.rocketThrs.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.rocketThrs.size; ++i) {
+    for (int i = 0; i < phisics.rocketThrs.size; ++i)
+    {
         int tmp = phisics.rocketThrs.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -255,6 +280,17 @@ void Game::send_init(int clientId) {
         writeBuff(buff, offset, tmp2);
         tmp2 = phisics.rocketThrs.at_index(i)->fuelForceMulti;
         writeBuff(buff, offset, tmp2);
+
+        tmp2 = phisics.rocketThrs.at_index(i)->power;
+        writeBuff(buff, offset, tmp2);
+        tmp = phisics.rocketThrs.at_index(i)->fuelContId;
+        writeBuff(buff, offset, tmp);
+
+        for (int j = 0; j < 8; ++j)
+        {
+            char tmp3 = phisics.rocketThrs.at_index(i)->controlls[j];
+            writeBuff(buff, offset, tmp3);
+        }
     }
 
     // fuelConts
@@ -263,7 +299,8 @@ void Game::send_init(int clientId) {
     */
     len = phisics.fuelConts.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.fuelConts.size; ++i) {
+    for (int i = 0; i < phisics.fuelConts.size; ++i)
+    {
         int tmp = phisics.fuelConts.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -272,7 +309,8 @@ void Game::send_init(int clientId) {
         tmp2 = phisics.fuelConts.at_index(i)->recharge;
         writeBuff(buff, offset, tmp2);
 
-        for (int j = 0; j < 4; ++j) {
+        for (int j = 0; j < 4; ++j)
+        {
             tmp = phisics.fuelConts.at_index(i)->pointIDs[j];
             writeBuff(buff, offset, tmp);
         }
@@ -285,14 +323,20 @@ void Game::send_init(int clientId) {
         writeBuff(buff, offset, tmp2);
     }
 
-    if (offset >= MAX_BUF_LEN) {
+    if (offset >= MAX_BUF_LEN)
+    {
         cout << "Data buffer overflowed, not sending anything\n";
         // TODO kaj ce OF
-    } else {
-        if (clientId == -1) {
+    }
+    else
+    {
+        if (clientId == -1)
+        {
             client.sendData(buff, offset);
             cout << "- init sent as client\n";
-        } else {
+        }
+        else
+        {
             server.sendData(clientId, buff, offset);
             cout << "- init sent as server (length: " << offset << ")\n";
         }
@@ -301,13 +345,118 @@ void Game::send_init(int clientId) {
     }
 }
 
+/*
+update (na vsake __ sek):
+    FastCont<PhPoint> points; (pos, vel)
+    FastCont<PhRocketThr> rocketThrs; (power)
+    FastCont<PhWeight> weights; (added weight?)
+    FastCont<FuelCont> fuelConts; (currentFuel)
+
+
+
+FastCont<__>:
+    st(uint32_T), [id, data],...
+
+
+
+packet:
+    HEADER - req/data, type
+    BODY - data
+    TRAILER - /
+
+*/
+
 // poslje del vsega
-void Game::send_update_all(int id) {
-    // TODO
-    cout << "todo send_update_all()\n";
+void Game::send_update_all(int clientId)
+{
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_UPDATE_ALL;
+    uint64_t offset = 2;
+
+    // points
+    /*
+        int id
+        double pos_x, pos_y
+        double vel_x, vel_y
+        * double added_weight
+    */
+    uint32_t len = phisics.points.size;
+    writeBuff(buff, offset, len);
+    for (uint32_t i = 0; i < len; ++i)
+    {
+        int id = phisics.points.get_id_at_index(i);
+        writeBuff(buff, offset, id);
+
+        Point tmp = phisics.points.at_index(i)->pos;
+        writeBuff(buff, offset, tmp.x);
+        writeBuff(buff, offset, tmp.y);
+
+        tmp = phisics.points.at_index(i)->vel;
+        writeBuff(buff, offset, tmp.x);
+        writeBuff(buff, offset, tmp.y);
+
+        double added_weight = phisics.points.at_index(i)->addedMass;
+        writeBuff(buff, offset, added_weight);
+    }
+
+    // rocketThrs
+    /*
+        int id
+        double power
+    */
+    len = phisics.rocketThrs.size;
+    writeBuff(buff, offset, len);
+    for (uint32_t i = 0; i < len; ++i)
+    {
+        int id = phisics.rocketThrs.get_id_at_index(i);
+        writeBuff(buff, offset, id);
+
+        double power = phisics.rocketThrs.at_index(i)->power;
+        writeBuff(buff, offset, power);
+    }
+
+    // fuelConts
+    /*
+        int id
+        double currentFuel
+    */
+    len = phisics.fuelConts.size;
+    writeBuff(buff, offset, len);
+    for (uint32_t i = 0; i < len; ++i)
+    {
+        int id = phisics.fuelConts.get_id_at_index(i);
+        writeBuff(buff, offset, id);
+
+        double currentFuel = phisics.fuelConts.at_index(i)->currentFuel;
+        writeBuff(buff, offset, currentFuel);
+    }
+
+    if (offset >= MAX_BUF_LEN)
+    {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    }
+    else
+    {
+        if (clientId == -1)
+        {
+            client.sendData(buff, offset);
+            cout << "- all updated data sent as client\n";
+        }
+        else
+        {
+            server.sendData(clientId, buff, offset);
+            cout << "- all updated data sent as server (length: " << offset << ")\n";
+        }
+
+        // cout << "Data sent\n";
+    }
 }
 
-void Game::process_updatePlayerControls() {
+void Game::process_updatePlayerControls()
+{
     // TODO
     cout << "todo process_updatePlayerControls()\n";
 }

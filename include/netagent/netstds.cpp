@@ -2,7 +2,7 @@
 
 /*
 initial (cel world, vse):
-    FastCont<PhPoint> points; (id, pos, accell, mass)
+    FastCont<PhPoint> points; (id, pos, vel, mass)
     FastCont<PhLineObst> lineObst;
     FastCont<PhLink> links;
     FastCont<PhMuscle> muscles;
@@ -11,12 +11,12 @@ initial (cel world, vse):
     FastCont<PhWeight> weights;
     FastCont<FuelCont> fuelConts;
     double gravity_accel;
-    double accel_mult_second;
+    double vel_mult_second;
 
 
 
 update (na vsake __ sek):
-    FastCont<PhPoint> points; (pos, accel)
+    FastCont<PhPoint> points; (pos, vel)
     FastCont<PhRocketThr> rocketThrs; (power)
     FastCont<PhWeight> weights; (added weight?)
     FastCont<FuelCont> fuelConts; (currentFuel)

@@ -3,8 +3,6 @@
 
 using namespace std;
 
-// TODO neki general multithreading: input events -- physics updating(?) -- rendering -- multiplayer handeling (?)
-
 int main(int argc, char *argv[]) {
     Game game;
 

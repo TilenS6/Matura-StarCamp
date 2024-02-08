@@ -11,21 +11,8 @@ string controlls[8] = {
     "DQ",
 };
 
-uint16_t charToScancode(char c) {
-    if (c > 'Z') c -= 'a' - 'A';
-
-    if (c >= 'A' && c <= 'Z') {
-        return c - 'A' + SDL_SCANCODE_A;
-    } else if (c >= '1' && c <= '9') {
-        return c - '1' + SDL_SCANCODE_1;
-    } else if (c == '0') {
-        return SDL_SCANCODE_0;
-    }
-
-    return SDL_SCANCODE_UNKNOWN;
-}
-
-void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, double off_y) {
+void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, double off_y)
+{
     w = world;
     kb = keyboard;
     double mult = 1. / 3.;
@@ -38,12 +25,13 @@ void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, d
         {4, 1, PIh},  // BW
         {4, 1, 0},    // L
         {6, 7, 0},    // L
-        {6, 5, 0},   // FW
-        {7, 0, 0},   // FW
+        {6, 5, 0},    // FW
+        {7, 0, 0},    // FW
         {7, 6, 0},    // R
     };
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < 8; ++i)
+    {
         int id = w->createNewPoint(p[i][0] * mult + off_x, p[i][1] * mult + off_y, 10, 0);
         ids.push_back(id);
     }
@@ -51,12 +39,14 @@ void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, d
     // nastavimo center (virtualna tocka -> povprecje vseh)
     centerId = w->createNewPoint(0, 0, 0, -1, 0, 0);
     w->points.at_id(centerId)->setVirtual(true);
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < 8; ++i)
+    {
         w->points.at_id(centerId)->virtAvgPoints.push_back(*ids.at_index(i));
     }
 
     // linke med vsemi
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < 8; ++i)
+    {
         w->createNewLinkBetween(*ids.at_index(i), *ids.at_index((i + 1) % 8), spring_hardness, spring_dampness);
     }
     // pa se vmes
@@ -78,15 +68,22 @@ void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, d
     // thr
     int pntTmp[4] = {*ids.at_index(5), *ids.at_index(6), *ids.at_index(7), *ids.at_index(0)};
     int fuelId = w->createNewFuelContainer(1, .03, pntTmp, 1, 1.5, 2000e3);
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < 8; ++i)
+    {
         int id = w->createNewThrOn(t[i][0], t[i][1], t[i][2], .01, 1);
 
         w->rocketThrs.at_id(id)->initPs(.05, 6, PI, .5, .3, 255, 255, 255);
         w->rocketThrs.at_id(id)->ps.setSpawnInterval(.01);
         w->rocketThrs.at_id(id)->ps.setRandomises(PI / 10, 1, .1);
+
         w->rocketThrs.at_id(id)->setFuelSource(fuelId);
 
-        thrs.push_back(id);
+        for (int j = 0; j < controlls[i].length(); ++j)
+        {
+            w->rocketThrs.at_id(id)->controlls[j] = controlls[i][j];
+        }
+
+        thrsId.push_back(id);
     }
 
     // teksture
@@ -95,7 +92,8 @@ void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, d
 
     p_min = {p[0][0], p[0][1]}, p_max = p_min;
     p_avg = p_min;
-    for (int i = 1; i < 8; ++i) {
+    for (int i = 1; i < 8; ++i)
+    {
         p_avg.x += p[i][0];
         p_avg.y += p[i][1];
 
@@ -112,18 +110,24 @@ void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, d
     p_avg /= 8;
 }
 
-void Player::update() {
-    for (int i = 0; i < thrs.size; ++i) {
+void Player::update()
+{
+    cout << "Neki klice Player::update()!\n";
+
+    for (int i = 0; i < thrsId.size; ++i)
+    {
 
         string tmp = controlls[i];
         bool st = false;
-        for (int j = 0; j < tmp.length(); ++j) {
-            if (kb->get((SDL_Scancode)charToScancode(tmp[j]))) {
+        for (int j = 0; j < tmp.length(); ++j)
+        {
+            if (kb->get((SDL_Scancode)charToScancode(tmp[j])))
+            {
                 st = true;
                 break;
             }
         }
-        w->rocketThrs.at_id(*thrs.at_index(i))->setState(st);
+        w->rocketThrs.at_id(*thrsId.at_index(i))->setState(st);
     }
 
     // w->rocketThrs.at_id(*thrs.at_index(0))->setState(kb->get(SDL_SCANCODE_D) || kb->get(SDL_SCANCODE_E));
@@ -136,9 +140,11 @@ void Player::update() {
     // w->rocketThrs.at_id(*thrs.at_index(7))->setState(kb->get(SDL_SCANCODE_D) || kb->get(SDL_SCANCODE_Q));
 }
 
-void Player::render(Camera *cam) {
+void Player::render(Camera *cam)
+{
     SDL_Vertex vert[9];
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < 8; ++i)
+    {
         Point point = {p[i][0], p[i][1]};
         Point rend = w->points.at_id(*ids.at_index(i))->getRenderPos(cam);
         vert[i] = {

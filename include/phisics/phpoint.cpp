@@ -3,7 +3,7 @@
 PhPoint::PhPoint(double x, double y, double _mass = 1., int collisionGroup = 0, double static_koef = 1., double kinetic_koef = .7) { // koef. for: concrete-rubber
     move(x, y);
     mass = _mass;
-    accel = {0, 0};
+    vel = {0, 0};
     force = {0, 0};
     addedMass = 0;
 
@@ -15,7 +15,7 @@ PhPoint::PhPoint(double x, double y, double _mass = 1., int collisionGroup = 0, 
 PhPoint::PhPoint(double x, double y, double _mass, FastCont<int> collisionGroupCont, double static_koef = 1., double kinetic_koef = .7) { // koef. for: concrete-rubber
     move(x, y);
     mass = _mass;
-    accel = {0, 0};
+    vel = {0, 0};
     force = {0, 0};
     addedMass = 0;
 
@@ -35,7 +35,7 @@ void PhPoint::setVirtual(bool isVirtual) {
     virt = isVirtual;
 }
 
-void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line movement, Line obstacle, Line obstAccel, double dt, Line *res = nullptr) {
+void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line movement, Line obstacle, Line obstVel, double dt, Line *res = nullptr) {
     bool foundCollision = false;
     Point closest, tmpForce = {0, 0};
     double dot = -1;
@@ -44,7 +44,7 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
         nowCircle.a = pos;
         nowCircle.setRadius(max(.01, distancePow2(movement.a, movement.b)));
         if (collisionLineCircle(obstacle, nowCircle, &closest, &dot)) {
-            Point obstAccelAtColl = {obstAccel.a.x * (1 - dot) + obstAccel.b.x * dot, obstAccel.a.y * (1 - dot) + obstAccel.b.y * dot};
+            Point obstVelAtColl = {obstVel.a.x * (1 - dot) + obstVel.b.x * dot, obstVel.a.y * (1 - dot) + obstVel.b.y * dot};
 
             foundCollision = true;
             double lineDir = atan2(obstacle.a.y - obstacle.b.y, obstacle.a.x - obstacle.b.x);
@@ -60,14 +60,14 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
 
             // keeping only dinamic force/acceleration
             double Fd = sinLineDir * force.y + cosLineDir * force.x;
-            double Ad = sinLineDir * (accel.y - obstAccelAtColl.y) + cosLineDir * (accel.x - obstAccelAtColl.x); // pospesek je relativen na oviro
+            double Ad = sinLineDir * (vel.y - obstVelAtColl.y) + cosLineDir * (vel.x - obstVelAtColl.x); // pospesek je relativen na oviro
 
             // friction force
             double Ff = 0;
             if (abs(Ad) > .02) { // if it is moving and is to use kinetic fritction
                 Ff = Fs * KoF_kinetic;
                 if (Ad > 0)
-                    Ff *= -1; // point to oposite direction of acceleration
+                    Ff *= -1; // point to oposite direction of velocity
             } else {
                 if (abs(Fd) <= KoF_static * Fs) {
                     Ff = -Fd;
@@ -87,7 +87,7 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
             }
 
             // same for acceleration
-            accel = {Ad * cosLineDir + obstAccelAtColl.x, Ad * sinLineDir + obstAccelAtColl.y};
+            vel = {Ad * cosLineDir + obstVelAtColl.x, Ad * sinLineDir + obstVelAtColl.y};
 
             pos = closest;
         }
@@ -99,10 +99,10 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
             double len2 = sqrt(dx * dx + dy * dy);
             dot = len2 / len;
 
-            Point obstAccelAtColl = {obstAccel.a.x * (1 - dot) + obstAccel.b.x * dot, obstAccel.a.y * (1 - dot) + obstAccel.b.y * dot};
+            Point obstVelAtColl = {obstVel.a.x * (1 - dot) + obstVel.b.x * dot, obstVel.a.y * (1 - dot) + obstVel.b.y * dot};
             double lineDir = atan2(obstacle.a.y - obstacle.b.y, obstacle.a.x - obstacle.b.x);
             double sinLineDir = sin(lineDir), cosLineDir = cos(lineDir);
-            double As = cosLineDir * accel.y - sinLineDir * accel.x;
+            double As = cosLineDir * vel.y - sinLineDir * vel.x;
             if (As < 0) return; // if it is moving from wrong direction, in same way as normal (normal collision face/side of obstacle)
 
             // cout << "new at " << i << endl;
@@ -122,8 +122,8 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
             }
 
             // same for acceleration
-            double Ad = sinLineDir * (accel.y - obstAccelAtColl.y) + cosLineDir * (accel.x - obstAccelAtColl.x);
-            accel = {Ad * cosLineDir + obstAccelAtColl.x, Ad * sinLineDir + obstAccelAtColl.y};
+            double Ad = sinLineDir * (vel.y - obstVelAtColl.y) + cosLineDir * (vel.x - obstVelAtColl.x);
+            vel = {Ad * cosLineDir + obstVelAtColl.x, Ad * sinLineDir + obstVelAtColl.y};
 
             // snap on the closest point on line -> prevent fazing trough it
             pos = closest;
@@ -164,7 +164,7 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
             *touchingLinksList.at_index(i) = false;
     }
 
-    Point nextPos = pos + (accel + (force / (mass + addedMass)) * dt) * dt;
+    Point nextPos = pos + (vel + (force / (mass + addedMass)) * dt) * dt;
     Line movement = {pos, nextPos};
     for (int i = 0; i < obst->size; ++i) {
         // ali je v istem collision groupu
@@ -178,8 +178,8 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
         if (!found) continue;
 
         Line obstacle = obst->at_index(i)->line;
-        Line obstAccel = {{0, 0}, {0, 0}};
-        calculateCollisions(&touchingList, i, movement, obstacle, obstAccel, dt);
+        Line obstVel = {{0, 0}, {0, 0}};
+        calculateCollisions(&touchingList, i, movement, obstacle, obstVel, dt);
     }
     for (int i = 0; i < linkObst->size; ++i) {
         // ali je v istem collision groupu
@@ -196,29 +196,29 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
         PhPoint *b = (points->at_id(links->at_id(linkObst->at_index(i)->linkId)->idPointB));
         if (a == nullptr || b == nullptr) cout << "!E: ne dobim ID pointa, phisics > resolveCollision\n";
         Line obstacle = {a->pos, b->pos};
-        Line obstAccel = {a->accel, b->accel};
+        Line obstVel = {a->vel, b->vel};
 
         // TODO to ne dela neki najbols... ampak je ok...
-        Point avgMovement = ((obstAccel.a + obstAccel.b) / 2) * dt * dt;
+        Point avgMovement = ((obstVel.a + obstVel.b) / 2) * dt * dt;
         Line movementToObst = {movement.a - avgMovement * 5, movement.b};
 
         Line result = {0, 0};
-        calculateCollisions(&touchingLinksList, i, movementToObst, obstacle, obstAccel, dt, &result); // zakaj vcasih kr skoci cez zid, you may ask... movement je samo prediction, ne pa to kam res gre, zato se lahko malo spremeni in je pol... grozno
+        calculateCollisions(&touchingLinksList, i, movementToObst, obstacle, obstVel, dt, &result); // zakaj vcasih kr skoci cez zid, you may ask... movement je samo prediction, ne pa to kam res gre, zato se lahko malo spremeni in je pol... grozno
 
         // 3. Newtonov zakon
         a->force -= result.a;
         b->force -= result.b;
     }
 
-    accel += (force / (mass + addedMass)) * dt;
+    vel += (force / (mass + addedMass)) * dt;
     force = {0, 0};
 }
 
 void PhPoint::applyChanges(double dt) {
     if (virt) return;
     // samo za NE virtual
-    pos += accel * dt;
-    currentSpeed = accel;
+    pos += vel * dt;
+    currentSpeed = vel;
 }
 
 void PhPoint::updateVirtual(PhWorld *world) {

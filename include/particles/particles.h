@@ -14,8 +14,8 @@ class ParticleS;
 
 class Particle {
     Rectangle r;
-    Point accel;
-    double accel_mult_second; // accel *= 1 - ((1 - accel_mult_second) * dt);
+    Point vel;
+    double vel_mult_second; // vel *= 1 - ((1 - vel_mult_second) * dt);
     double rem_life, init_life;
     SDL_Colour colour;
 
@@ -33,10 +33,10 @@ class ParticleS {
 
     Point __spwnPnt;
     double __size;
-    // Point __initial_accel;
+    // Point __initial_vel;
     double __speed;
     double __dir;
-    double __accel_mult_per_second;
+    double __vel_mult_per_second;
     double __rem_life_seconds;
     unsigned char __red;
     unsigned char __grn;

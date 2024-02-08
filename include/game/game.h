@@ -42,7 +42,7 @@ class Player {
     Keyboard *kb;
     int centerId;
     FastCont<int> ids;  // 8+1
-    FastCont<int> thrs; // 8
+    FastCont<int> thrsId; // 8
 
     SDL_Texture *texture;
 
@@ -50,6 +50,8 @@ public:
     void init(PhWorld *, Keyboard *, Camera *, double, double);
     void update();
     void render(Camera *);
+
+    friend class Game;
 };
 
 class Game {
@@ -87,6 +89,7 @@ public:
     static void networkManagerS(Game *); // static zarad thread-ov
 
     void requestInitialFromServer();
+    void requestUpdateAllFromServer();
     void process_init();
     void process_update_all();
     void send_init(int = -1);
