@@ -112,3 +112,5 @@ public:
 
 #include "game/game.cpp"
 #include "game/player.cpp"
+
+// TODO: teksture gor na clientih + player.h dej nekak stran, nared "generator.h" al neki
