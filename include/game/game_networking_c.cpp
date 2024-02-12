@@ -1,57 +1,52 @@
 #include "game/game.h"
 
-void Game::requestInitialFromServer()
-{
+void Game::requestInitialFromServer() {
+#ifdef CONSOLE_LOGGING
     cout << "- init requested...\n";
-    if (client.getConnectionStatus() != 0)
-    {
+#endif
+    if (client.getConnectionStatus() != 0) {
         cout << "E@ Game::requestInitialFromServer() - Server error!\n";
     }
     char data[] = {NETSTD_HEADER_REQUEST, NETSTD_INIT};
     client.sendData(data, sizeof(data));
 }
 
-void Game::requestUpdateAllFromServer()
-{
+void Game::requestUpdateAllFromServer() {
+#ifdef CONSOLE_LOGGING
     cout << "- update all requested...\n";
-    if (client.getConnectionStatus() != 0)
-    {
+#endif
+    if (client.getConnectionStatus() != 0) {
         cout << "E@ Game::requestInitialFromServer() - Server error!\n";
     }
     char data[] = {NETSTD_HEADER_REQUEST, NETSTD_UPDATE_ALL};
     client.sendData(data, sizeof(data));
 }
 
-void Game::networkManagerC(Game *g)
-{
+void Game::networkManagerC(Game *g) {
     cout << "Client ran...\n";
     g->netRequestTimer.interval();
-    while (g->running)
-    {
-        if (!g->networkingActive || g->client.getConnectionStatus() != 0)
-        {
+    while (g->running) {
+        if (!g->networkingActive || g->client.getConnectionStatus() != 0) {
             cout << "client.getConnectionStatus(): " << g->client.getConnectionStatus() << endl;
             Sleep(1000);
             continue;
         }
         int ret = g->client.recieveData();
-        if (ret != recieveData_NO_NEW_DATA)
-        {
+        if (ret != recieveData_NO_NEW_DATA) {
+#ifdef CONSOLE_LOGGING
             cout << "Data recieved!\n";
+#endif
             g->halt = true;
-            while (!g->halting)
-            {
+            while (!g->halting) {
                 asm("nop");
             }
             if (g->client.recvbuflen < 2)
                 continue;
 
-            switch (g->client.recvbuf[0])
-            {
+            switch (g->client.recvbuf[0]) {
             case NETSTD_HEADER_DATA:
                 //! NEW DATA
-                switch (g->client.recvbuf[1])
-                {
+                switch (g->client.recvbuf[1]) {
                 case NETSTD_INIT:
                     g->process_init();
                     break;
@@ -63,8 +58,7 @@ void Game::networkManagerC(Game *g)
                 break;
             case NETSTD_HEADER_REQUEST:
                 //! REQUEST
-                switch (g->client.recvbuf[1])
-                {
+                switch (g->client.recvbuf[1]) {
                 case NETSTD_INIT:
                     g->send_init();
                     break;
@@ -81,13 +75,11 @@ void Game::networkManagerC(Game *g)
             g->halt = false;
         }
 
-        if (g->netRequestTimer.getTime() >= NETW_REQ_INTERVAL)
-        {
+        if (g->netRequestTimer.getTime() >= NETW_REQ_INTERVAL) {
             g->netRequestTimer.interval();
+#ifdef CONSOLE_LOGGING
             cout << "- request sent\n";
-
-            // TODO send data + request new data
-            // g->requestInitialFromServer(); //! TEMP
+#endif
             g->requestUpdateAllFromServer();
         }
     }
@@ -129,12 +121,7 @@ packet:
 */
 
 // prepise vse
-#define readBuff(buff, offset, a)         \
-    memcpy(&a, buff + offset, sizeof(a)); \
-    offset += sizeof(a);
-
-void Game::process_init()
-{
+void Game::process_init() {
     int bufflen = client.recvbuflen;
     char buff[bufflen];
     memcpy(&buff, client.recvbuf, bufflen);
@@ -162,8 +149,7 @@ void Game::process_init()
     */
     uint32_t len;
     readBuff(buff, offset, len);
-    for (uint32_t i = 0; i < len; ++i)
-    {
+    for (uint32_t i = 0; i < len; ++i) {
         int id;
         double x;
         double y;
@@ -185,8 +171,7 @@ void Game::process_init()
 
         uint32_t jn;
         readBuff(buff, offset, jn);
-        for (uint32_t j = 0; j < jn; ++j)
-        {
+        for (uint32_t j = 0; j < jn; ++j) {
             int tmp;
             readBuff(buff, offset, tmp);
             collisionGroup.push_back(tmp);
@@ -209,8 +194,7 @@ void Game::process_init()
         int PhWorld::createNewLineObst(double x1, double y1, double x2, double y2, int coll_group = 0) {
     */
     readBuff(buff, offset, len);
-    for (uint32_t i = 0; i < len; ++i)
-    {
+    for (uint32_t i = 0; i < len; ++i) {
         int id;
         double x1;
         double y1;
@@ -235,8 +219,7 @@ void Game::process_init()
         int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
     */
     readBuff(buff, offset, len);
-    for (uint32_t i = 0; i < len; ++i)
-    {
+    for (uint32_t i = 0; i < len; ++i) {
         int id;
         int idA;
         int idB;
@@ -265,8 +248,7 @@ void Game::process_init()
         int PhWorld::createNewMuscleBetween(int idA, int idB, double spring_koef = 100, double damp_koef = 10, double muscle_range = .5, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
     */
     readBuff(buff, offset, len);
-    for (uint32_t i = 0; i < len; ++i)
-    {
+    for (uint32_t i = 0; i < len; ++i) {
         int id;
         int idA;
         int idB;
@@ -297,8 +279,7 @@ void Game::process_init()
         int PhWorld::createNewLinkObst(int linkId, int collG = 0) {
     */
     readBuff(buff, offset, len);
-    for (uint32_t i = 0; i < len; ++i)
-    {
+    for (uint32_t i = 0; i < len; ++i) {
         int id;
         int linkId;
         int collG;
@@ -319,8 +300,7 @@ void Game::process_init()
             * + char[8] controlls
     */
     readBuff(buff, offset, len);
-    for (uint32_t i = 0; i < len; ++i)
-    {
+    for (uint32_t i = 0; i < len; ++i) {
         int id;
         int attached;
         int facing;
@@ -350,8 +330,7 @@ void Game::process_init()
         phisics.rocketThrs.at_id(id)->ps.setSpawnInterval(.01);
         phisics.rocketThrs.at_id(id)->ps.setRandomises(PI / 10, 1, .1);
 
-        for (int i = 0; i < 8; ++i)
-        {
+        for (int i = 0; i < 8; ++i) {
             char tmp;
             readBuff(buff, offset, tmp);
             phisics.rocketThrs.at_id(id)->controlls[i] = tmp;
@@ -363,8 +342,7 @@ void Game::process_init()
         int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit=50000) {
     */
     readBuff(buff, offset, len);
-    for (uint32_t i = 0; i < len; ++i)
-    {
+    for (uint32_t i = 0; i < len; ++i) {
         int id;
         double _capacity;
         double recharge_per_second;
@@ -379,8 +357,7 @@ void Game::process_init()
         readBuff(buff, offset, _capacity);
         readBuff(buff, offset, recharge_per_second);
 
-        for (int i = 0; i < 4; ++i)
-        {
+        for (int i = 0; i < 4; ++i) {
             readBuff(buff, offset, pointIdsForWeights[i]);
         }
 
@@ -397,8 +374,7 @@ void Game::process_init()
 }
 
 // prepise del vsega
-void Game::process_update_all()
-{
+void Game::process_update_all() {
     int bufflen = client.recvbuflen;
     char buff[bufflen];
     memcpy(&buff, client.recvbuf, bufflen);
@@ -414,8 +390,7 @@ void Game::process_update_all()
     */
     uint32_t len;
     readBuff(buff, offset, len);
-    for (uint32_t i = 0; i < len; ++i)
-    {
+    for (uint32_t i = 0; i < len; ++i) {
         int id;
         double pos_x, pos_y;
         double vel_x, vel_y;
@@ -442,11 +417,10 @@ void Game::process_update_all()
         double power
     */
     readBuff(buff, offset, len);
-    for (uint32_t i = 0; i < len; ++i)
-    {
+    for (uint32_t i = 0; i < len; ++i) {
         int id;
         double power;
-        
+
         readBuff(buff, offset, id);
         readBuff(buff, offset, power);
 
@@ -459,8 +433,7 @@ void Game::process_update_all()
         double currentFuel
     */
     readBuff(buff, offset, len);
-    for (uint32_t i = 0; i < len; ++i)
-    {
+    for (uint32_t i = 0; i < len; ++i) {
         int id;
         double currentFuel;
 
@@ -473,4 +446,29 @@ void Game::process_update_all()
     cout << "Update all data processed\n";
     cout << "offset on " << offset << "/" << client.recvbuflen << endl;
 #endif
+}
+
+/*
+header: DATA, CONTROLS
+data: (int)thrID_1, (double)power_1, ...
+*/
+
+void Game::send_updatePlayerControls() { // TODO to se lahko izvaja v posebnem threadu
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_UPDATE_PLAYER_CONTROLS;
+    uint64_t offset = 2;
+
+    int n = thrSendBuffer.size;
+    writeBuff(buff, offset, n);
+
+    for (int i = 0; i < thrSendBuffer.size; ++i) {
+        int tmp = thrSendBuffer.get_id_at_index(i);
+        writeBuff(buff, offset, tmp);
+        double st = *thrSendBuffer.at_index(i);
+        writeBuff(buff, offset, st);
+    }
+
+    client.sendData(buff, offset);
 }

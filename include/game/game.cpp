@@ -2,29 +2,22 @@
 #include "game/game.h"
 string srvrName = "127.0.0.1";
 
-uint16_t charToScancode(char c)
-{
+uint16_t charToScancode(char c) {
     if (c > 'Z')
         c -= 'a' - 'A';
 
-    if (c >= 'A' && c <= 'Z')
-    {
+    if (c >= 'A' && c <= 'Z') {
         return c - 'A' + SDL_SCANCODE_A;
-    }
-    else if (c >= '1' && c <= '9')
-    {
+    } else if (c >= '1' && c <= '9') {
         return c - '1' + SDL_SCANCODE_1;
-    }
-    else if (c == '0')
-    {
+    } else if (c == '0') {
         return SDL_SCANCODE_0;
     }
 
     return SDL_SCANCODE_UNKNOWN;
 }
 
-Game::Game()
-{
+Game::Game() {
     cout << "Run as server? ";
     cin >> serverRole;
 
@@ -33,21 +26,18 @@ Game::Game()
     phisics.gravity_accel = 0; // vesolje
     phisics.vel_mult_second = .5;
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
-    {
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         cout << "Error initializing SDL: " << SDL_GetError() << endl;
         return;
     }
     wind = SDL_CreateWindow("StarCamp", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0); // SDL_WINDOW_BORDERLESS namesto 0
-    if (!wind)
-    {
+    if (!wind) {
         cout << "Error creating window: " << SDL_GetError() << endl;
         SDL_Quit();
         return;
     }
     cam.assignRenderer(SDL_CreateRenderer(wind, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
-    if (!cam.r)
-    {
+    if (!cam.r) {
         cout << "Error creating renderer: " << SDL_GetError() << endl;
         SDL_DestroyWindow(wind);
         SDL_Quit();
@@ -85,13 +75,10 @@ Game::Game()
 
     // -------- net --------
 
-    if (serverRole)
-    {
+    if (serverRole) {
         server.init();
         networkThr = thread(networkManagerS, this);
-    }
-    else
-    {
+    } else {
         client.init(srvrName);
         networkThr = thread(networkManagerC, this);
         // send_init();
@@ -100,8 +87,7 @@ Game::Game()
     networkingActive = true;
 }
 
-Game::~Game()
-{
+Game::~Game() {
     TTF_Quit();
     SDL_DestroyRenderer(cam.r);
     SDL_DestroyWindow(wind);
@@ -111,27 +97,22 @@ Game::~Game()
     client.closeConnection();
 }
 
-void Game::update()
-{
-    while (halt)
-    {
+void Game::update() {
+    while (halt) {
         halting = true;
     }
     halting = false;
     double dt = t.interval();
     SDL_Event event;
-    while (SDL_PollEvent(&event))
-    {
+    while (SDL_PollEvent(&event)) {
         kb.update(event);
-        switch (event.type)
-        {
+        switch (event.type) {
         case SDL_QUIT:
             running = false;
             break;
 
         case SDL_KEYDOWN:
-            switch (event.key.keysym.scancode)
-            {
+            switch (event.key.keysym.scancode) {
             case SDL_SCANCODE_ESCAPE:
                 running = false;
                 break;
@@ -143,8 +124,7 @@ void Game::update()
             break;
 
         case SDL_KEYUP:
-            switch (event.key.keysym.scancode)
-            {
+            switch (event.key.keysym.scancode) {
             case SDL_SCANCODE_SPACE:
                 break;
 
@@ -158,12 +138,10 @@ void Game::update()
     }
 
     uint8_t m_ev = m.update();
-    if (m_ev & Mouse::M_LClickMask)
-    {
+    if (m_ev & Mouse::M_LClickMask) {
         cout << "L click at " << m.x << ", " << m.y << endl;
     }
-    if (m_ev & Mouse::M_RClickMask)
-    {
+    if (m_ev & Mouse::M_RClickMask) {
         cout << "R click at " << m.x << ", " << m.y << endl;
     }
 
@@ -178,66 +156,46 @@ void Game::update()
     // }
 
     double dtPerStep = dt / PHISICS_SUBSTEPS;
-    if (dtPerStep > MAX_DT)
-    {
+    if (dtPerStep > MAX_DT) {
         cout << "dt capped\n";
         dtPerStep = MAX_DT;
     }
-    for (int i = 0; i < PHISICS_SUBSTEPS; ++i)
-    {
+    // clear send buffer
+    while (thrSendBuffer.size > 0)
+        thrSendBuffer.pop_back();
+
+    for (int i = 0; i < PHISICS_SUBSTEPS; ++i) {
         phisics.applyGravity();
+        if (!serverRole) {
 
-        for (int i = 0; i < phisics.rocketThrs.size; ++i)
-        {
-            bool st = false;
-            for (int j = 0; j < 8; ++j)
-            {
-                char c = phisics.rocketThrs.at_index(i)->controlls[j];
-                if (c == 0)
-                    break;
+            for (int i = 0; i < phisics.rocketThrs.size; ++i) {
+                double st = 0;
+                for (int j = 0; j < 8; ++j) {
+                    char c = phisics.rocketThrs.at_index(i)->controlls[j];
+                    if (c == 0)
+                        break;
 
-                if (kb.get((SDL_Scancode)charToScancode(c)))
-                {
-                    st = true;
-                    // cout << "PRTISNU " << c << endl;
-                    break;
+                    if (kb.get((SDL_Scancode)charToScancode(c))) {
+                        st = 1;
+                        // cout << "PRTISNU " << c << endl;
+                        break;
+                    }
+                }
+                if (phisics.rocketThrs.at_index(i)->power != st) {
+                    thrSendBuffer.force_import(phisics.rocketThrs.get_id_at_index(i), st);
+                    phisics.rocketThrs.at_index(i)->setState(st);
                 }
             }
-            phisics.rocketThrs.at_index(i)->setState(st);
+
+            if (thrSendBuffer.size > 0)
+                send_updatePlayerControls();
         }
 
-        /*
-        if (kb.get(SDL_SCANCODE_W)) {
-            for (int i = 0; i < 3; ++i) {
-                phisics.points.at_index(i)->force.y += 15 * (1 + kb.get(SDL_SCANCODE_LSHIFT) * 5);
-            }
-        }
-        if (kb.get(SDL_SCANCODE_S)) {
-            for (int i = 0; i < 3; ++i) {
-                phisics.points.at_index(i)->force.y -= 15 * (1 + kb.get(SDL_SCANCODE_LSHIFT) * 5);
-            }
-        }
-        if (kb.get(SDL_SCANCODE_A)) {
-            for (int i = 0; i < 3; ++i) {
-                phisics.points.at_index(i)->force.x -= 15 * (1 + kb.get(SDL_SCANCODE_LSHIFT) * 5);
-            }
-        }
-        if (kb.get(SDL_SCANCODE_D)) {
-            for (int i = 0; i < 3; ++i) {
-                phisics.points.at_index(i)->force.x += 15 * (1 + kb.get(SDL_SCANCODE_LSHIFT) * 5);
-            }
-        }
-        phisics.rocketThrs.at_id(0)->setState(kb.get(SDL_SCANCODE_UP));
-        phisics.rocketThrs.at_id(1)->setState(kb.get(SDL_SCANCODE_UP));
-        phisics.rocketThrs.at_id(2)->setState(kb.get(SDL_SCANCODE_UP));
-        */
         phisics.update(dtPerStep);
-    }
 
-    // particleSystem.spawning = kb.get(SDL_SCANCODE_SPACE);
-
-    for (int i = 0; i < particleSs.size; ++i)
-        particleSs.at_index(i)->update(dt);
+        for (int i = 0; i < particleSs.size; ++i)
+            particleSs.at_index(i)->update(dt);
+    } // end: substeping
 
     SDL_SetRenderDrawColor(cam.r, 5, 5, 5, 255); // r b g a
     SDL_RenderClear(cam.r);
@@ -250,16 +208,11 @@ void Game::update()
     for (int i = 0; i < particleSs.size; ++i)
         particleSs.at_index(i)->render(&cam);
 
-    if (drawRuller)
-    {
-        for (uint16_t y = 0, y2 = 0; y < cam.h; y += cam.scale)
-        {
-            if (y2)
-            {
+    if (drawRuller) {
+        for (uint16_t y = 0, y2 = 0; y < cam.h; y += cam.scale) {
+            if (y2) {
                 SDL_SetRenderDrawColor(cam.r, 255, 0, 0, 255);
-            }
-            else
-            {
+            } else {
                 SDL_SetRenderDrawColor(cam.r, 0, 0, 255, 255);
             }
             y2 = !y2;

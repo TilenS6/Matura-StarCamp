@@ -24,6 +24,14 @@ class Particle;
 class ParticleS;
 class Game;
 
+#define writeBuff(buff, offset, a)        \
+    memcpy(&buff[offset], &a, sizeof(a)); \
+    offset += sizeof(a);
+
+#define readBuff(buff, offset, a)         \
+    memcpy(&a, buff + offset, sizeof(a)); \
+    offset += sizeof(a);
+
 class Player {
     double p[8][2] = {
         // initial points
@@ -41,7 +49,7 @@ class Player {
     PhWorld *w;
     Keyboard *kb;
     int centerId;
-    FastCont<int> ids;  // 8+1
+    FastCont<int> ids;    // 8+1
     FastCont<int> thrsId; // 8
 
     SDL_Texture *texture;
@@ -79,6 +87,9 @@ class Game {
 
     bool halt = false, halting = false;
 
+    // ---- client ----
+    FastCont<double> thrSendBuffer;
+
 public:
     Game();
     ~Game();
@@ -95,7 +106,8 @@ public:
     void send_init(int = -1);
     void send_update_all(int = -1);
 
-    void process_updatePlayerControls();
+    void send_updatePlayerControls();
+    void process_updatePlayerControls(RecievedData *);
 };
 
 #include "game/game.cpp"

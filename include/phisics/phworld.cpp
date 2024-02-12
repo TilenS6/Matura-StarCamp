@@ -14,9 +14,9 @@ PhWorld::PhWorld() {
     fuelConts.set_memory_leak_safety(false);
 }
 void PhWorld::resetWorld() {
-            #ifdef CONSOLE_LOGGING
+#ifdef CONSOLE_LOGGING
     cout << "RESETAM WORLD!!!\n";
-            #endif
+#endif
     gravity_accel = 9.81;
 
     // remove data

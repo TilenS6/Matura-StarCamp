@@ -67,7 +67,7 @@ void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, d
 
     // thr
     int pntTmp[4] = {*ids.at_index(5), *ids.at_index(6), *ids.at_index(7), *ids.at_index(0)};
-    int fuelId = w->createNewFuelContainer(1, .03, pntTmp, 1, 1.5, 2000e3);
+    int fuelId = w->createNewFuelContainer(1, .03, pntTmp, 1, 1.5, 10e3);
     for (int i = 0; i < 8; ++i)
     {
         int id = w->createNewThrOn(t[i][0], t[i][1], t[i][2], .01, 1);
