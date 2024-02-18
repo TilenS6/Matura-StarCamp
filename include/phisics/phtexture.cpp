@@ -83,6 +83,4 @@ void PhTexture::render(Camera *cam, PhWorld *w) {
     }
 
     SDL_RenderGeometry(cam->r, texture, vert, indiciesTrises.size * 3, NULL, 0);
-
-#pragma message("tole na clientu ne rendra!")
 }

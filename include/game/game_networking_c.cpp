@@ -144,7 +144,7 @@ void Game::process_init() {
     // points
     /*
         int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7) {
-        * + bool virt
+        * + bool virt (if virt: uint16_t len, id1, id2,...)
         * + double velocity_x, double velocity_y
     */
     uint32_t len;
@@ -179,13 +179,26 @@ void Game::process_init() {
 
         readBuff(buff, offset, static_koef);
         readBuff(buff, offset, kinetic_koef);
+
         readBuff(buff, offset, virt);
+        phisics.createNewPoint(x, y, mass, collisionGroup, static_koef, kinetic_koef, id);
+        phisics.points.at_id(id)->setVirtual(virt);
+
+        if (virt) {
+            uint16_t len;
+            readBuff(buff, offset, len);
+            for (uint16_t j = 0; j < len; ++j) {
+                int tmpid;
+                readBuff(buff, offset, tmpid);
+                phisics.points.at_id(id)->virtAvgPoints.push_back(tmpid);
+                cout << tmpid << ",";
+            }
+            cout << endl;
+        }
 
         readBuff(buff, offset, velocity_x);
         readBuff(buff, offset, velocity_y);
 
-        phisics.createNewPoint(x, y, mass, collisionGroup, static_koef, kinetic_koef, id);
-        phisics.points.at_id(id)->setVirtual(virt);
         phisics.points.at_id(id)->vel = {velocity_x, velocity_y};
     }
 
@@ -419,6 +432,7 @@ void Game::process_init() {
             readBuff(buff, offset, normC.y);
 
             tx->push_indicie(idA, idB, idC, normA, normB, normC);
+            cout << idA << "," << idB << "," << idC << ": " << normA.x << "," << normA.y << ";" << normB.x << "," << normB.y << ";" << normC.x << "," << normC.y << "," << endl;
         }
     }
 #ifdef CONSOLE_LOGGING

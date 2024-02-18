@@ -105,7 +105,7 @@ void Game::send_init(int clientId) {
     // points
     /*
         int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7) {
-        * + bool virt
+        * + bool virt (if virt: uint16_t len, id1, id2,...)
         * + double velocity_x, double velocity_y
     */
     uint32_t len = phisics.points.size;
@@ -136,6 +136,15 @@ void Game::send_init(int clientId) {
 
         bool tmp3 = phisics.points.at_id(i)->virt;
         writeBuff(buff, offset, tmp3);
+
+        if (tmp3) {
+            uint16_t len = phisics.points.at_index(i)->virtAvgPoints.size;
+            writeBuff(buff, offset, len);
+            for (uint16_t j = 0; j < len; ++j) {
+                tmpid = *phisics.points.at_index(i)->virtAvgPoints.at_index(j);
+                writeBuff(buff, offset, tmpid);
+            }
+        }
 
         tmp2 = phisics.points.at_id(i)->vel.x;
         writeBuff(buff, offset, tmp2);
