@@ -304,6 +304,55 @@ void Game::send_init(int clientId) {
         writeBuff(buff, offset, tmp2);
     }
 
+    // textures
+    /*
+        (chars, ends with \0) path
+        --- FastCont<PhTextureTris>
+        (int) len
+        (int) idA, idB, idC
+        (double) normA_x, normA_y, normB...
+    */
+    len = phisics.textures.size;
+    writeBuff(buff, offset, len);
+    for (int i = 0; i < phisics.textures.size; ++i) {
+        int tmp = phisics.textures.get_id_at_index(i);
+        writeBuff(buff, offset, tmp);
+
+        for (int j = 0; j < phisics.textures.at_index(i)->orgPath.size(); ++j) {
+            char c = phisics.textures.at_index(i)->orgPath[j];
+            writeBuff(buff, offset, c);
+        }
+        char c = '\0';
+        writeBuff(buff, offset, c);
+
+        uint32_t jn = phisics.textures.at_index(i)->indiciesTrises.size;
+        writeBuff(buff, offset, jn);
+        for (uint32_t j = 0; j < jn; ++j) {
+            PhTextureTris *tr = phisics.textures.at_index(i)->indiciesTrises.at_index(j);
+            tmp = tr->idA;
+            writeBuff(buff, offset, tmp);
+            tmp = tr->idB;
+            writeBuff(buff, offset, tmp);
+            tmp = tr->idC;
+            writeBuff(buff, offset, tmp);
+
+            double tmp2 = tr->normA.x;
+            writeBuff(buff, offset, tmp2);
+            tmp2 = tr->normA.y;
+            writeBuff(buff, offset, tmp2);
+
+            tmp2 = tr->normB.x;
+            writeBuff(buff, offset, tmp2);
+            tmp2 = tr->normB.y;
+            writeBuff(buff, offset, tmp2);
+
+            tmp2 = tr->normC.x;
+            writeBuff(buff, offset, tmp2);
+            tmp2 = tr->normC.y;
+            writeBuff(buff, offset, tmp2);
+        }
+    }
+
     if (offset >= MAX_BUF_LEN) {
         cout << "Data buffer overflowed, not sending anything\n";
         // TODO kaj ce OF
@@ -411,8 +460,7 @@ void Game::send_update_all(int clientId) {
     if (offset >= MAX_BUF_LEN) {
         cout << "Data buffer overflowed, not sending anything\n";
         // TODO kaj ce OF
-    }
-    else {
+    } else {
         if (clientId == -1) {
             client.sendData(buff, offset);
 #ifdef CONSOLE_LOGGING

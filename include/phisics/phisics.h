@@ -49,7 +49,7 @@ class PhPoint {
     void calculateCollisions(FastCont<bool> *, int, Line, Line, Line, double, Line *);
 
 public:
-    Point force, vel, currentSpeed; //currentSpeed = prejsnji velocity
+    Point force, vel, currentSpeed; // currentSpeed = prejsnji velocity
     double mass, addedMass;
     FastCont<int> collisionGroups;
     FastCont<int> virtAvgPoints;
@@ -70,10 +70,10 @@ public:
 
     friend class PhWorld;
     friend class PhLink;
-    
-    #ifdef GAME_EXISTS
-        friend class Game;
-    #endif
+
+#ifdef GAME_EXISTS
+    friend class Game;
+#endif
 };
 
 class PhLink {
@@ -105,9 +105,9 @@ public:
     friend class PhLinkObst;
     friend class PhWorld;
 
-    #ifdef GAME_EXISTS
-        friend class Game;
-    #endif
+#ifdef GAME_EXISTS
+    friend class Game;
+#endif
 };
 
 class PhMuscle : public PhLink {
@@ -124,9 +124,9 @@ public:
 
     friend class PhWorld;
 
-    #ifdef GAME_EXISTS
-        friend class Game;
-    #endif
+#ifdef GAME_EXISTS
+    friend class Game;
+#endif
 };
 
 class PhLinkObst {
@@ -139,9 +139,9 @@ public:
     PhLinkObst(FastCont<PhLink> *);
     void render(Camera *);
 
-    #ifdef GAME_EXISTS
-        friend class Game;
-    #endif
+#ifdef GAME_EXISTS
+    friend class Game;
+#endif
 };
 
 class PhRocketThr {
@@ -173,9 +173,9 @@ public:
 
     void initPs(double, double, double, double, double, unsigned char, unsigned char, unsigned char);
 
-    #ifdef GAME_EXISTS
-        friend class Game;
-    #endif
+#ifdef GAME_EXISTS
+    friend class Game;
+#endif
 };
 
 class PhWeight {
@@ -190,9 +190,9 @@ public:
 
     friend class PhWorld;
 
-    #ifdef GAME_EXISTS
-        friend class Game;
-    #endif
+#ifdef GAME_EXISTS
+    friend class Game;
+#endif
 };
 
 class FuelCont {
@@ -218,9 +218,30 @@ public:
     */
     double take(double, double *);
 
-    #ifdef GAME_EXISTS
-        friend class Game;
-    #endif
+#ifdef GAME_EXISTS
+    friend class Game;
+#endif
+};
+
+struct PhTextureTris {
+    int idA, idB, idC;
+    Point normA, normB, normC;
+};
+
+class PhTexture {
+    bool inited;
+    FastCont<PhTextureTris> indiciesTrises; // -> SDL_Vertex(3x render_pos, 3x colour, 3x texture_normal)
+    SDL_Texture *texture;
+    string orgPath;
+//#pragma message("tole niht gut da je string (error pr koperanju)")
+
+public:
+    PhTexture();
+    void setTexture(Camera *, string);
+    void push_indicie(int, int, int, Point, Point, Point);
+    void render(Camera *, PhWorld *);
+
+    friend class Game;
 };
 
 class PhWorld {
@@ -233,6 +254,7 @@ public:
     FastCont<PhRocketThr> rocketThrs;
     FastCont<PhWeight> weights;
     FastCont<FuelCont> fuelConts;
+    FastCont<PhTexture> textures;
     double gravity_accel;
     double vel_mult_second;
 
@@ -277,6 +299,7 @@ public:
 #include "phisics/phlinkobst.cpp"
 #include "phisics/phrocketthr.cpp"
 #include "phisics/phweight.cpp"
+#include "phisics/phtexture.cpp"
 #include "phisics/phworld.cpp"
 
 #include "phisics/fuelcont.cpp"

@@ -66,8 +66,9 @@ Game::Game() {
     // phisics.createNewThrOn(1, 2, 20);
     // phisics.createNewThrOn(2, 0, 20);
 
+    gen.init(this);
     if (serverRole)
-        player.init(&phisics, &kb, &cam, 0, 0);
+        gen.newPlayerAt({0, 0});
 
     // particleSystem.create({1, 0}, .05, .02, PI, .5, 1, 255, 100, 0);
     // particleSystem.setSpawnInterval(.02);
@@ -202,8 +203,8 @@ void Game::update() {
 
     phisics.render(&cam);
 
-    if (serverRole)
-        player.render(&cam);
+    // if (serverRole)
+    //    player.render(&cam);
 
     for (int i = 0; i < particleSs.size; ++i)
         particleSs.at_index(i)->render(&cam);

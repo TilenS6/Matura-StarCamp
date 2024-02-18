@@ -19,9 +19,10 @@
 #define MAX_DT 0.005
 
 using namespace std;
-class Player;
+// class Player;
 class Particle;
 class ParticleS;
+class Generator;
 class Game;
 
 #define writeBuff(buff, offset, a)        \
@@ -31,8 +32,9 @@ class Game;
 #define readBuff(buff, offset, a)         \
     memcpy(&a, buff + offset, sizeof(a)); \
     offset += sizeof(a);
-
-class Player {
+/* 
+class Player
+{
     double p[8][2] = {
         // initial points
         {1, 1},
@@ -62,7 +64,19 @@ public:
     friend class Game;
 };
 
-class Game {
+*/
+
+class Generator
+{
+    Game *g = nullptr;
+
+public:
+    void init(Game *);
+    void newPlayerAt(Point);
+};
+
+class Game
+{
     Camera cam;
     SDL_Window *wind;
 
@@ -73,7 +87,7 @@ class Game {
     PhWorld phisics;
     FastCont<ParticleS> particleSs;
 
-    Player player;
+    Generator gen;
 
     NetClient client;
     NetServer server;
@@ -108,9 +122,11 @@ public:
 
     void send_updatePlayerControls();
     void process_updatePlayerControls(RecievedData *);
+
+    friend class Generator;
 };
 
 #include "game/game.cpp"
-#include "game/player.cpp"
+#include "game/generator.cpp"
 
 // TODO: teksture gor na clientih + player.h dej nekak stran, nared "generator.h" al neki

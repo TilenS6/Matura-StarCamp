@@ -1,8 +1,7 @@
 #include "FastCont/FastCont.h"
 
 template <class T, class id_data_type>
-FastContElement<T, id_data_type>::FastContElement(T _data, id_data_type _id) : data(_data),
-                                                                               id(_id) {
+FastContElement<T, id_data_type>::FastContElement(T _data, id_data_type _id) : data(_data), id(_id) {
 }
 
 template <class T, class id_data_type>
@@ -18,7 +17,9 @@ id_data_type FastCont<T, id_data_type>::push_back(T _a) {
     }
 
     (p + size)->id = rollingID++;
-    (p + size)->data = _a;
+    // (p + size)->data = _a;
+    memcpy(&(p + size)->data, &_a, sizeof(T));
+    // #pragma message("talele memcpy je novi, dela kr dobr zaenkat...")
     ++size;
 
     return rollingID - 1;
@@ -152,7 +153,8 @@ void FastCont<T, id_data_type>::force_import(id_data_type id, T _a) {
     }
 
     (p + size)->id = id;
-    (p + size)->data = _a;
+    // (p + size)->data = _a;
+    memcpy(&(p + size)->data, &_a, sizeof(T));
     ++size;
 
     if (id > rollingID) rollingID = id;

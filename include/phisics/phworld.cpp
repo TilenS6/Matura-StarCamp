@@ -297,6 +297,10 @@ void PhWorld::render(Camera *cam) {
     for (int i = 0; i < linkObst.size; ++i) {
         linkObst.at_index(i)->render(cam);
     }
+
+    for (int i = 0; i < textures.size; ++i) {
+        textures.at_index(i)->render(cam, this);
+    }
 }
 
 bool PhWorld::removeLinkByIds(int idA, int idB) {

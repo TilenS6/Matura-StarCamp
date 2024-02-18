@@ -110,6 +110,7 @@ void Player::init(PhWorld *world, Keyboard *keyboard, Camera *c, double off_x, d
     p_avg /= 8;
 }
 
+#pragma poison
 void Player::update()
 {
     cout << "Neki klice Player::update()!\n";

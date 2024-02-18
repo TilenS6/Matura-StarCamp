@@ -367,6 +367,60 @@ void Game::process_init() {
 
         phisics.createNewFuelContainer(_capacity, recharge_per_second, pointIdsForWeights, empty_kg, kg_perFuelUnit, Ns_perFuelUnit, id);
     }
+
+    // textures
+    /*
+        (chars, ends with \0) path
+        --- FastCont<PhTextureTris>
+        (int) len
+        (int) idA, idB, idC
+        (double) normA_x, normA_y, normB...
+    */
+    readBuff(buff, offset, len);
+    for (uint32_t i = 0; i < len; ++i) {
+        PhTexture tmpText;
+
+        int id;
+        string path = "";
+        uint32_t jn;
+
+        // --------------------------------
+
+        readBuff(buff, offset, id);
+
+        phisics.textures.force_import(id, tmpText);
+        PhTexture *tx = phisics.textures.at_id(id);
+
+        char c;
+        do {
+            readBuff(buff, offset, c);
+            if (c != '\0') {
+                path += c;
+            }
+        } while (c != '\0');
+        cout << path << endl;
+
+        tx->setTexture(&cam, path);
+
+        readBuff(buff, offset, jn);
+        for (uint32_t j = 0; j < jn; ++j) {
+            int idA, idB, idC;
+            Point normA, normB, normC;
+
+            readBuff(buff, offset, idA);
+            readBuff(buff, offset, idB);
+            readBuff(buff, offset, idC);
+
+            readBuff(buff, offset, normA.x);
+            readBuff(buff, offset, normA.y);
+            readBuff(buff, offset, normB.x);
+            readBuff(buff, offset, normB.y);
+            readBuff(buff, offset, normC.x);
+            readBuff(buff, offset, normC.y);
+
+            tx->push_indicie(idA, idB, idC, normA, normB, normC);
+        }
+    }
 #ifdef CONSOLE_LOGGING
     cout << "Init data processed\n";
     cout << "offset on " << offset << "/" << client.recvbuflen << endl;
