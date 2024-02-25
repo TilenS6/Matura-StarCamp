@@ -18,7 +18,7 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 void Generator::init(Game *_g) {
     g = _g;
 }
-void Generator::newPlayerAt(Point transform) {
+void Generator::newPlayerAt(Point transform, int forPlayerID) {
     FastCont<int> ids, thrsId;
     int centerId;
 
@@ -106,7 +106,7 @@ void Generator::newPlayerAt(Point transform) {
     int pntTmp[4] = {*ids.at_index(5), *ids.at_index(6), *ids.at_index(7), *ids.at_index(0)};
     int fuelId = g->phisics.createNewFuelContainer(1, .03, pntTmp, 1, 1.5, 10e3);
     for (int i = 0; i < 8; ++i) {
-        int id = g->phisics.createNewThrOn(t[i][0], t[i][1], t[i][2], .01, 1);
+        int id = g->phisics.createNewThrOn(*ids.at_index(t[i][0]), *ids.at_index(t[i][1]), t[i][2], .01, 1);
 
         g->phisics.rocketThrs.at_id(id)->initPs(.05, 6, PI, .5, .3, 255, 255, 255);
         g->phisics.rocketThrs.at_id(id)->ps.setSpawnInterval(.01);
@@ -117,6 +117,7 @@ void Generator::newPlayerAt(Point transform) {
         for (int j = 0; j < controlls[i].length(); ++j) {
             g->phisics.rocketThrs.at_id(id)->controlls[j] = controlls[i][j];
         }
+        g->phisics.rocketThrs.at_id(id)->forPlayerID = forPlayerID;
 
         thrsId.push_back(id);
     }
@@ -143,10 +144,61 @@ void Generator::newPlayerAt(Point transform) {
 
     tx->setTexture(&g->cam, "media/astronaut.png");
     for (int i = 0; i < 8; ++i) {
-        int i2 = (i+1)%8;
+        int i2 = (i + 1) % 8;
         Point normA = {norm[i][0], norm[i][1]};
         Point normB = {norm[i2][0], norm[i2][1]};
         Point normC = {.5, .5};
         tx->push_indicie(*ids.at_index(i), *ids.at_index(i2), centerId, normA, normB, normC);
+    }
+#ifdef CONSOLE_LOGGING
+    cout << "pl narjen\n";
+#endif
+}
+
+void Generator::planets(unsigned long seed, int count = 10) {
+    PlanetGenSeed = seed;
+    PlanetCount = count;
+#ifdef CONSOLE_LOGGING
+    cout << "generating planets, seed=" << seed << ", count=" << count << endl;
+#endif
+
+    srand(PlanetGenSeed); // vedno isti seed (clientu poslem sam talele seed)
+
+    Planet tmp;
+    int rd, gr, bl;
+
+    double r = g->gameArea.getRadius();
+    FastCont<double> zs;
+    zs.reserve_n_spots(count);
+    for (int i = 0; i < count; ++i) {
+        double val = (50 + rand() % 201) / 100.;
+        bool ins = false;
+
+        // insertion sort
+        for (int j = 0; j < zs.size; ++j) {
+            if (val > *zs.at_index(j)) {
+                zs.insert(val, j);
+                ins = true;
+                break;
+            }
+        }
+
+        if (!ins)
+            zs.push_back(val);
+    }
+
+    for (int i = 0; i < count; ++i) {
+        Point pos;
+        do {
+            pos.x = (((rand() % 201) - 100) / 100.) * r;
+            pos.y = (((rand() % 201) - 100) / 100.) * r;
+        } while (collisionPointCircle(pos, g->gameArea)); // generera jih samo v playArea (krog)
+
+        int id = g->planets.push_back(tmp);
+        Planet *p = g->planets.at_id(id);
+        Point3 here = {pos.x, pos.y, *zs.at_index(i)};             // zs sortiran padajoce
+        bool ring = (rand() % 3) > 0;                              // 2/3 moznosti
+        hsv2rgb(rand() % 360, 128 + rand() % 80, 255, rd, gr, bl); // iz graphics.h
+        p->generate(&g->cam, 101, 101, 10, here, rd, gr, bl, ring);
     }
 }

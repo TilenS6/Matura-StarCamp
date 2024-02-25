@@ -104,17 +104,116 @@ void Circle::render(Camera *cam) {
 }
 void Rectangle::render(Camera *cam) {
     SDL_Rect rect;
-    rect.x = (a.x - cam->x) * cam->scale;
-    if (rect.x > cam->w) return;
-    rect.y = cam->h - (a.y - cam->y) * cam->scale;
-    if (rect.y > cam->h) return;
     rect.w = dimensions.x * cam->scale;
-    if (rect.x + rect.w < 0) return;
     rect.h = dimensions.y * cam->scale;
+
+    rect.x = (a.x - cam->x) * cam->scale;
+    rect.y = cam->h - (a.y - cam->y) * cam->scale-rect.w;
+
+    if (rect.x > cam->w) return;
+    if (rect.y > cam->h) return;
+    if (rect.x + rect.w < 0) return;
     if (rect.y + rect.h < 0) return;
     SDL_RenderFillRect(cam->r, &rect);
 }
 double distancePow2(Point a, Point b) {
     double dx = a.x - b.x, dy = a.y - b.y;
     return dx * dx + dy * dy;
+}
+
+// -------- Point3 --------
+
+Point3 Point3::operator+(Point3 a) {
+    Point3 tmp;
+    tmp.x = x + a.x;
+    tmp.y = y + a.y;
+    tmp.z = z + a.z;
+    return tmp;
+}
+Point3 Point3::operator-(Point3 a) {
+    Point3 tmp;
+    tmp.x = x - a.x;
+    tmp.y = y - a.y;
+    tmp.z = z - a.z;
+    return tmp;
+}
+Point3 Point3::operator*(double a) {
+    Point3 tmp;
+    tmp.x = x * a;
+    tmp.y = y * a;
+    tmp.z = z * a;
+    return tmp;
+}
+Point3 Point3::operator/(double a) {
+    Point3 tmp;
+    tmp.x = x / a;
+    tmp.y = y / a;
+    tmp.z = z / a;
+    return tmp;
+}
+void Point3::operator+=(Point3 a) {
+    x += a.x;
+    y += a.y;
+    z += a.z;
+}
+void Point3::operator-=(Point3 a) {
+    x -= a.x;
+    y -= a.y;
+    z -= a.z;
+}
+void Point3::operator+=(double a) {
+    x += a;
+    y += a;
+    z += a;
+}
+void Point3::operator-=(double a) {
+    x -= a;
+    y -= a;
+    z -= a;
+}
+void Point3::operator*=(double a) {
+    x *= a;
+    y *= a;
+    z *= a;
+}
+void Point3::operator/=(double a) {
+    x /= a;
+    y /= a;
+    z /= a;
+}
+bool Point3::operator==(Point3 a) {
+    return x == a.x && y == a.y && z == a.z;
+}
+bool Point3::operator!=(Point3 a) {
+    return !(x == a.x || y == a.y || z == a.z);
+}
+void Point3::operator=(Point3 a) {
+    x = a.x;
+    y = a.y;
+    z = a.z;
+}
+
+void Point3::render(Camera *cam) {
+    Point t = {(x - cam->x) * cam->scale, cam->h - (y - cam->y) * cam->scale};
+    double mult = pow(.5, z);
+    t.x-=cam->w/2;
+    t.y-=cam->h/2;
+    t *= mult;
+    t.x+=cam->w/2;
+    t.y+=cam->h/2;
+
+    if (t.x < 0 || t.y < 0 || t.x >= cam->w || t.y >= cam->h) return;
+    SDL_RenderDrawPoint(cam->r, t.x, t.y);
+}
+
+Point Point3::renderAt(Camera *cam) {
+    Point t = {(x - cam->x) * cam->scale, cam->h - (y - cam->y) * cam->scale};
+    double mult = pow(.5, z);
+    t.x-=cam->w/2;
+    t.y-=cam->h/2;
+    t *= mult;
+    t.x+=cam->w/2;
+    t.y+=cam->h/2;
+    
+    return t;
 }

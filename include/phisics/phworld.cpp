@@ -28,6 +28,7 @@ void PhWorld::resetWorld() {
     rocketThrs.clear();
     weights.clear();
     fuelConts.clear();
+    textures.clear();
 
     // resets rolling ids
     points.reset();
@@ -38,6 +39,7 @@ void PhWorld::resetWorld() {
     rocketThrs.reset();
     weights.reset();
     fuelConts.reset();
+    textures.reset();
 }
 
 int PhWorld::createNewPoint(double x, double y, double mass, int collisionGroup = 0, double static_koef = 1., double kinetic_koef = .7, int forceId = -1) {

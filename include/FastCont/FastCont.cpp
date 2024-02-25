@@ -58,10 +58,10 @@ void FastCont<T, id_data_type>::insert(T a, uint32_t at) {
         p = (FastContElement<T, id_data_type> *)realloc(p, sizeof(FastContElement<T, id_data_type>) * alloc_size);
     }
 
-    for (uint32_t i = size - 1; i >= at; --i)
+    for (int64_t i = size - 1; i >= at; --i)
         *(p + i + 1) = *(p + i);
 
-    *(p + at) = a;
+    (p + at)->data = a;
     ++size;
 }
 template <class T, class id_data_type>

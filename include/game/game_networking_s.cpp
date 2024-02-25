@@ -1,8 +1,15 @@
 #include "game/game.h"
 using namespace std;
+std::ostream &bold_on(std::ostream &os) {
+    return os << "\e[1m";
+}
+
+std::ostream &bold_off(std::ostream &os) {
+    return os << "\e[0m";
+}
 
 void Game::networkManagerS(Game *g) {
-    cout << "Server ran...\n";
+    cout << bold_on << "Server ran..." << bold_off << endl;
     FastCont<int> clientIds;
     while (g->running) {
         if (!g->networkingActive || g->client.getConnectionStatus() != 0) {
@@ -12,9 +19,16 @@ void Game::networkManagerS(Game *g) {
 
         int id = g->server.acceptNewClient();
         if (id >= 0) { // new client
+            g->halt = true;
             clientIds.push_back(id);
             cout << "Hello " << id << "!\n";
-            g->send_init(id);
+            while (!g->halting)
+                asm("nop");
+
+            g->handle_newPlayer(id);
+            g->send_init(id, id);
+
+            g->halt = false;
         }
 
         for (int i = 0; i < clientIds.size; ++i) {
@@ -29,6 +43,9 @@ void Game::networkManagerS(Game *g) {
 
             case recieveData_OK: {
                 RecievedData *rec = g->server.getLastData(id);
+                g->halt = true;
+                while (!g->halting)
+                    asm("nop");
                 if (rec->len < 2)
                     break; // minimum header len
 
@@ -42,6 +59,7 @@ void Game::networkManagerS(Game *g) {
 #ifdef CONSOLE_LOGGING
                         cout << "- controlls update recieved\n";
 #endif
+
                         g->process_updatePlayerControls(rec);
                         break;
                     default:
@@ -56,7 +74,7 @@ void Game::networkManagerS(Game *g) {
 #ifdef CONSOLE_LOGGING
                         cout << "- init requested\n";
 #endif
-                        g->send_init(id);
+                        g->send_init(id, id);
                         break;
                     case NETSTD_UPDATE_ALL:
 #ifdef CONSOLE_LOGGING
@@ -72,6 +90,7 @@ void Game::networkManagerS(Game *g) {
                 default:
                     break;
                 }
+                g->halt = false;
 
                 break;
             }
@@ -84,8 +103,15 @@ void Game::networkManagerS(Game *g) {
     }
 }
 
+void Game::handle_newPlayer(int playerID) {
+    gen.newPlayerAt({(double)playerID, 0}, playerID);
+    // TODO
+#pragma message("ok, neki ne dela s 3emi")
+}
+
 // poslje vse
-void Game::send_init(int clientId) {
+void Game::send_init(int network_clientId, int playerID) {
+    cout << "init: clientId=" << network_clientId << ", forPlayerId=" << playerID << endl;
     char buff[MAX_BUF_LEN];
     // header
     buff[0] = NETSTD_HEADER_DATA;
@@ -98,9 +124,13 @@ void Game::send_init(int clientId) {
     /*
         double gravity_accel;
         double vel_mult_second;
+        * unsigned long randSeed (for planet generation)
+        * int planetCount (for planet generation)
     */
     writeBuff(buff, offset, phisics.gravity_accel);
     writeBuff(buff, offset, phisics.vel_mult_second);
+    writeBuff(buff, offset, gen.PlanetGenSeed);
+    writeBuff(buff, offset, gen.PlanetCount);
 
     // points
     /*
@@ -279,9 +309,16 @@ void Game::send_init(int clientId) {
         tmp = phisics.rocketThrs.at_index(i)->fuelContId;
         writeBuff(buff, offset, tmp);
 
-        for (int j = 0; j < 8; ++j) {
-            char tmp3 = phisics.rocketThrs.at_index(i)->controlls[j];
-            writeBuff(buff, offset, tmp3);
+        if (phisics.rocketThrs.at_index(i)->forPlayerID == playerID) {
+            for (int j = 0; j < 8; ++j) {
+                char tmp3 = phisics.rocketThrs.at_index(i)->controlls[j];
+                writeBuff(buff, offset, tmp3);
+            }
+        } else {
+            char tmp3 = '\0';
+            for (int j = 0; j < 8; ++j) {
+                writeBuff(buff, offset, tmp3);
+            }
         }
     }
 
@@ -366,13 +403,13 @@ void Game::send_init(int clientId) {
         cout << "Data buffer overflowed, not sending anything\n";
         // TODO kaj ce OF
     } else {
-        if (clientId == -1) {
+        if (network_clientId == -1) {
             client.sendData(buff, offset);
 #ifdef CONSOLE_LOGGING
             cout << "- init sent as client\n";
 #endif
         } else {
-            server.sendData(clientId, buff, offset);
+            server.sendData(network_clientId, buff, offset);
 #ifdef CONSOLE_LOGGING
             cout << "- init sent as server (length: " << offset << ")\n";
 #endif

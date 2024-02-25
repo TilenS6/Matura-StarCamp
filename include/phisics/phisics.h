@@ -157,6 +157,7 @@ class PhRocketThr {
 public:
     ParticleS ps;
     char controlls[MAX_CONTROLL_LEN];
+    int forPlayerID;
 
     double power; // 0-1
     // double maxThrust; // [N]

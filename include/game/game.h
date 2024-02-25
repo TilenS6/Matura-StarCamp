@@ -11,12 +11,14 @@
 #include "particles/particles.h"
 #include "netagent/netagent.h"
 #include <thread>
+#include "graphics/graphics.h"
 
 #define WIDTH 1920 / 2
 #define HEIGHT 1080 / 2
 #define PHISICS_SUBSTEPS 5
 #define NETW_REQ_INTERVAL 0.1
 #define MAX_DT 0.005
+#define CAMERA_STIFFNESS .3 // s kksno vrednostjo ostane stara vrednost pozicije kamere po 1s
 
 using namespace std;
 // class Player;
@@ -32,7 +34,7 @@ class Game;
 #define readBuff(buff, offset, a)         \
     memcpy(&a, buff + offset, sizeof(a)); \
     offset += sizeof(a);
-/* 
+/*
 class Player
 {
     double p[8][2] = {
@@ -66,17 +68,19 @@ public:
 
 */
 
-class Generator
-{
+class Generator {
     Game *g = nullptr;
 
 public:
     void init(Game *);
-    void newPlayerAt(Point);
+    void newPlayerAt(Point, int);
+
+    unsigned long PlanetGenSeed;
+    int PlanetCount;
+    void planets(unsigned long, int);
 };
 
-class Game
-{
+class Game {
     Camera cam;
     SDL_Window *wind;
 
@@ -85,29 +89,32 @@ class Game
     Timer t;
 
     PhWorld phisics;
-    FastCont<ParticleS> particleSs;
 
     Generator gen;
 
+    // ---- network ----
     NetClient client;
     NetServer server;
     Timer netRequestTimer;
     thread networkThr;
-
     bool running, networkingActive;
-    bool drawRuller = false;
-
     bool serverRole;
-
     bool halt = false, halting = false;
-
-    // ---- client ----
     FastCont<double> thrSendBuffer;
+
+    // ---- visual ----
+    FastCont<ParticleS> particleSs;
+    bool drawRuller = false;
+    FastCont<Planet> planets;
+
+    // ---- gameplay ----
+    Circle gameArea;
 
 public:
     Game();
     ~Game();
     void update();
+    void render();
 
     bool looping() { return running; }
     static void networkManagerC(Game *); // static zarad thread-ov
@@ -117,16 +124,19 @@ public:
     void requestUpdateAllFromServer();
     void process_init();
     void process_update_all();
-    void send_init(int = -1);
-    void send_update_all(int = -1);
+    void send_init(int, int);
+    void send_update_all(int);
 
     void send_updatePlayerControls();
     void process_updatePlayerControls(RecievedData *);
 
+    void handle_newPlayer(int);
+    void followCamera(double);
+
     friend class Generator;
 };
 
-#include "game/game.cpp"
 #include "game/generator.cpp"
+#include "game/game.cpp"
 
 // TODO: teksture gor na clientih + player.h dej nekak stran, nared "generator.h" al neki

@@ -60,10 +60,10 @@ void Game::networkManagerC(Game *g) {
                 //! REQUEST
                 switch (g->client.recvbuf[1]) {
                 case NETSTD_INIT:
-                    g->send_init();
+                    g->send_init(-1, -1);
                     break;
                 case NETSTD_UPDATE_ALL:
-                    g->send_update_all();
+                    g->send_update_all(-1);
                 default:
                     break;
                 }
@@ -133,13 +133,22 @@ void Game::process_init() {
     /*
         double gravity_accel;
         double vel_mult_second;
+        * unsigned long randSeed (for planet generation)
+        * int planetCount (for planet generation)
     */
     double gravity_accel;
     double vel_mult_second;
+    unsigned long randSeed;
+    int planetCount;
     readBuff(buff, offset, gravity_accel);
     readBuff(buff, offset, vel_mult_second);
+    readBuff(buff, offset, randSeed);
+    readBuff(buff, offset, planetCount);
+
     phisics.gravity_accel = gravity_accel;
     phisics.vel_mult_second = vel_mult_second;
+
+    gen.planets(randSeed, planetCount);
 
     // points
     /*
@@ -343,10 +352,11 @@ void Game::process_init() {
         phisics.rocketThrs.at_id(id)->ps.setSpawnInterval(.01);
         phisics.rocketThrs.at_id(id)->ps.setRandomises(PI / 10, 1, .1);
 
-        for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
             char tmp;
             readBuff(buff, offset, tmp);
-            phisics.rocketThrs.at_id(id)->controlls[i] = tmp;
+            cout << "thr " << i << ": " << j << "=" << (int)tmp << endl;
+            phisics.rocketThrs.at_id(id)->controlls[j] = tmp;
         }
     }
 
@@ -474,6 +484,10 @@ void Game::process_update_all() {
         readBuff(buff, offset, added_weight);
 
         PhPoint *p = phisics.points.at_id(id);
+        if (p == nullptr) {
+            requestInitialFromServer();
+            return;
+        }
         p->pos = {pos_x, pos_y};
         p->vel = {vel_x, vel_y};
         p->addedMass = added_weight;
@@ -492,7 +506,12 @@ void Game::process_update_all() {
         readBuff(buff, offset, id);
         readBuff(buff, offset, power);
 
-        phisics.rocketThrs.at_id(id)->setState(power);
+        PhRocketThr *p = phisics.rocketThrs.at_id(id);
+        if (p == nullptr) {
+            requestInitialFromServer();
+            return;
+        }
+        p->setState(power);
     }
 
     // fuelConts
@@ -508,7 +527,12 @@ void Game::process_update_all() {
         readBuff(buff, offset, id);
         readBuff(buff, offset, currentFuel);
 
-        phisics.fuelConts.at_id(id)->setFuel(currentFuel);
+        FuelCont *p = phisics.fuelConts.at_id(id);
+        if (p == nullptr) {
+            requestInitialFromServer();
+            return;
+        }
+        p->setFuel(currentFuel);
     }
 #ifdef CONSOLE_LOGGING
     cout << "Update all data processed\n";
@@ -522,6 +546,8 @@ data: (int)thrID_1, (double)power_1, ...
 */
 
 void Game::send_updatePlayerControls() { // TODO to se lahko izvaja v posebnem threadu
+    if (thrSendBuffer.size == 0) return;
+
     char buff[MAX_BUF_LEN];
     // header
     buff[0] = NETSTD_HEADER_DATA;
