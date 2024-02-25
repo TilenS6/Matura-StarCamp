@@ -10,6 +10,9 @@ PhPoint::PhPoint(double x, double y, double _mass = 1., int collisionGroup = 0, 
     KoF_static = static_koef;
     KoF_kinetic = kinetic_koef;
     virt = false;
+
+    ownership = -1;
+
     collisionGroups.push_back(collisionGroup);
 }
 PhPoint::PhPoint(double x, double y, double _mass, FastCont<int> collisionGroupCont, double static_koef = 1., double kinetic_koef = .7) { // koef. for: concrete-rubber
@@ -22,6 +25,9 @@ PhPoint::PhPoint(double x, double y, double _mass, FastCont<int> collisionGroupC
     KoF_static = static_koef;
     KoF_kinetic = kinetic_koef;
     virt = false;
+
+    ownership = -1;
+
     collisionGroups = collisionGroupCont;
 }
 void PhPoint::move(double x, double y) {

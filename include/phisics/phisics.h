@@ -51,6 +51,7 @@ class PhPoint {
 public:
     Point force, vel, currentSpeed; // currentSpeed = prejsnji velocity
     double mass, addedMass;
+    int ownership; // default: -1
     FastCont<int> collisionGroups;
     FastCont<int> virtAvgPoints;
 
@@ -174,6 +175,7 @@ public:
 
     void initPs(double, double, double, double, double, unsigned char, unsigned char, unsigned char);
 
+    friend class PhWorld;
 #ifdef GAME_EXISTS
     friend class Game;
 #endif
@@ -219,6 +221,7 @@ public:
     */
     double take(double, double *);
 
+    friend class PhWorld;
 #ifdef GAME_EXISTS
     friend class Game;
 #endif
@@ -234,7 +237,6 @@ class PhTexture {
     FastCont<PhTextureTris> indiciesTrises; // -> SDL_Vertex(3x render_pos, 3x colour, 3x texture_normal)
     SDL_Texture *texture;
     string orgPath;
-//#pragma message("tole niht gut da je string (error pr koperanju)")
 
 public:
     PhTexture();
@@ -242,7 +244,10 @@ public:
     void push_indicie(int, int, int, Point, Point, Point);
     void render(Camera *, PhWorld *);
 
+    friend class PhWorld;
+#ifdef GAME_EXISTS
     friend class Game;
+#endif
 };
 
 class PhWorld {

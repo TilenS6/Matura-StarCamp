@@ -52,7 +52,12 @@ void Game::networkManagerC(Game *g) {
                     break;
                 case NETSTD_UPDATE_ALL:
                     g->process_update_all();
+                    break;
+                case NETSTD_DELETE:
+                    g->process_deletePoints();
+                    break;
                 default:
+                    cout << "HEADER_DATA: unknown data\n";
                     break;
                 }
                 break;
@@ -65,11 +70,13 @@ void Game::networkManagerC(Game *g) {
                 case NETSTD_UPDATE_ALL:
                     g->send_update_all(-1);
                 default:
+                    cout << "HEADER_REQUEST: unknown data\n";
                     break;
                 }
 
                 break;
             default:
+                cout << "HEADER: unknown operation\n";
                 break;
             }
             g->halt = false;
@@ -82,6 +89,51 @@ void Game::networkManagerC(Game *g) {
 #endif
             g->requestUpdateAllFromServer();
         }
+    }
+    g->send_bye();
+    int ret;
+    do {
+        ret = g->client.recieveData();
+    } while (ret == recieveData_NO_NEW_DATA);
+    if (g->client.recvbuf[0] == NETSTD_HEADER_DATA && g->client.recvbuf[1] == NETSTD_BYE) {
+        cout << "connection closed successfuly\n";
+    } else {
+        cout << "error while closing connection!\n";
+    }
+}
+
+void Game::process_deletePoints() {
+    int bufflen = client.recvbuflen;
+    char buff[bufflen];
+    memcpy(&buff, client.recvbuf, bufflen);
+
+    uint64_t offset = 2;
+
+    uint32_t len;
+    readBuff(buff, offset, len);
+
+    for (uint32_t i = 0; i < len; ++i) {
+        int id;
+        readBuff(buff, offset, id);
+        phisics.removePointById(id);
+    }
+}
+
+void Game::send_bye() {
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_REQUEST;
+    buff[1] = NETSTD_BYE;
+    uint64_t offset = 2;
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        client.sendData(buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- bye sent\n";
+#endif
     }
 }
 
@@ -355,7 +407,7 @@ void Game::process_init() {
         for (int j = 0; j < 8; ++j) {
             char tmp;
             readBuff(buff, offset, tmp);
-            cout << "thr " << i << ": " << j << "=" << (int)tmp << endl;
+            // cout << "thr " << i << ": " << j << "=" << (int)tmp << endl;
             phisics.rocketThrs.at_id(id)->controlls[j] = tmp;
         }
     }

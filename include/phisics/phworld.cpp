@@ -98,6 +98,42 @@ void PhWorld::removePointById(int id) {
             --i;
         }
     }
+    for (int i = 0; i < rocketThrs.size; ++i) {
+        if (id == rocketThrs.at_index(i)->attachedPID) {
+            rocketThrs.remove_index(i);
+            --i;
+        }
+    }
+    for (int i = 0; i < fuelConts.size; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (id == fuelConts.at_index(i)->pointIDs[j]) {
+                fuelConts.remove_index(i);
+                --i;
+                break;
+            }
+        }
+    }
+    for (int i = 0; i < textures.size; ++i) {
+        PhTexture *tx = textures.at_index(i);
+        for (int j = 0; j < tx->indiciesTrises.size; ++j) {
+            PhTextureTris *tx2 = tx->indiciesTrises.at_index(j);
+            if (tx2->idA == id || tx2->idB == id || tx2->idC == id) {
+                textures.remove_index(i);
+                --i;
+                break;
+            }
+        }
+    }
+    for (int i = 0; i < points.size; ++i) {
+        if (points.at_index(i)->virt) {
+            for (int j = 0; j < points.at_index(i)->virtAvgPoints.size; ++j) {
+                if (*points.at_index(i)->virtAvgPoints.at_index(j) == id) {
+                    removePointById(points.get_id_at_index(i));
+                    i--;
+                }
+            }
+        }
+    }
 
     points.remove_id(id);
 }

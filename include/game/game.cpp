@@ -57,7 +57,7 @@ Game::Game() {
     // SDL_Texture *textTexture = SDL_CreateTextureFromSurface(r, textSurface);
 
     if (serverRole)
-        cam.scale = 2; //  __ px = 1m
+        cam.scale = 8; //  __ px = 1m
     else
         cam.scale = 50; //  __ px = 1m
 

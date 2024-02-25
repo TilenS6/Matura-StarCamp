@@ -37,6 +37,13 @@ void Game::networkManagerS(Game *g) {
             switch (res) {
             case recieveData_NO_CLIENT_ERR:
             case recieveData_CONN_CLOSED_BY_CLIENT_ERR:
+                g->halt = true;
+                while (!g->halting)
+                    asm("nop");
+
+                cout << "Connection to " << id << " forcefully closed!\n";
+
+                g->handle_playerLeft(id);
                 clientIds.remove_index(i);
                 --i;
                 break;
@@ -63,6 +70,7 @@ void Game::networkManagerS(Game *g) {
                         g->process_updatePlayerControls(rec);
                         break;
                     default:
+                        cout << "HEADER_DATA: unknown data\n";
                         break;
                     }
                     break;
@@ -76,21 +84,34 @@ void Game::networkManagerS(Game *g) {
 #endif
                         g->send_init(id, id);
                         break;
+
                     case NETSTD_UPDATE_ALL:
 #ifdef CONSOLE_LOGGING
                         cout << "- update all requested\n";
 #endif
                         g->send_update_all(id);
                         break;
+                    case NETSTD_BYE:
+
+                        cout << "Connection to " << id << " closed\n";
+                        g->handle_playerLeft(id);
+                        {
+                            char data[2] = {NETSTD_HEADER_DATA, NETSTD_BYE};
+                            g->server.sendData(id, data, 2);
+                        }
+                        clientIds.remove_index(i);
+                        --i;
+                        break;
                     default:
+                        cout << "HEADER_REQUEST: unknown data\n";
                         break;
                     }
 
                     break;
                 default:
+                    cout << "HEADER: unknown operation\n";
                     break;
                 }
-                g->halt = false;
 
                 break;
             }
@@ -98,15 +119,65 @@ void Game::networkManagerS(Game *g) {
             case recieveData_NO_NEW_DATA:
             default:
                 break;
-            }
+            } // konc vseh CASE-ov
+
+            g->halt = false;
+        }
+
+        for (int i = 0; i < clientIds.size; ++i) {
+            g->send_removedPoints(*clientIds.at_index(i));
+        }
+        g->removedPoints.clear(); // size = 0
+        g->removedPoints.reset(); // rolling id = 0
+    }
+}
+
+/*
+
+*/
+void Game::send_removedPoints(int clientID) {
+    if (removedPoints.size == 0) return;
+    
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_DELETE;
+    uint64_t offset = 2;
+
+    // -------- BODY --------
+    // meta
+    /*
+       uint32_t len
+    */
+    uint32_t len = removedPoints.size;
+    writeBuff(buff, offset, len);
+
+    // ids
+    /*
+        int id
+    */
+    for (uint32_t i = 0; i < len; ++i) {
+        int id = *removedPoints.at_index(i);
+        writeBuff(buff, offset, id);
+    }
+
+    server.sendData(clientID, buff, offset);
+}
+
+void Game::handle_playerLeft(int playerID) {
+    for (int i = 0; i < phisics.points.size; ++i) {
+        if (phisics.points.at_index(i)->ownership == playerID) {
+            int id = phisics.points.get_id_at_index(i);
+
+            removedPoints.push_back(id);
+            phisics.removePointById(id); // zbrise tega
+            i--;
         }
     }
 }
 
 void Game::handle_newPlayer(int playerID) {
     gen.newPlayerAt({(double)playerID, 0}, playerID);
-    // TODO
-#pragma message("ok, neki ne dela s 3emi")
 }
 
 // poslje vse
@@ -159,12 +230,12 @@ void Game::send_init(int network_clientId, int playerID) {
             writeBuff(buff, offset, tmp3);
         }
 
-        tmp2 = phisics.points.at_id(i)->KoF_static;
+        tmp2 = phisics.points.at_index(i)->KoF_static;
         writeBuff(buff, offset, tmp2);
-        tmp2 = phisics.points.at_id(i)->KoF_kinetic;
+        tmp2 = phisics.points.at_index(i)->KoF_kinetic;
         writeBuff(buff, offset, tmp2);
 
-        bool tmp3 = phisics.points.at_id(i)->virt;
+        bool tmp3 = phisics.points.at_index(i)->virt;
         writeBuff(buff, offset, tmp3);
 
         if (tmp3) {
@@ -176,9 +247,9 @@ void Game::send_init(int network_clientId, int playerID) {
             }
         }
 
-        tmp2 = phisics.points.at_id(i)->vel.x;
+        tmp2 = phisics.points.at_index(i)->vel.x;
         writeBuff(buff, offset, tmp2);
-        tmp2 = phisics.points.at_id(i)->vel.y;
+        tmp2 = phisics.points.at_index(i)->vel.y;
         writeBuff(buff, offset, tmp2);
     }
 

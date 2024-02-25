@@ -101,6 +101,7 @@ class Game {
     bool serverRole;
     bool halt = false, halting = false;
     FastCont<double> thrSendBuffer;
+    FastCont<int> removedPoints;
 
     // ---- visual ----
     FastCont<ParticleS> particleSs;
@@ -130,8 +131,14 @@ public:
     void send_updatePlayerControls();
     void process_updatePlayerControls(RecievedData *);
 
+    void send_bye();
+    void send_removedPoints(int); // removed points logged in removedPoints
+    void process_deletePoints();
+
     void handle_newPlayer(int);
     void followCamera(double);
+
+    void handle_playerLeft(int);
 
     friend class Generator;
 };

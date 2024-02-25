@@ -72,6 +72,7 @@ void Generator::newPlayerAt(Point transform, int forPlayerID) {
 
     for (int i = 0; i < 8; ++i) {
         int id = g->phisics.createNewPoint(p[i][0] * mult + transform.x, p[i][1] * mult + transform.y, 10, 0);
+        g->phisics.points.at_id(id)->ownership = forPlayerID;
         ids.push_back(id);
     }
 
@@ -81,6 +82,7 @@ void Generator::newPlayerAt(Point transform, int forPlayerID) {
     for (int i = 0; i < 8; ++i) {
         g->phisics.points.at_id(centerId)->virtAvgPoints.push_back(*ids.at_index(i));
     }
+    g->phisics.points.at_id(centerId)->ownership = forPlayerID;
 
     // linke med vsemi
     for (int i = 0; i < 8; ++i) {
