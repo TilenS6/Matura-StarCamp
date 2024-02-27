@@ -102,6 +102,37 @@ void Game::networkManagerC(Game *g) {
     }
 }
 
+/*
+ ! NO HEADER
+
+ ---- username
+ uint16_t len
+ char c0, c1, c2...
+ ---- password
+ uint16_t len
+ char c0, c1, c2...
+
+*/
+void Game::sendLoginInfo(string username, string password) {
+    char buff[MAX_BUF_LEN];
+    uint64_t offset = 0;
+
+    uint16_t len = username.length();
+    writeBuff(buff, offset, len);
+    for (uint16_t i = 0; i < len; ++i) {
+        char c = username[i];
+        writeBuff(buff, offset, c);
+    }
+    len = password.length();
+    writeBuff(buff, offset, len);
+    for (uint16_t i = 0; i < len; ++i) {
+        char c = password[i];
+        writeBuff(buff, offset, c);
+    }
+
+    client.sendData(buff, offset);
+}
+
 void Game::process_deletePoints() {
     int bufflen = client.recvbuflen;
     char buff[bufflen];

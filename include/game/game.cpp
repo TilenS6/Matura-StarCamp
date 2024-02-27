@@ -21,6 +21,14 @@ Game::Game() {
     cout << "Run as server? ";
     cin >> serverRole;
 
+    string username, password;
+    if (!serverRole) {
+        cout << "username: ";
+        cin >> username;
+        cout << "password: ";
+        cin >> password;
+    }
+
     running = true;
     networkingActive = false;
     phisics.gravity_accel = 0; // vesolje
@@ -76,6 +84,8 @@ Game::Game() {
 
     gen.init(this);
 
+    gen.stars(100);
+
     // particleSystem.create({1, 0}, .05, .02, PI, .5, 1, 255, 100, 0);
     // particleSystem.setSpawnInterval(.02);
     // particleSystem.setRandomises(PI/8, .01, .3);
@@ -83,11 +93,15 @@ Game::Game() {
     // -------- net --------
 
     if (serverRole) {
+        LoginEntry entr = {"a", "a", {1, 1}};
+        login.push_back(entr);
+
         server.init();
         networkThr = thread(networkManagerS, this);
         gen.planets(1234, 10); // seed, count
     } else {
         client.init(srvrName);
+        sendLoginInfo(username, password);
         networkThr = thread(networkManagerC, this);
         // send_init();
     }
@@ -102,7 +116,8 @@ Game::~Game() {
     SDL_Quit();
 
     networkThr.join();
-    client.closeConnection();
+    if (!serverRole)
+        client.closeConnection();
 }
 
 void Game::update() {
@@ -262,7 +277,7 @@ void Game::followCamera(double dt) {
         cam.y = 0;
         return;
     }
-    
+
     avg /= (double)count;
 
     Point newPos = {avg.x - (cam.w / cam.scale) / 2, avg.y - (cam.h / cam.scale) / 2};
@@ -280,8 +295,10 @@ void Game::render() {
     SDL_SetRenderDrawColor(cam.r, 5, 5, 5, 255); // r b g a
     SDL_RenderClear(cam.r);
 
-    // TODO zvezde
-
+    // zvezde
+    for (int i = 0; i < stars.size; ++i) {
+        stars.at_index(i)->render(&cam);
+    }
     // planeti
     for (int i = 0; i < planets.size; ++i) {
         planets.at_index(i)->render(&cam);
@@ -319,9 +336,3 @@ void Game::render() {
 
     SDL_RenderPresent(cam.r);
 }
-
-// -------- NET --------
-#include "netagent/netstds.cpp"
-
-#include "game/game_networking_c.cpp"
-#include "game/game_networking_s.cpp"

@@ -204,3 +204,21 @@ void Generator::planets(unsigned long seed, int count = 10) {
         p->generate(&g->cam, 101, 101, 10, here, rd, gr, bl, ring);
     }
 }
+
+void Generator::stars(int count = 100) {
+    double r = g->gameArea.getRadius();
+    r += 400;
+    for (int i = 0; i < count; ++i) {
+        Star s;
+        int id = g->stars.push_back(s);
+        Star *sp = g->stars.at_id(id);
+
+        Point pos;
+        do {
+            pos.x = (((rand() % 201) - 100) / 100.) * r;
+            pos.y = (((rand() % 201) - 100) / 100.) * r;
+        } while (collisionPointCircle(pos, g->gameArea)); // generera jih samo v playArea (krog)
+        Point3 at{pos.x, pos.y, ((rand() % 101) / 100.) * 2 + 4};
+        sp->generate(&g->cam, 10, 10, 3, at, 255, 255, 255, 1);
+    }
+}

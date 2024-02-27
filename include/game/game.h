@@ -10,6 +10,7 @@
 #include "timer/timer.h"
 #include "particles/particles.h"
 #include "netagent/netagent.h"
+#include "netagent/netstds.cpp"
 #include <thread>
 #include "graphics/graphics.h"
 
@@ -78,6 +79,12 @@ public:
     unsigned long PlanetGenSeed;
     int PlanetCount;
     void planets(unsigned long, int);
+    void stars(int);
+};
+
+struct LoginEntry {
+    string username, password;
+    Point logoutPos;
 };
 
 class Game {
@@ -107,9 +114,12 @@ class Game {
     FastCont<ParticleS> particleSs;
     bool drawRuller = false;
     FastCont<Planet> planets;
+    FastCont<Star> stars;
 
     // ---- gameplay ----
     Circle gameArea;
+    FastCont<LoginEntry> login;
+    FastCont<int> clientIds; // everyone in server [loginID] => [clientConnectionID]
 
 public:
     Game();
@@ -140,10 +150,16 @@ public:
 
     void handle_playerLeft(int);
 
+    // -------- login --------
+    void sendLoginInfo(string, string);
+    int resolveLoginInfo(RecievedData *);
+
+    void generateStars(int);
+
     friend class Generator;
 };
 
 #include "game/generator.cpp"
+#include "game_networking_c.cpp"
+#include "game_networking_s.cpp"
 #include "game/game.cpp"
-
-// TODO: teksture gor na clientih + player.h dej nekak stran, nared "generator.h" al neki

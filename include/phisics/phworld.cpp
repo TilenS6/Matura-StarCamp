@@ -73,7 +73,7 @@ int PhWorld::createNewLinkObst(int linkId, int collG = 0, int forceId = -1) {
     return forceId;
 }
 
-void PhWorld::removePointById(int id) {
+void PhWorld::removePointById(int id, FastCont<int> *removedPointsList = nullptr) {
     for (int i = 0; i < linkObst.size; ++i) {
         if (id == links.at_id(linkObst.at_index(i)->linkId)->idPointA || id == links.at_id(linkObst.at_index(i)->linkId)->idPointB) {
             linkObst.remove_index(i);
@@ -128,6 +128,10 @@ void PhWorld::removePointById(int id) {
         if (points.at_index(i)->virt) {
             for (int j = 0; j < points.at_index(i)->virtAvgPoints.size; ++j) {
                 if (*points.at_index(i)->virtAvgPoints.at_index(j) == id) {
+                    
+                    if (removedPointsList != nullptr)
+                        removedPointsList->push_back(points.get_id_at_index(i));
+
                     removePointById(points.get_id_at_index(i));
                     i--;
                 }

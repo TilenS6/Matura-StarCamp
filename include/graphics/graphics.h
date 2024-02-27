@@ -23,5 +23,22 @@ public:
     void render(Camera *);
 };
 
+class Star {
+    int w,h;
+    Point3 pos;
+    double sizeMult;
+
+    public:
+    SDL_Texture *texture;
+
+    Star();
+    ~Star();
+
+    void generate(Camera *, int, int, int, Point3, int, int, int, double);
+    void render(Camera *);
+
+};
+
 #include "graphics/graphics.cpp"
 #include "graphics/planet.cpp"
+#include "graphics/star.cpp"

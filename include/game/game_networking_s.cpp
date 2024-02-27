@@ -10,7 +10,6 @@ std::ostream &bold_off(std::ostream &os) {
 
 void Game::networkManagerS(Game *g) {
     cout << bold_on << "Server ran..." << bold_off << endl;
-    FastCont<int> clientIds;
     while (g->running) {
         if (!g->networkingActive || g->client.getConnectionStatus() != 0) {
             Sleep(1000);
@@ -19,20 +18,46 @@ void Game::networkManagerS(Game *g) {
 
         int id = g->server.acceptNewClient();
         if (id >= 0) { // new client
-            g->halt = true;
-            clientIds.push_back(id);
-            cout << "Hello " << id << "!\n";
-            while (!g->halting)
-                asm("nop");
+            Timer t;
+            t.interval();
+            int res;
+            do {
+                Sleep(50);
+                res = g->server.recieveData(id);
+            } while (res == recieveData_NO_NEW_DATA && t.getTime() < 1);
 
-            g->handle_newPlayer(id);
-            g->send_init(id, id);
+            if (res == recieveData_NO_NEW_DATA) {
+                cout << "client timed-out on providing login information! (1 sec)\n";
+            } else {
+                RecievedData *rec = g->server.getLastData(id);
+                int loginId = g->resolveLoginInfo(rec);
+                if (loginId == -1) { // no username/password exists
+                    cout << "This username/password don't exist!\n";
+                    // TODO back to client
+                    g->server.closeConnection(id);
+                } else if (g->clientIds.at_id(loginId) != nullptr) {
+                    cout << "This user is already on the server!\n";
+                    g->server.closeConnection(id);
+                    // TODO -||-
+                } else {
+                    g->halt = true;
+                    g->clientIds.force_import(loginId, id);
+                    cout << "Hello " << id << "!\n";
+                    while (!g->halting)
+                        asm("nop");
 
-            g->halt = false;
+                    Point pos = g->login.at_id(loginId)->logoutPos;
+                    g->gen.newPlayerAt(pos, id);
+
+                    g->send_init(id, id);
+
+                    g->halt = false;
+                }
+            }
         }
 
-        for (int i = 0; i < clientIds.size; ++i) {
-            int id = *clientIds.at_index(i);
+        for (int i = 0; i < g->clientIds.size; ++i) {
+            int id = *g->clientIds.at_index(i);
             int res = g->server.recieveData(id);
             switch (res) {
             case recieveData_NO_CLIENT_ERR:
@@ -44,7 +69,7 @@ void Game::networkManagerS(Game *g) {
                 cout << "Connection to " << id << " forcefully closed!\n";
 
                 g->handle_playerLeft(id);
-                clientIds.remove_index(i);
+                g->clientIds.remove_index(i);
                 --i;
                 break;
 
@@ -99,7 +124,7 @@ void Game::networkManagerS(Game *g) {
                             char data[2] = {NETSTD_HEADER_DATA, NETSTD_BYE};
                             g->server.sendData(id, data, 2);
                         }
-                        clientIds.remove_index(i);
+                        g->clientIds.remove_index(i);
                         --i;
                         break;
                     default:
@@ -124,8 +149,8 @@ void Game::networkManagerS(Game *g) {
             g->halt = false;
         }
 
-        for (int i = 0; i < clientIds.size; ++i) {
-            g->send_removedPoints(*clientIds.at_index(i));
+        for (int i = 0; i < g->clientIds.size; ++i) {
+            g->send_removedPoints(*g->clientIds.at_index(i));
         }
         g->removedPoints.clear(); // size = 0
         g->removedPoints.reset(); // rolling id = 0
@@ -133,11 +158,51 @@ void Game::networkManagerS(Game *g) {
 }
 
 /*
+ ! NO HEADER
+
+ ---- username
+ uint16_t len
+ char c0, c1, c2...
+ ---- password
+ uint16_t len
+ char c0, c1, c2...
 
 */
+
+/** @return -1 on unsuccessful login, or return ID of user on success (>=0) */
+int Game::resolveLoginInfo(RecievedData *rec) {
+    string username = "", password = "";
+    uint32_t offset = 0;
+
+    uint16_t len;
+    readBuff(rec->data, offset, len);
+    for (uint16_t i = 0; i < len; ++i) {
+        char c;
+        readBuff(rec->data, offset, c);
+        username += c;
+    }
+
+    readBuff(rec->data, offset, len);
+    for (uint16_t i = 0; i < len; ++i) {
+        char c;
+        readBuff(rec->data, offset, c);
+        password += c;
+    }
+
+    cout << "usr=" << username << ", pas=" << password << endl;
+
+    for (int i = 0; i < login.size; ++i) {
+        LoginEntry *usr = login.at_index(i);
+        if (usr->username == username && usr->password == password) {
+            return login.get_id_at_index(i);
+        }
+    }
+    return -1;
+}
+
 void Game::send_removedPoints(int clientID) {
     if (removedPoints.size == 0) return;
-    
+
     char buff[MAX_BUF_LEN];
     // header
     buff[0] = NETSTD_HEADER_DATA;
@@ -165,17 +230,36 @@ void Game::send_removedPoints(int clientID) {
 }
 
 void Game::handle_playerLeft(int playerID) {
-    for (int i = 0; i < phisics.points.size; ++i) {
-        if (phisics.points.at_index(i)->ownership == playerID) {
-            int id = phisics.points.get_id_at_index(i);
+    int loginId = -1;
+    for (int i = 0; i < clientIds.size; ++i) {
+        if (*clientIds.at_index(i) == playerID) {
+            loginId = clientIds.get_id_at_index(i);
+            break;
+        }
+    }
 
+    if (loginId != -1) {
+        for (int i = 0; i < phisics.points.size; ++i) {
+            if (phisics.points.at_index(i)->ownership == playerID && phisics.points.at_index(i)->virt) {
+                // ce je owner in je virt tocka to
+                login.at_id(loginId)->logoutPos = phisics.points.at_index(i)->pos;
+                break;
+            }
+        }
+    }
+
+    for (int i = 0; i < phisics.points.size; ++i) {
+        int id = phisics.points.get_id_at_index(i);
+        PhPoint *p = phisics.points.at_index(i);
+        if (phisics.points.at_index(i)->ownership == playerID) {
             removedPoints.push_back(id);
-            phisics.removePointById(id); // zbrise tega
+            phisics.removePointById(id, &removedPoints); // zbrise tega, pise se v tale list kar se pobrise
             i--;
         }
     }
 }
 
+// TODO not in use anymore
 void Game::handle_newPlayer(int playerID) {
     gen.newPlayerAt({(double)playerID, 0}, playerID);
 }

@@ -1,6 +1,5 @@
 #include "netagent/netagent.h"
 
-using namespace netagent;
 NetClient::NetClient(){};
 int NetClient::init(std::string server) {
     err = 0;

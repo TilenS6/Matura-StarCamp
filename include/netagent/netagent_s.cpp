@@ -1,7 +1,5 @@
 #include "netagent/netagent.h"
 
-using namespace netagent;
-
 void NetServer::init() {
     WSADATA wsaData;
     int iResult;
@@ -119,7 +117,7 @@ int NetServer::acceptNewClient() {
     std::cout << "socket in non-blocking mode\n";
 
     // No longer need server socket
-    //! closesocket(ListenSocket);
+    // closesocket(ListenSocket);
     return ClientSockets.push_back(tmp);
 }
 
@@ -169,4 +167,17 @@ RecievedData *NetServer::getLastData(int clientId) {
         return nullptr;
 
     return &s->recieved;
+}
+
+void NetServer::closeConnection(int clientId) {
+    int iResult = shutdown(ClientSockets.at_id(clientId)->socket, SD_SEND);
+    if (iResult == SOCKET_ERROR) {
+        std::cout << "E @ NetServer::closeConnection... shutdown failed with error: " << WSAGetLastError() << std::endl;
+        // closesocket(ClientSocket);
+        // WSACleanup();
+        // return;
+    }
+    closesocket(ClientSockets.at_id(clientId)->socket);
+    
+    ClientSockets.remove_id(clientId);
 }

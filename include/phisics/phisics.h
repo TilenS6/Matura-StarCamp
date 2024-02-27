@@ -278,7 +278,7 @@ public:
     int createNewWeightOn(int, int);
     int createNewFuelContainer(double, double, int[4], double, double, double, int);
 
-    void removePointById(int);
+    void removePointById(int, FastCont<int> *);
     bool removeLinkByIds(int, int);     // ret: TRUE on succesfull deletion
     bool removeMuscleByIds(int, int);   // ret: TRUE on succesfull deletion
     bool removeLineObstById(int);       // ret: TRUE on succesfull deletion
