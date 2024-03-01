@@ -37,40 +37,13 @@ Game::Game() {
     gameArea.a = {0, 0};
     gameArea.setRadius(20);
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        cout << "Error initializing SDL: " << SDL_GetError() << endl;
-        return;
-    }
-    wind = SDL_CreateWindow("StarCamp", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0); // SDL_WINDOW_BORDERLESS namesto 0
-    if (!wind) {
-        cout << "Error creating window: " << SDL_GetError() << endl;
-        SDL_Quit();
-        return;
-    }
-    cam.assignRenderer(SDL_CreateRenderer(wind, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE));
-    if (!cam.r) {
-        cout << "Error creating renderer: " << SDL_GetError() << endl;
-        SDL_DestroyWindow(wind);
-        SDL_Quit();
-        return;
-    }
-
-    SDL_SetRenderDrawBlendMode(cam.r, SDL_BLENDMODE_BLEND);
-    cout << "- " << SDL_GetError() << endl;
-
-    TTF_Init();
-    // TTF_Font *Sans = TTF_OpenFont("fonts/open-sans/OpenSans-Regular.ttf", 24);
-    // SDL_Surface *textSurface;
-    // textSurface = TTF_RenderText_Blended(Sans, "Hello world!", SDL_Color({255, 255, 255})); //use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
-    // SDL_Texture *textTexture = SDL_CreateTextureFromSurface(r, textSurface);
-
     if (serverRole)
-        cam.scale = 8; //  __ px = 1m
+        grend->cam.scale = 8; //  __ px = 1m
     else
-        cam.scale = 50; //  __ px = 1m
+        grend->cam.scale = 50; //  __ px = 1m
 
-    cam.x = -(cam.w / cam.scale) / 2;
-    cam.y = -(cam.h / cam.scale) / 2;
+    grend->cam.x = -(grend->cam.w / grend->cam.scale) / 2;
+    grend->cam.y = -(grend->cam.h / grend->cam.scale) / 2;
 
     // phisics.loadWorldFromFile("TEST.WRD");
 
@@ -110,11 +83,6 @@ Game::Game() {
 }
 
 Game::~Game() {
-    TTF_Quit();
-    SDL_DestroyRenderer(cam.r);
-    SDL_DestroyWindow(wind);
-    SDL_Quit();
-
     networkThr.join();
     if (!serverRole)
         client.closeConnection();
@@ -172,35 +140,35 @@ void Game::update() {
     if (serverRole) {
         bool faster = kb.get(SDL_SCANCODE_SPACE);
         if (kb.get(SDL_SCANCODE_W)) {
-            cam.y += ((500 + faster * 500) / cam.scale) * dt;
+            grend->cam.y += ((500 + faster * 500) / grend->cam.scale) * dt;
         }
         if (kb.get(SDL_SCANCODE_S)) {
-            cam.y -= ((500 + faster * 500) / cam.scale) * dt;
+            grend->cam.y -= ((500 + faster * 500) / grend->cam.scale) * dt;
         }
         if (kb.get(SDL_SCANCODE_D)) {
-            cam.x += ((500 + faster * 500) / cam.scale) * dt;
+            grend->cam.x += ((500 + faster * 500) / grend->cam.scale) * dt;
         }
         if (kb.get(SDL_SCANCODE_A)) {
-            cam.x -= ((500 + faster * 500) / cam.scale) * dt;
+            grend->cam.x -= ((500 + faster * 500) / grend->cam.scale) * dt;
         }
 
         if (kb.get(SDL_SCANCODE_LSHIFT)) {
-            cam.x += (cam.w / cam.scale) / 2;
-            cam.y += (cam.h / cam.scale) / 2;
+            grend->cam.x += (grend->cam.w / grend->cam.scale) / 2;
+            grend->cam.y += (grend->cam.h / grend->cam.scale) / 2;
 
-            cam.scale *= 1 + dt * (1 + faster);
+            grend->cam.scale *= 1 + dt * (1 + faster);
 
-            cam.x -= (cam.w / cam.scale) / 2;
-            cam.y -= (cam.h / cam.scale) / 2;
+            grend->cam.x -= (grend->cam.w / grend->cam.scale) / 2;
+            grend->cam.y -= (grend->cam.h / grend->cam.scale) / 2;
         }
         if (kb.get(SDL_SCANCODE_LCTRL)) {
-            cam.x += (cam.w / cam.scale) / 2;
-            cam.y += (cam.h / cam.scale) / 2;
+            grend->cam.x += (grend->cam.w / grend->cam.scale) / 2;
+            grend->cam.y += (grend->cam.h / grend->cam.scale) / 2;
 
-            cam.scale *= 1 - dt * (1 + faster);
+            grend->cam.scale *= 1 - dt * (1 + faster);
 
-            cam.x -= (cam.w / cam.scale) / 2;
-            cam.y -= (cam.h / cam.scale) / 2;
+            grend->cam.x -= (grend->cam.w / grend->cam.scale) / 2;
+            grend->cam.y -= (grend->cam.h / grend->cam.scale) / 2;
         }
     }
 
@@ -273,66 +241,65 @@ void Game::followCamera(double dt) {
         }
     }
     if (count == 0) {
-        cam.x = 0;
-        cam.y = 0;
+        grend->cam.x = 0;
+        grend->cam.y = 0;
         return;
     }
 
     avg /= (double)count;
 
-    Point newPos = {avg.x - (cam.w / cam.scale) / 2, avg.y - (cam.h / cam.scale) / 2};
+    Point newPos = {avg.x - (grend->cam.w / grend->cam.scale) / 2, avg.y - (grend->cam.h / grend->cam.scale) / 2};
     double k = pow(CAMERA_STIFFNESS, dt);
-    cam.x = cam.x * k + newPos.x * (1. - k);
-    cam.y = cam.y * k + newPos.y * (1. - k);
+    grend->cam.x = grend->cam.x * k + newPos.x * (1. - k);
+    grend->cam.y = grend->cam.y * k + newPos.y * (1. - k);
 
-    if (isnan(cam.x) || isnan(cam.y)) {
-        cam.x = newPos.x;
-        cam.y = newPos.y;
+    if (isnan(grend->cam.x) || isnan(grend->cam.y)) {
+        grend->cam.x = newPos.x;
+        grend->cam.y = newPos.y;
     }
 }
 
 void Game::render() {
-    SDL_SetRenderDrawColor(cam.r, 5, 5, 5, 255); // r b g a
-    SDL_RenderClear(cam.r);
+    grend->clear();
 
     // zvezde
     for (int i = 0; i < stars.size; ++i) {
-        stars.at_index(i)->render(&cam);
+        stars.at_index(i)->render(&grend->cam);
     }
     // planeti
     for (int i = 0; i < planets.size; ++i) {
-        planets.at_index(i)->render(&cam);
+        planets.at_index(i)->render(&grend->cam);
     }
 
-    phisics.render(&cam);
+    phisics.render(&grend->cam);
 
     // if (serverRole)
     //    player.render(&cam);
 
     for (int i = 0; i < particleSs.size; ++i)
-        particleSs.at_index(i)->render(&cam);
+        particleSs.at_index(i)->render(&grend->cam);
 
     if (drawRuller) {
-        for (uint16_t y = 0, y2 = 0; y < cam.h; y += cam.scale) {
+        for (uint16_t y = 0, y2 = 0; y < grend->cam.h; y += grend->cam.scale) {
             if (y2) {
-                SDL_SetRenderDrawColor(cam.r, 255, 0, 0, 255);
+                SDL_SetRenderDrawColor(grend->cam.r, 255, 0, 0, 255);
             } else {
-                SDL_SetRenderDrawColor(cam.r, 0, 0, 255, 255);
+                SDL_SetRenderDrawColor(grend->cam.r, 0, 0, 255, 255);
             }
             y2 = !y2;
-            SDL_RenderDrawLine(cam.r, 0, y, 0, y + cam.scale);
+            SDL_RenderDrawLine(grend->cam.r, 0, y, 0, y + grend->cam.scale);
         }
     }
 
     Point p = {0, 0};
-    SDL_SetRenderDrawColor(cam.r, 255, 0, 0, 255); // r b g a
-    p.render(&cam);
+    SDL_SetRenderDrawColor(grend->cam.r, 255, 0, 0, 255); // r b g a
+    p.render(&grend->cam);
 
     class Rectangle rec;
-    SDL_SetRenderDrawColor(cam.r, 255, 255, 255, 255); // r b g a
+    SDL_SetRenderDrawColor(grend->cam.r, 255, 255, 255, 255); // r b g a
     rec.a = {0, 0};
     rec.dimensions = {1, 1};
-    rec.render(&cam);
+    rec.render(&grend->cam);
 
-    SDL_RenderPresent(cam.r);
+    grend->represent();
 }

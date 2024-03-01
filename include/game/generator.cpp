@@ -144,7 +144,7 @@ void Generator::newPlayerAt(Point transform, int forPlayerID) {
     int tmpTid = g->phisics.textures.push_back(tmpTexture);
     PhTexture *tx = g->phisics.textures.at_id(tmpTid);
 
-    tx->setTexture(&g->cam, "media/astronaut.png");
+    tx->setTexture(&g->grend->cam, "media/astronaut.png");
     for (int i = 0; i < 8; ++i) {
         int i2 = (i + 1) % 8;
         Point normA = {norm[i][0], norm[i][1]};
@@ -201,7 +201,7 @@ void Generator::planets(unsigned long seed, int count = 10) {
         Point3 here = {pos.x, pos.y, *zs.at_index(i)};             // zs sortiran padajoce
         bool ring = (rand() % 3) > 0;                              // 2/3 moznosti
         hsv2rgb(rand() % 360, 128 + rand() % 80, 255, rd, gr, bl); // iz graphics.h
-        p->generate(&g->cam, 101, 101, 10, here, rd, gr, bl, ring);
+        p->generate(&g->grend->cam, 101, 101, 10, here, rd, gr, bl, ring);
     }
 }
 
@@ -219,6 +219,6 @@ void Generator::stars(int count = 100) {
             pos.y = (((rand() % 201) - 100) / 100.) * r;
         } while (collisionPointCircle(pos, g->gameArea)); // generera jih samo v playArea (krog)
         Point3 at{pos.x, pos.y, ((rand() % 101) / 100.) * 2 + 4};
-        sp->generate(&g->cam, 10, 10, 3, at, 255, 255, 255, 1);
+        sp->generate(&g->grend->cam, 10, 10, 3, at, 255, 255, 255, 1);
     }
 }

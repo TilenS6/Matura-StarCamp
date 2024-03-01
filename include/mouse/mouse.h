@@ -9,6 +9,7 @@ public:
     int x, y;
     bool left = false, right = false, middle = false;
     Uint32 buttons = 0, lastButtons = 0;
+    uint8_t last_event = 0;
 
     enum UpdateTypeMask {
         M_ButtonMask = 1,

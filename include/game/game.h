@@ -13,6 +13,7 @@
 #include "netagent/netstds.cpp"
 #include <thread>
 #include "graphics/graphics.h"
+#include "basicui/basicui.h"
 
 #define WIDTH 1920 / 2
 #define HEIGHT 1080 / 2
@@ -69,7 +70,8 @@ public:
 
 */
 
-class Generator {
+class Generator
+{
     Game *g = nullptr;
 
 public:
@@ -82,13 +84,32 @@ public:
     void stars(int);
 };
 
-struct LoginEntry {
+class GameRenderer
+{
+    SDL_Window *wind;
+
+public:
+    Camera cam;
+    ~GameRenderer();
+
+    void init();
+
+    void clear();
+    void represent();
+    bool basicEvents();
+
+    friend class Game;
+};
+
+struct LoginEntry
+{
     string username, password;
     Point logoutPos;
 };
 
-class Game {
-    Camera cam;
+class Game
+{
+    GameRenderer *grend;
     SDL_Window *wind;
 
     Mouse m;
@@ -162,4 +183,5 @@ public:
 #include "game/generator.cpp"
 #include "game_networking_c.cpp"
 #include "game_networking_s.cpp"
+#include "game/gamerenderer.cpp"
 #include "game/game.cpp"

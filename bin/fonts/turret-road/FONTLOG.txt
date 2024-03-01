@@ -1,0 +1,54 @@
+FONTLOG for Turret Road fonts
+
+This file provides detailed information on the Turret Road
+Font Software.
+
+This information should be distributed along with the 
+Turret Road fonts and any derivative works.
+
+Basic Font Information
+
+Turret Road is an agular geometric sans serif typeface, with very low contrast, high x-height and gylph height, and playful diacritics.
+
+Turret Road delves into eugenics, solar evolution, science fiction and homeward conversations.
+
+More detailed information can be found here: https://noponies.github.io/turret-road/
+
+More specifically, this release supports the following 
+Unicode ranges: Latin-1, 
+
+To contribute to the project contact Dale Sattler 
+at dale@noponies.com
+
+ChangeLog
+08 Agust 2019 (Dale Sattler)
+PPEM Q/A .ttf fix
+Added Division Slash glyph
+hhea set to 0
+
+19 September 2018 (Dale Sattler)
+Adjusted TM weight
+Added .ttf export
+
+30 July 2018 (Dale Sattler)
+Fractions
+Refinement
+Renamed from Tracer (existing typeface) to Turret Road.
+
+27 July 2018 (Dale Sattler)
+Reworked into Multiple Master
+Extra interpolated weights
+
+23 July 2018 (Dale Sattler) Tracer v1
+- Initial release
+
+Acknowledgements
+
+If you make modifications be sure to add your name (N), 
+email (E), web-address (if you have one) (W) and 
+description (D). This list is in alphabetical order.
+
+N: Dale Sattler [Noponies]
+E: dale@noponies.com
+W: http://noponies.com || https://noponies.github.io/
+D: Original Type Designer

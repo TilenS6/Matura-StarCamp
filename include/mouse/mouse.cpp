@@ -15,6 +15,6 @@ uint8_t Mouse::update() {
 
     lastX = x;
     lastY = y;
-
+    last_event = ret;
     return ret;
 }

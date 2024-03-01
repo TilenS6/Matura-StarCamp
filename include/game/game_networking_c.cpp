@@ -506,7 +506,7 @@ void Game::process_init() {
         } while (c != '\0');
         cout << path << endl;
 
-        tx->setTexture(&cam, path);
+        tx->setTexture(&grend->cam, path);
 
         readBuff(buff, offset, jn);
         for (uint32_t j = 0; j < jn; ++j) {
