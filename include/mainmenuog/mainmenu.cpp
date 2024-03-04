@@ -1,6 +1,6 @@
 #include "mainmenuog/mainmenuog.h"
 
-int MainMenu::chose(SDL_Renderer *r, string s[], uint8_t n, string title) {
+int Menu::chose(SDL_Renderer *r, string s[], uint8_t n, string title) {
     int W, H;
     SDL_GetRendererOutputSize(r, &W, &H);
     int btnW = 200, btnH = 50;

@@ -70,7 +70,8 @@
         "unordered_map": "cpp",
         "variant": "cpp",
         "vector": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "filesystem": "cpp"
     },
     "debug.console.closeOnEnd": true,
     "lldb.launch.terminal": "integrated",

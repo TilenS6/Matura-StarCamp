@@ -70,8 +70,7 @@ public:
 
 */
 
-class Generator
-{
+class Generator {
     Game *g = nullptr;
 
 public:
@@ -84,8 +83,7 @@ public:
     void stars(int);
 };
 
-class GameRenderer
-{
+class GameRenderer {
     SDL_Window *wind;
 
 public:
@@ -101,14 +99,12 @@ public:
     friend class Game;
 };
 
-struct LoginEntry
-{
+struct LoginEntry {
     string username, password;
     Point logoutPos;
 };
 
-class Game
-{
+class Game {
     GameRenderer *grend;
     SDL_Window *wind;
 
@@ -143,7 +139,7 @@ class Game
     FastCont<int> clientIds; // everyone in server [loginID] => [clientConnectionID]
 
 public:
-    Game();
+    Game(GameRenderer *);
     ~Game();
     void update();
     void render();
@@ -174,8 +170,6 @@ public:
     // -------- login --------
     void sendLoginInfo(string, string);
     int resolveLoginInfo(RecievedData *);
-
-    void generateStars(int);
 
     friend class Generator;
 };

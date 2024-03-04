@@ -16,6 +16,7 @@ void Game::networkManagerS(Game *g) {
             continue;
         }
 
+    cancel_new_client:
         int id = g->server.acceptNewClient();
         if (id >= 0) { // new client
             Timer t;
@@ -30,6 +31,13 @@ void Game::networkManagerS(Game *g) {
                 cout << "client timed-out on providing login information! (1 sec)\n";
             } else {
                 RecievedData *rec = g->server.getLastData(id);
+                if (rec->len == 1 && rec->data[0] == 0) { // ping
+                    char data[] = {1};
+                    g->server.sendData(id, data, 1); // pong
+                    g->server.closeConnection(id);
+                    goto cancel_new_client;
+                }
+
                 int loginId = g->resolveLoginInfo(rec);
                 if (loginId == -1) { // no username/password exists
                     cout << "This username/password don't exist!\n";
@@ -78,8 +86,16 @@ void Game::networkManagerS(Game *g) {
                 g->halt = true;
                 while (!g->halting)
                     asm("nop");
-                if (rec->len < 2)
+
+                if (rec->len < 1)
                     break; // minimum header len
+
+                if (rec->len == 1) { // ping packet
+                    if (rec->data[0] != 0) break;
+                    char data[] = {1};
+                    g->server.sendData(id, data, 1); // pong
+                    break;
+                }
 
                 // char data[] = {NETSTD_HEADER_REQUEST, NETSTD_INIT};
 

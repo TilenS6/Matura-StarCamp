@@ -17,7 +17,9 @@ uint16_t charToScancode(char c) {
     return SDL_SCANCODE_UNKNOWN;
 }
 
-Game::Game() {
+Game::Game(GameRenderer *_grend) {
+    grend = _grend;
+
     cout << "Run as server? ";
     cin >> serverRole;
 

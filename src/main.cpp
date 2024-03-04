@@ -1,41 +1,30 @@
 #include <iostream>
-#include "game/game.h"
-#include "mainmenuog/mainmenuog.h"
+#include "mainmenu/mainmenu.cpp"
 
 using namespace std;
 int main(int argc, char *argv[]) {
-    GameRenderer rend;
-    rend.init();
-
-    MainMenu menu;
-    string opt[] = {
-        "test1",
-        "test2",
-        "test3",
-        "test4",
-        "blbllblablsblabl",
-    };
-    
-    int n = 5;
+    GameRenderer gr;
+    gr.init();
     while (true) {
-        cout << menu.chose(rend.cam.r, opt, n, "Test") << endl;
+        int ret = qeMenu_game;
+        while (ret != gameAction_play) {
+            if (ret == qeMenu_game)
+                ret = mainmenu_game(&gr);
+            else if (ret == qeMenu_settings)
+                ret = mainmenu_settings(&gr);
+            else if (ret == qeMenu_info)
+                ret = mainmenu_info(&gr);
+            else
+                ret = qeMenu_game;
+
+            if (ret == -1) return 0;
+        }
+
+        // PLAY
+        Game game(&gr);
+        while (game.looping()) {
+            game.update();
+        }
     }
-
-    Mouse m;
-    while (!rend.basicEvents()) {
-        uint8_t m_ev = m.update();
-
-        rend.clear();
-
-        rend.represent();
-    }
-
-    /*
-    Game game;
-
-    while (game.looping()) {
-        game.update();
-    }
-    */
     return 0;
 }

@@ -18,7 +18,7 @@ public:
     void render(SDL_Renderer *);
 };
 
-class MainMenu {
+class Menu {
     FastCont<Button> btns;
 
 public:
