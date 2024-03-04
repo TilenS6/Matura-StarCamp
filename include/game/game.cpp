@@ -17,7 +17,7 @@ uint16_t charToScancode(char c) {
     return SDL_SCANCODE_UNKNOWN;
 }
 
-Game::Game(GameRenderer *_grend) {
+Game::Game(GameRenderer *_grend, string srvr) {
     grend = _grend;
 
     cout << "Run as server? ";
@@ -70,12 +70,14 @@ Game::Game(GameRenderer *_grend) {
     if (serverRole) {
         LoginEntry entr = {"a", "a", {1, 1}};
         login.push_back(entr);
+        entr = {"b", "b", {-1, 1}};
+        login.push_back(entr);
 
         server.init();
         networkThr = thread(networkManagerS, this);
         gen.planets(1234, 10); // seed, count
     } else {
-        client.init(srvrName);
+        client.init(srvr);
         sendLoginInfo(username, password);
         networkThr = thread(networkManagerC, this);
         // send_init();

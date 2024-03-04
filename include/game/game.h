@@ -139,7 +139,7 @@ class Game {
     FastCont<int> clientIds; // everyone in server [loginID] => [clientConnectionID]
 
 public:
-    Game(GameRenderer *);
+    Game(GameRenderer *, string);
     ~Game();
     void update();
     void render();

@@ -55,7 +55,7 @@ void checkConnection(Text *report) {
                 checkConnection_report = "OK, update required";
             } else {
                 string str = "OK, ";
-                str += (int)(ping * 1000);
+                str += to_string((int)(ping * 1000));
                 str += "ms";
                 checkConnection_report = str;
             }

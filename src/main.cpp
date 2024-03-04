@@ -21,10 +21,12 @@ int main(int argc, char *argv[]) {
         }
 
         // PLAY
-        Game game(&gr);
+        Game game(&gr, server);
         while (game.looping()) {
             game.update();
         }
     }
     return 0;
 }
+
+// TODO: domnu je sel offset cez recvbuflen na Game::process_init() (client), (1460,1525) in pol pumpa napacne podatke not
