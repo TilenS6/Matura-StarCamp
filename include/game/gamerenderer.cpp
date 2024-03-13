@@ -33,7 +33,7 @@ void GameRenderer::init()
     // SDL_Texture *textTexture = SDL_CreateTextureFromSurface(r, textSurface);
 }
 
-GameRenderer::~GameRenderer()
+void GameRenderer::destroy()
 {
     TTF_Quit();
     SDL_DestroyRenderer(cam.r);

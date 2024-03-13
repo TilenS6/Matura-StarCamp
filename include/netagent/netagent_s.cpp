@@ -80,8 +80,10 @@ void NetServer::init()
     std::cout << "ListenSocket in non-blocking mode\n";
 
     // TCP_NODELAY
+    /*
     DWORD tr = TRUE;
     setsockopt(ListenSocket, IPPROTO_TCP, TCP_NODELAY, (const char *)&tr, sizeof(tr));
+    */
 }
 
 NetServer::~NetServer()
@@ -116,7 +118,7 @@ int NetServer::acceptNewClient()
         {
             return -1;
         }
-        std::cout << "NetServer::NetServer accept failed with error: " << WSAGetLastError() << std::endl;
+        std::cout << "NetServer::acceptNewClient (accept) failed with error: " << WSAGetLastError() << std::endl;
         // closesocket(ListenSocket);
         // WSACleanup();
         return -1;

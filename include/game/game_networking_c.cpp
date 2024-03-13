@@ -83,11 +83,11 @@ void Game::networkManagerC(Game *g) {
         }
 
         if (g->netRequestTimer.getTime() >= NETW_REQ_INTERVAL) {
-            g->netRequestTimer.interval();
 #ifdef CONSOLE_LOGGING
             cout << "- request sent\n";
 #endif
             g->requestUpdateAllFromServer();
+            g->netRequestTimer.interval();
         }
     }
     g->send_bye();
@@ -206,6 +206,7 @@ packet:
 // prepise vse
 void Game::process_init() {
     int bufflen = client.recvbuflen;
+    cout << "BUFFLEN = " << bufflen << endl;
     char buff[bufflen];
     memcpy(&buff, client.recvbuf, bufflen);
 
@@ -223,10 +224,10 @@ void Game::process_init() {
     double vel_mult_second;
     unsigned long randSeed;
     int planetCount;
-    readBuff(buff, offset, gravity_accel);
-    readBuff(buff, offset, vel_mult_second);
-    readBuff(buff, offset, randSeed);
-    readBuff(buff, offset, planetCount);
+    readBuff_c(buff, offset, bufflen, gravity_accel);
+    readBuff_c(buff, offset, bufflen, vel_mult_second);
+    readBuff_c(buff, offset, bufflen, randSeed);
+    readBuff_c(buff, offset, bufflen, planetCount);
 
     phisics.gravity_accel = gravity_accel;
     phisics.vel_mult_second = vel_mult_second;
@@ -240,7 +241,8 @@ void Game::process_init() {
         * + double velocity_x, double velocity_y
     */
     uint32_t len;
-    readBuff(buff, offset, len);
+    readBuff_c(buff, offset, bufflen, len);
+    cout << "points len = " << len <<endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         double x;
@@ -256,40 +258,39 @@ void Game::process_init() {
 
         // --------------------------------
 
-        readBuff(buff, offset, id);
-        readBuff(buff, offset, x);
-        readBuff(buff, offset, y);
-        readBuff(buff, offset, mass);
+        readBuff_c(buff, offset, bufflen, id);
+        readBuff_c(buff, offset, bufflen, x);
+        readBuff_c(buff, offset, bufflen, y);
+        readBuff_c(buff, offset, bufflen, mass);
 
         uint32_t jn;
-        readBuff(buff, offset, jn);
+        readBuff_c(buff, offset, bufflen, jn);
         for (uint32_t j = 0; j < jn; ++j) {
             int tmp;
-            readBuff(buff, offset, tmp);
+            readBuff_c(buff, offset, bufflen, tmp);
             collisionGroup.push_back(tmp);
         }
 
-        readBuff(buff, offset, static_koef);
-        readBuff(buff, offset, kinetic_koef);
-
-        readBuff(buff, offset, virt);
+        readBuff_c(buff, offset, bufflen, static_koef);
+        readBuff_c(buff, offset, bufflen, kinetic_koef);
+        readBuff_c(buff, offset, bufflen, virt);
+        
         phisics.createNewPoint(x, y, mass, collisionGroup, static_koef, kinetic_koef, id);
         phisics.points.at_id(id)->setVirtual(virt);
 
         if (virt) {
             uint16_t len;
-            readBuff(buff, offset, len);
+            readBuff_c(buff, offset, bufflen, len);
             for (uint16_t j = 0; j < len; ++j) {
                 int tmpid;
-                readBuff(buff, offset, tmpid);
+                readBuff_c(buff, offset, bufflen, tmpid);
                 phisics.points.at_id(id)->virtAvgPoints.push_back(tmpid);
-                cout << tmpid << ",";
             }
             cout << endl;
         }
 
-        readBuff(buff, offset, velocity_x);
-        readBuff(buff, offset, velocity_y);
+        readBuff_c(buff, offset, bufflen, velocity_x);
+        readBuff_c(buff, offset, bufflen, velocity_y);
 
         phisics.points.at_id(id)->vel = {velocity_x, velocity_y};
     }
@@ -298,7 +299,8 @@ void Game::process_init() {
     /*
         int PhWorld::createNewLineObst(double x1, double y1, double x2, double y2, int coll_group = 0) {
     */
-    readBuff(buff, offset, len);
+    readBuff_c(buff, offset, bufflen, len);
+    cout << "lineObst len = " << len <<endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         double x1;
@@ -309,12 +311,12 @@ void Game::process_init() {
 
         // --------------------------------
 
-        readBuff(buff, offset, id);
-        readBuff(buff, offset, x1);
-        readBuff(buff, offset, y1);
-        readBuff(buff, offset, x2);
-        readBuff(buff, offset, y2);
-        readBuff(buff, offset, coll_group);
+        readBuff_c(buff, offset, bufflen, id);
+        readBuff_c(buff, offset, bufflen, x1);
+        readBuff_c(buff, offset, bufflen, y1);
+        readBuff_c(buff, offset, bufflen, x2);
+        readBuff_c(buff, offset, bufflen, y2);
+        readBuff_c(buff, offset, bufflen, coll_group);
 
         phisics.createNewLineObst(x1, y1, x2, y2, coll_group, id);
     }
@@ -323,7 +325,8 @@ void Game::process_init() {
     /*
         int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
     */
-    readBuff(buff, offset, len);
+    readBuff_c(buff, offset, bufflen, len);
+    cout << "links len = " << len <<endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int idA;
@@ -336,14 +339,14 @@ void Game::process_init() {
 
         // --------------------------------
 
-        readBuff(buff, offset, id);
-        readBuff(buff, offset, idA);
-        readBuff(buff, offset, idB);
-        readBuff(buff, offset, spring_koef);
-        readBuff(buff, offset, damp_koef);
-        readBuff(buff, offset, maxCompression);
-        readBuff(buff, offset, maxStretch);
-        readBuff(buff, offset, originalLength);
+        readBuff_c(buff, offset, bufflen, id);
+        readBuff_c(buff, offset, bufflen, idA);
+        readBuff_c(buff, offset, bufflen, idB);
+        readBuff_c(buff, offset, bufflen, spring_koef);
+        readBuff_c(buff, offset, bufflen, damp_koef);
+        readBuff_c(buff, offset, bufflen, maxCompression);
+        readBuff_c(buff, offset, bufflen, maxStretch);
+        readBuff_c(buff, offset, bufflen, originalLength);
 
         phisics.createNewLinkBetween(idA, idB, spring_koef, damp_koef, maxCompression, maxStretch, sqrt(originalLength), id);
     }
@@ -352,7 +355,8 @@ void Game::process_init() {
     /*
         int PhWorld::createNewMuscleBetween(int idA, int idB, double spring_koef = 100, double damp_koef = 10, double muscle_range = .5, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
     */
-    readBuff(buff, offset, len);
+    readBuff_c(buff, offset, bufflen, len);
+    cout << "muscles len = " << len <<endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int idA;
@@ -366,24 +370,25 @@ void Game::process_init() {
 
         // --------------------------------
 
-        readBuff(buff, offset, id);
-        readBuff(buff, offset, idA);
-        readBuff(buff, offset, idB);
-        readBuff(buff, offset, spring_koef);
-        readBuff(buff, offset, damp_koef);
-        readBuff(buff, offset, muscle_range);
-        readBuff(buff, offset, maxCompression);
-        readBuff(buff, offset, maxStretch);
-        readBuff(buff, offset, originalLength);
+        readBuff_c(buff, offset, bufflen, id);
+        readBuff_c(buff, offset, bufflen, idA);
+        readBuff_c(buff, offset, bufflen, idB);
+        readBuff_c(buff, offset, bufflen, spring_koef);
+        readBuff_c(buff, offset, bufflen, damp_koef);
+        readBuff_c(buff, offset, bufflen, muscle_range);
+        readBuff_c(buff, offset, bufflen, maxCompression);
+        readBuff_c(buff, offset, bufflen, maxStretch);
+        readBuff_c(buff, offset, bufflen, originalLength);
 
-        phisics.createNewMuscleBetween(idA, idB, spring_koef, damp_koef, muscle_range, maxCompression, maxStretch, originalLength, id);
+        phisics.createNewMuscleBetween(idA, idB, spring_koef, damp_koef, muscle_range, maxCompression, maxStretch, sqrt(originalLength), id);
     }
 
     // linkObst
     /*
         int PhWorld::createNewLinkObst(int linkId, int collG = 0) {
     */
-    readBuff(buff, offset, len);
+    readBuff_c(buff, offset, bufflen, len);
+    cout << "lineObst len = " << len <<endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int linkId;
@@ -391,9 +396,9 @@ void Game::process_init() {
 
         // --------------------------------
 
-        readBuff(buff, offset, id);
-        readBuff(buff, offset, linkId);
-        readBuff(buff, offset, collG);
+        readBuff_c(buff, offset, bufflen, id);
+        readBuff_c(buff, offset, bufflen, linkId);
+        readBuff_c(buff, offset, bufflen, collG);
         phisics.createNewLinkObst(linkId, collG, id);
     }
 
@@ -404,7 +409,8 @@ void Game::process_init() {
             * + int fuel_source
             * + char[8] controlls
     */
-    readBuff(buff, offset, len);
+    readBuff_c(buff, offset, bufflen, len);
+    cout << "rocketThr len = " << len <<endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int attached;
@@ -418,14 +424,14 @@ void Game::process_init() {
 
         // --------------------------------
 
-        readBuff(buff, offset, id);
-        readBuff(buff, offset, attached);
-        readBuff(buff, offset, facing);
-        readBuff(buff, offset, shift_direction);
-        readBuff(buff, offset, fuelConsumption);
-        readBuff(buff, offset, forceMult);
-        readBuff(buff, offset, power);
-        readBuff(buff, offset, fuel_source);
+        readBuff_c(buff, offset, bufflen, id);
+        readBuff_c(buff, offset, bufflen, attached);
+        readBuff_c(buff, offset, bufflen, facing);
+        readBuff_c(buff, offset, bufflen, shift_direction);
+        readBuff_c(buff, offset, bufflen, fuelConsumption);
+        readBuff_c(buff, offset, bufflen, forceMult);
+        readBuff_c(buff, offset, bufflen, power);
+        readBuff_c(buff, offset, bufflen, fuel_source);
 
         phisics.createNewThrOn(attached, facing, shift_direction, fuelConsumption, forceMult, id);
         phisics.rocketThrs.at_id(id)->setFuelSource(fuel_source);
@@ -437,7 +443,7 @@ void Game::process_init() {
 
         for (int j = 0; j < 8; ++j) {
             char tmp;
-            readBuff(buff, offset, tmp);
+            readBuff_c(buff, offset, bufflen, tmp);
             // cout << "thr " << i << ": " << j << "=" << (int)tmp << endl;
             phisics.rocketThrs.at_id(id)->controlls[j] = tmp;
         }
@@ -447,7 +453,8 @@ void Game::process_init() {
     /*
         int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit=50000) {
     */
-    readBuff(buff, offset, len);
+    readBuff_c(buff, offset, bufflen, len);
+    cout << "fuelCont len = " << len <<endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         double _capacity;
@@ -459,17 +466,17 @@ void Game::process_init() {
 
         // --------------------------------
 
-        readBuff(buff, offset, id);
-        readBuff(buff, offset, _capacity);
-        readBuff(buff, offset, recharge_per_second);
+        readBuff_c(buff, offset, bufflen, id);
+        readBuff_c(buff, offset, bufflen, _capacity);
+        readBuff_c(buff, offset, bufflen, recharge_per_second);
 
         for (int i = 0; i < 4; ++i) {
-            readBuff(buff, offset, pointIdsForWeights[i]);
+            readBuff_c(buff, offset, bufflen, pointIdsForWeights[i]);
         }
 
-        readBuff(buff, offset, empty_kg);
-        readBuff(buff, offset, kg_perFuelUnit);
-        readBuff(buff, offset, Ns_perFuelUnit);
+        readBuff_c(buff, offset, bufflen, empty_kg);
+        readBuff_c(buff, offset, bufflen, kg_perFuelUnit);
+        readBuff_c(buff, offset, bufflen, Ns_perFuelUnit);
 
         phisics.createNewFuelContainer(_capacity, recharge_per_second, pointIdsForWeights, empty_kg, kg_perFuelUnit, Ns_perFuelUnit, id);
     }
@@ -482,7 +489,8 @@ void Game::process_init() {
         (int) idA, idB, idC
         (double) normA_x, normA_y, normB...
     */
-    readBuff(buff, offset, len);
+    readBuff_c(buff, offset, bufflen, len);
+    cout << "textures len = " << len <<endl;
     for (uint32_t i = 0; i < len; ++i) {
         PhTexture tmpText;
 
@@ -492,14 +500,14 @@ void Game::process_init() {
 
         // --------------------------------
 
-        readBuff(buff, offset, id);
+        readBuff_c(buff, offset, bufflen, id);
 
         phisics.textures.force_import(id, tmpText);
         PhTexture *tx = phisics.textures.at_id(id);
 
         char c;
         do {
-            readBuff(buff, offset, c);
+            readBuff_c(buff, offset, bufflen, c);
             if (c != '\0') {
                 path += c;
             }
@@ -508,21 +516,21 @@ void Game::process_init() {
 
         tx->setTexture(&grend->cam, path);
 
-        readBuff(buff, offset, jn);
+        readBuff_c(buff, offset, bufflen, jn);
         for (uint32_t j = 0; j < jn; ++j) {
             int idA, idB, idC;
             Point normA, normB, normC;
 
-            readBuff(buff, offset, idA);
-            readBuff(buff, offset, idB);
-            readBuff(buff, offset, idC);
+            readBuff_c(buff, offset, bufflen, idA);
+            readBuff_c(buff, offset, bufflen, idB);
+            readBuff_c(buff, offset, bufflen, idC);
 
-            readBuff(buff, offset, normA.x);
-            readBuff(buff, offset, normA.y);
-            readBuff(buff, offset, normB.x);
-            readBuff(buff, offset, normB.y);
-            readBuff(buff, offset, normC.x);
-            readBuff(buff, offset, normC.y);
+            readBuff_c(buff, offset, bufflen, normA.x);
+            readBuff_c(buff, offset, bufflen, normA.y);
+            readBuff_c(buff, offset, bufflen, normB.x);
+            readBuff_c(buff, offset, bufflen, normB.y);
+            readBuff_c(buff, offset, bufflen, normC.x);
+            readBuff_c(buff, offset, bufflen, normC.y);
 
             tx->push_indicie(idA, idB, idC, normA, normB, normC);
             cout << idA << "," << idB << "," << idC << ": " << normA.x << "," << normA.y << ";" << normB.x << "," << normB.y << ";" << normC.x << "," << normC.y << "," << endl;

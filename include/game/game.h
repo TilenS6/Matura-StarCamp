@@ -18,9 +18,14 @@
 #define WIDTH 1920 / 2
 #define HEIGHT 1080 / 2
 #define PHISICS_SUBSTEPS 5
-#define NETW_REQ_INTERVAL 0.1
+#define NETW_REQ_INTERVAL 0.05
 #define MAX_DT 0.005
 #define CAMERA_STIFFNESS .3 // s kksno vrednostjo ostane stara vrednost pozicije kamere po 1s
+
+#define INVENTORY_SIZE 5
+#define INVENTORY_TEXTURE_SIZE 50
+#define INVENTORY_TEXTURE_BORDER 2
+#define INVENTORY_TEXTURE_BORDER_COLOUR 255, 255, 255
 
 using namespace std;
 // class Player;
@@ -33,9 +38,17 @@ class Game;
     memcpy(&buff[offset], &a, sizeof(a)); \
     offset += sizeof(a);
 
-#define readBuff(buff, offset, a)         \
+#define readBuff(buff, offset, a) \
     memcpy(&a, buff + offset, sizeof(a)); \
     offset += sizeof(a);
+
+#define readBuff_c(buff, offset, bufflen, a) \
+        if (offset + sizeof(a) > bufflen) { \
+            requestInitialFromServer(); \
+            return; \
+        } else { \
+            readBuff(buff, offset, a); \
+        };
 /*
 class Player
 {
@@ -71,10 +84,10 @@ public:
 */
 
 class Generator {
-    Game *g = nullptr;
+    Game* g = nullptr;
 
 public:
-    void init(Game *);
+    void init(Game*);
     void newPlayerAt(Point, int);
 
     unsigned long PlanetGenSeed;
@@ -84,13 +97,13 @@ public:
 };
 
 class GameRenderer {
-    SDL_Window *wind;
+    SDL_Window* wind;
 
 public:
     Camera cam;
-    ~GameRenderer();
 
     void init();
+    void destroy();
 
     void clear();
     void represent();
@@ -99,14 +112,27 @@ public:
     friend class Game;
 };
 
+struct InventoryEntry {
+    int ID, count;
+};
+class Inventory {
+    public:
+    InventoryEntry inv[INVENTORY_SIZE];
+    int selected;
+
+    Inventory();
+    void render(Camera *);
+};
+
 struct LoginEntry {
     string username, password;
     Point logoutPos;
 };
 
+FastCont<LoginEntry> login;
 class Game {
-    GameRenderer *grend;
-    SDL_Window *wind;
+    GameRenderer* grend;
+    SDL_Window* wind;
 
     Mouse m;
     Keyboard kb;
@@ -115,6 +141,9 @@ class Game {
     PhWorld phisics;
 
     Generator gen;
+
+    // ---- client ----
+    Inventory client_inventory;
 
     // ---- network ----
     NetClient client;
@@ -135,18 +164,19 @@ class Game {
 
     // ---- gameplay ----
     Circle gameArea;
-    FastCont<LoginEntry> login;
     FastCont<int> clientIds; // everyone in server [loginID] => [clientConnectionID]
 
+    void renderHUD();
+
 public:
-    Game(GameRenderer *, string);
+    Game(GameRenderer*, string, string, string, bool);
     ~Game();
     void update();
     void render();
 
     bool looping() { return running; }
-    static void networkManagerC(Game *); // static zarad thread-ov
-    static void networkManagerS(Game *); // static zarad thread-ov
+    static void networkManagerC(Game*); // static zarad thread-ov
+    static void networkManagerS(Game*); // static zarad thread-ov
 
     void requestInitialFromServer();
     void requestUpdateAllFromServer();
@@ -156,7 +186,7 @@ public:
     void send_update_all(int);
 
     void send_updatePlayerControls();
-    void process_updatePlayerControls(RecievedData *);
+    void process_updatePlayerControls(RecievedData*);
 
     void send_bye();
     void send_removedPoints(int); // removed points logged in removedPoints
@@ -169,7 +199,7 @@ public:
 
     // -------- login --------
     void sendLoginInfo(string, string);
-    int resolveLoginInfo(RecievedData *);
+    int resolveLoginInfo(RecievedData*);
 
     friend class Generator;
 };
@@ -178,4 +208,5 @@ public:
 #include "game_networking_c.cpp"
 #include "game_networking_s.cpp"
 #include "game/gamerenderer.cpp"
+#include "game/inventory.cpp"
 #include "game/game.cpp"

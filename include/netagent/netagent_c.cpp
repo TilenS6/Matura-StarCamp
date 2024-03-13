@@ -82,9 +82,10 @@ int NetClient::init(std::string server) {
     std::cout << "ConnectSocket in non-blocking mode\n";
 
     // TCP_NODELAY
+    /*
     DWORD tr = TRUE;
     setsockopt(ConnectSocket, IPPROTO_TCP, TCP_NODELAY, (const char *)&tr, sizeof(tr));
-
+    */
     return 0;
 }
 NetClient::NetClient(std::string server) {

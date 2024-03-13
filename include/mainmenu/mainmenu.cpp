@@ -6,9 +6,14 @@
 #include "netagent/netagent.h"
 #include "netagent/netstds.cpp"
 
-string server = "127.0.0.1";
-string checkConnection_report = "";
-string username = "", password = "";
+extern string server;
+extern string checkConnection_report;
+extern string username, password;
+extern bool pingingServer;
+extern bool pingingServer_accepted;
+extern bool terminatePing;
+extern bool terminatePing_accepted;
+extern Text *txtStatusP;
 
 enum qeMenu {
     qeMenu_game = -2,
@@ -17,7 +22,9 @@ enum qeMenu {
 };
 
 enum gameAction {
-    gameAction_play
+    gameAction_play,
+    gameAction_launchServer,
+    gameAction_addUser,
 };
 
 /* login packet
@@ -31,42 +38,54 @@ enum gameAction {
  char c0, c1, c2...
 
 */
-void checkConnection(Text *report) {
-    NetClient client;
-    client.init(server);
-    switch (client.getConnectionStatus()) {
-    case getConnectionStatus_NO_HOST:
-        checkConnection_report = "cannot resolve IP address";
-        break;
+void checkConnection() {
+    while (true) {
+        NetClient client;
+        terminatePing_accepted = terminatePing;
+        if (terminatePing_accepted)
+            return;
 
-    case 0:
-        checkConnection_report = "OK";
-        {
-            char dt[] = {0};
-            Timer t;
-            t.interval();
-            client.sendData(dt, 1);
+        pingingServer_accepted = pingingServer;
+        if (pingingServer_accepted) {
+            checkConnection_report += "...";
+            client.init(server);
+            switch (client.getConnectionStatus()) {
+            case getConnectionStatus_NO_HOST:
+                checkConnection_report = "cannot resolve IP address";
+                break;
 
-            while (t.getTime() < 5 && client.recieveData() == recieveData_NO_NEW_DATA)
-                asm("nop");
+            case 0:
+                checkConnection_report = "OK";
+                {
+                    char dt[] = {0};
+                    Timer t;
+                    t.interval();
+                    client.sendData(dt, 1);
 
-            double ping = t.interval();
-            if (client.recvbuflen != 1 || client.recvbuf[0] != 1) {
-                checkConnection_report = "OK, update required";
-            } else {
-                string str = "OK, ";
-                str += to_string((int)(ping * 1000));
-                str += "ms";
-                checkConnection_report = str;
+                    while (t.getTime() < 5 && client.recieveData() == recieveData_NO_NEW_DATA)
+                        asm("nop");
+
+                    double ping = t.interval();
+                    if (client.recvbuflen != 1 || client.recvbuf[0] != 1) {
+                        checkConnection_report = "OK, update required";
+                    } else {
+                        string str = "OK, ";
+                        str += to_string((int)(ping * 1000));
+                        str += "ms";
+                        checkConnection_report = str;
+                    }
+                }
+                client.closeConnection();
+                break;
+
+            case getConnectionStatus_ERR:
+            default:
+                checkConnection_report = "connection error";
+                break;
             }
         }
-        client.closeConnection();
-        break;
 
-    case getConnectionStatus_ERR:
-    default:
-        checkConnection_report = "connection error";
-        break;
+        Sleep(500);
     }
 }
 
@@ -92,13 +111,18 @@ int mainmenu_game(GameRenderer *gr) {
     txt.move(rect.x + 10, rect.y + 10);
 
     Text txtStatus;
-    txtStatus.changeText(gr->cam.r, "...", 16);
+    txtStatus.changeText(gr->cam.r, checkConnection_report, 16);
     txtStatus.linkText(&checkConnection_report);
     txtStatus.move(rect.x + 10, rect.y + 10 + 30);
 
     Button btn;
     btn.move(rect.x + 10, rect.y + 10 + 30 + 50, 150, 40);
     btn.changeText(gr->cam.r, "Refresh");
+
+    Button btnStartServer;
+    btnStartServer.move(rect.x, rect.y + 10 + 30 + 50 + 50, rect.w, 40);
+    btnStartServer.changeText(gr->cam.r, "Launch server");
+    btnStartServer.changeStyle(1);
 
     Text txtUsername, txtPassword;
     txtUsername.changeText(gr->cam.r, "Username: ", 24);
@@ -119,10 +143,8 @@ int mainmenu_game(GameRenderer *gr) {
     inputPassword.h = 30;
     inputPassword.linkText(gr->cam.r, &password, true);
 
-    thread thr = thread(checkConnection, &txtStatus);
-
-    int ret = menu.chose(gr->cam.r, opt, n, title, qeMenu, qeN, 0,                                                   // static options
-                         &rect, &txt, &txtStatus, &btn, &txtUsername, &txtPassword, &inputUsername, &inputPassword); // added features
+    int ret = menu.chose(gr->cam.r, opt, n, title, qeMenu, qeN, 0,                                                                    // static options
+                         &rect, &txt, &txtStatus, &btn, &btnStartServer, &txtUsername, &txtPassword, &inputUsername, &inputPassword); // added features
 
     txt.destroy();
     txtStatus.destroy();
@@ -130,19 +152,30 @@ int mainmenu_game(GameRenderer *gr) {
     txtPassword.destroy();
     inputUsername.destroy();
     inputPassword.destroy();
-    thr.join(); // TODO mal eh... timeout za IP je 10sec, se ne joina dokler ne pride do pod., tut ce hoces drugam
 
-    if (ret == 0) return gameAction_play; // Play
-    if (ret == 1) return -1;              // Exit
-    if (ret == 2) return qeMenu_game;
-    if (ret == 3) return qeMenu_settings;
-    if (ret == 4) return qeMenu_info;
+    cout << ret << endl;
+    if (ret == 0)
+        return gameAction_play; // Play
+    if (ret == 1)
+        return -1;            // Exit
+    if (ret == 2 || ret == 5) // Refresh
+        return qeMenu_game;
+    if (ret == 3)
+        return qeMenu_settings;
+    if (ret == 4)
+        return qeMenu_info;
+
+    if (ret == 6)
+        return gameAction_launchServer;
     return ret;
 }
 
 //----------------------------------------------------------------------------------------------------
-
+string new_username, new_password;
 int mainmenu_settings(GameRenderer *gr) {
+    new_username = "";
+    new_password = "";
+
     Menu menu;
     string opt[] = {
 
@@ -163,7 +196,7 @@ int mainmenu_settings(GameRenderer *gr) {
     txt.move(rect.x + 10, rect.y + 10);
 
     Text txtStatus;
-    txtStatus.changeText(gr->cam.r, "...", 16);
+    txtStatus.changeText(gr->cam.r, checkConnection_report, 16);
     txtStatus.linkText(&checkConnection_report);
     txtStatus.move(rect.x + 10, rect.y + 10 + 30);
 
@@ -182,19 +215,53 @@ int mainmenu_settings(GameRenderer *gr) {
     inputIp.h = 30;
     inputIp.linkText(gr->cam.r, &server);
 
-    thread thr = thread(checkConnection, &txtStatus);
+    Text txtUsername, txtPassword;
+    txtUsername.changeText(gr->cam.r, "Username: ", 24);
+    txtUsername.move(70, 5.5 * 50 * 1.3);
+    txtPassword.changeText(gr->cam.r, "Password: ", 24);
+    txtPassword.move(70, 6 * 50 * 1.3);
 
-    int ret = menu.chose(gr->cam.r, opt, n, title, qeMenu, qeN, 1,         // static options
-                         &rect, &txt, &txtStatus, &btn, &txtIp, &inputIp); // added features
+    Input inputUsername, inputPassword;
+    inputUsername.x = 220;
+    inputUsername.y = 5.5 * 50 * 1.3;
+    inputUsername.w = 200;
+    inputUsername.h = 30;
+    inputUsername.linkText(gr->cam.r, &new_username);
+
+    inputPassword.x = 210;
+    inputPassword.y = 6 * 50 * 1.3;
+    inputPassword.w = 200;
+    inputPassword.h = 30;
+    inputPassword.linkText(gr->cam.r, &new_password, true);
+
+    Button btnAddUser;
+    btnAddUser.move(70, 6 * 50 * 1.3 + 50, 200, 40);
+    btnAddUser.changeText(gr->cam.r, "Add user");
+
+    // thread thr = thread(checkConnection, &txtStatus);
+
+    int ret = menu.chose(gr->cam.r, opt, n, title, qeMenu, qeN, 1,                                                                                  // static options
+                         &rect, &txt, &txtStatus, &btn, &txtIp, &inputIp, &btnAddUser, &txtUsername, &txtPassword, &inputUsername, &inputPassword); // added features
 
     txt.destroy();
     txtStatus.destroy();
+    btn.destroy();
     inputIp.destroy();
-    thr.join();
+    btnAddUser.destroy();
 
-    if (ret == 0) return qeMenu_game;
-    if (ret == 1 || ret == 3) return qeMenu_settings;
-    if (ret == 2) return qeMenu_info;
+    txtUsername.destroy();
+    txtPassword.destroy();
+    inputUsername.destroy();
+    inputPassword.destroy();
+
+    if (ret == 0)
+        return qeMenu_game;
+    if (ret == 1 || ret == 3)
+        return qeMenu_settings;
+    if (ret == 2)
+        return qeMenu_info;
+    if (ret == 4)
+        return gameAction_addUser;
 
     return ret;
 }
@@ -231,9 +298,12 @@ int mainmenu_info(GameRenderer *gr) {
     txt3.destroy();
     txt4.destroy();
 
-    if (ret == 0) return qeMenu_game;
-    if (ret == 1) return qeMenu_settings;
-    if (ret == 2) return qeMenu_info;
+    if (ret == 0)
+        return qeMenu_game;
+    if (ret == 1)
+        return qeMenu_settings;
+    if (ret == 2)
+        return qeMenu_info;
 
     return ret;
 }

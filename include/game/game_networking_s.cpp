@@ -41,8 +41,8 @@ void Game::networkManagerS(Game *g) {
                 int loginId = g->resolveLoginInfo(rec);
                 if (loginId == -1) { // no username/password exists
                     cout << "This username/password don't exist!\n";
-                    // TODO back to client
                     g->server.closeConnection(id);
+                    // TODO back to client
                 } else if (g->clientIds.at_id(loginId) != nullptr) {
                     cout << "This user is already on the server!\n";
                     g->server.closeConnection(id);
@@ -54,7 +54,7 @@ void Game::networkManagerS(Game *g) {
                     while (!g->halting)
                         asm("nop");
 
-                    Point pos = g->login.at_id(loginId)->logoutPos;
+                    Point pos = login.at_id(loginId)->logoutPos; // TODO
                     g->gen.newPlayerAt(pos, id);
 
                     g->send_init(id, id);
@@ -310,9 +310,9 @@ void Game::send_init(int network_clientId, int playerID) {
         * + double velocity_x, double velocity_y
     */
     uint32_t len = phisics.points.size;
-    memcpy(&buff[offset], &len, sizeof(len));
-    offset += sizeof(len);
-    for (int i = 0; i < phisics.points.size; ++i) {
+    writeBuff(buff, offset, len);
+    cout << "points len = " << len <<endl;
+    for (int i = 0; i < len; ++i) {
         int tmpid = phisics.points.get_id_at_index(i);
         writeBuff(buff, offset, tmpid);
 
@@ -359,7 +359,8 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.lineObst.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.lineObst.size; ++i) {
+    cout << "lineObst len = " << len <<endl;
+    for (int i = 0; i < len; ++i) {
         int tmp = phisics.lineObst.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -379,7 +380,8 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.links.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.links.size; ++i) {
+    cout << "links len = " << len <<endl;
+    for (int i = 0; i < len; ++i) {
         int tmp = phisics.links.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -408,7 +410,8 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.muscles.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.muscles.size; ++i) {
+    cout << "muscles len = " << len <<endl;
+    for (int i = 0; i < len; ++i) {
         int tmp = phisics.muscles.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -439,7 +442,8 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.linkObst.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.linkObst.size; ++i) {
+    cout << "linkObst len = " << len <<endl;
+    for (int i = 0; i < len; ++i) {
         int tmp = phisics.linkObst.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -458,7 +462,8 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.rocketThrs.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.rocketThrs.size; ++i) {
+    cout << "rocketThr len = " << len <<endl;
+    for (uint32_t i = 0; i < len; ++i) {
         int tmp = phisics.rocketThrs.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -499,7 +504,8 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.fuelConts.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.fuelConts.size; ++i) {
+    cout << "fuelCont len = " << len <<endl;
+    for (int i = 0; i < len; ++i) {
         int tmp = phisics.fuelConts.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 
@@ -531,7 +537,8 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.textures.size;
     writeBuff(buff, offset, len);
-    for (int i = 0; i < phisics.textures.size; ++i) {
+    cout << "textures len = " << len <<endl;
+    for (int i = 0; i < len; ++i) {
         int tmp = phisics.textures.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
 

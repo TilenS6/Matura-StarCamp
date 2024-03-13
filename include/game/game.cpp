@@ -17,26 +17,16 @@ uint16_t charToScancode(char c) {
     return SDL_SCANCODE_UNKNOWN;
 }
 
-Game::Game(GameRenderer *_grend, string srvr) {
+Game::Game(GameRenderer* _grend, string srvr, string username, string password, bool launchAsServer) {
     grend = _grend;
-
-    cout << "Run as server? ";
-    cin >> serverRole;
-
-    string username, password;
-    if (!serverRole) {
-        cout << "username: ";
-        cin >> username;
-        cout << "password: ";
-        cin >> password;
-    }
+    serverRole = launchAsServer;
 
     running = true;
     networkingActive = false;
     phisics.gravity_accel = 0; // vesolje
     phisics.vel_mult_second = .5;
 
-    gameArea.a = {0, 0};
+    gameArea.a = { 0, 0 };
     gameArea.setRadius(20);
 
     if (serverRole)
@@ -68,9 +58,9 @@ Game::Game(GameRenderer *_grend, string srvr) {
     // -------- net --------
 
     if (serverRole) {
-        LoginEntry entr = {"a", "a", {1, 1}};
+        LoginEntry entr = { "a", "a", {1, 1} };
         login.push_back(entr);
-        entr = {"b", "b", {-1, 1}};
+        entr = { "b", "b", {-1, 1} };
         login.push_back(entr);
 
         server.init();
@@ -191,7 +181,8 @@ void Game::update() {
         // -------- CLINET
         if (!serverRole) {
             for (int i = 0; i < phisics.rocketThrs.size; ++i) {
-                if (phisics.rocketThrs.at_index(i)->controlls[0] == '\0') continue;
+                if (phisics.rocketThrs.at_index(i)->controlls[0] == '\0')
+                    continue;
 
                 double st = 0;
                 for (int j = 0; j < 8; ++j) {
@@ -230,7 +221,7 @@ void Game::update() {
 
 void Game::followCamera(double dt) {
     FastCont<Point> controllsAt;
-    Point avg = {0, 0}, min = {INFINITY, INFINITY}, max = {-INFINITY, -INFINITY};
+    Point avg = { 0, 0 }, min = { INFINITY, INFINITY }, max = { -INFINITY, -INFINITY };
     int count = 0;
     for (int i = 0; i < phisics.rocketThrs.size; ++i) {
         if (phisics.rocketThrs.at_index(i)->controlls[0] != '\0') {
@@ -238,10 +229,14 @@ void Game::followCamera(double dt) {
             int pid = phisics.rocketThrs.at_index(i)->attachedPID;
             Point a = phisics.points.at_id(pid)->pos;
             avg += a;
-            if (min.x > a.x) min.x = a.x;
-            if (max.x < a.x) max.x = a.x;
-            if (min.y > a.y) min.y = a.y;
-            if (max.y < a.y) max.y = a.y;
+            if (min.x > a.x)
+                min.x = a.x;
+            if (max.x < a.x)
+                max.x = a.x;
+            if (min.y > a.y)
+                min.y = a.y;
+            if (max.y < a.y)
+                max.y = a.y;
         }
     }
     if (count == 0) {
@@ -252,7 +247,7 @@ void Game::followCamera(double dt) {
 
     avg /= (double)count;
 
-    Point newPos = {avg.x - (grend->cam.w / grend->cam.scale) / 2, avg.y - (grend->cam.h / grend->cam.scale) / 2};
+    Point newPos = { avg.x - (grend->cam.w / grend->cam.scale) / 2, avg.y - (grend->cam.h / grend->cam.scale) / 2 };
     double k = pow(CAMERA_STIFFNESS, dt);
     grend->cam.x = grend->cam.x * k + newPos.x * (1. - k);
     grend->cam.y = grend->cam.y * k + newPos.y * (1. - k);
@@ -295,15 +290,21 @@ void Game::render() {
         }
     }
 
-    Point p = {0, 0};
+    Point p = { 0, 0 };
     SDL_SetRenderDrawColor(grend->cam.r, 255, 0, 0, 255); // r b g a
     p.render(&grend->cam);
 
     class Rectangle rec;
     SDL_SetRenderDrawColor(grend->cam.r, 255, 255, 255, 255); // r b g a
-    rec.a = {0, 0};
-    rec.dimensions = {1, 1};
+    rec.a = { 0, 0 };
+    rec.dimensions = { 1, 1 };
     rec.render(&grend->cam);
 
+    renderHUD();
+
     grend->represent();
+}
+
+void Game::renderHUD() {
+    client_inventory.render(&grend->cam);
 }
