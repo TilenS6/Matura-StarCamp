@@ -311,7 +311,7 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     uint32_t len = phisics.points.size;
     writeBuff(buff, offset, len);
-    cout << "points len = " << len <<endl;
+    cout << "points len = " << len << endl;
     for (int i = 0; i < len; ++i) {
         int tmpid = phisics.points.get_id_at_index(i);
         writeBuff(buff, offset, tmpid);
@@ -359,7 +359,7 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.lineObst.size;
     writeBuff(buff, offset, len);
-    cout << "lineObst len = " << len <<endl;
+    cout << "lineObst len = " << len << endl;
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.lineObst.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -380,7 +380,7 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.links.size;
     writeBuff(buff, offset, len);
-    cout << "links len = " << len <<endl;
+    cout << "links len = " << len << endl;
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.links.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -410,7 +410,7 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.muscles.size;
     writeBuff(buff, offset, len);
-    cout << "muscles len = " << len <<endl;
+    cout << "muscles len = " << len << endl;
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.muscles.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -442,7 +442,7 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.linkObst.size;
     writeBuff(buff, offset, len);
-    cout << "linkObst len = " << len <<endl;
+    cout << "linkObst len = " << len << endl;
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.linkObst.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -462,7 +462,7 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.rocketThrs.size;
     writeBuff(buff, offset, len);
-    cout << "rocketThr len = " << len <<endl;
+    cout << "rocketThr len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
         int tmp = phisics.rocketThrs.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -504,7 +504,7 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.fuelConts.size;
     writeBuff(buff, offset, len);
-    cout << "fuelCont len = " << len <<endl;
+    cout << "fuelCont len = " << len << endl;
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.fuelConts.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -537,7 +537,7 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.textures.size;
     writeBuff(buff, offset, len);
-    cout << "textures len = " << len <<endl;
+    cout << "textures len = " << len << endl;
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.textures.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -721,4 +721,38 @@ void Game::process_updatePlayerControls(RecievedData *rec) {
 
         phisics.rocketThrs.at_id(thrId)->setState(st);
     }
+}
+
+// -------- inventory --------
+
+/*
+DroppedItem(struct)
+*/
+void Game::sendPickup(int clientId, DroppedItem it) {
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_PICKUP_ITEM;
+    uint64_t offset = 2;
+
+    writeBuff(buff, offset, it);
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        server.sendData(clientId, buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- all updated data sent as server (length: " << offset << ")\n";
+#endif
+    }
+}
+
+void Game::process_drop(RecievedData *rec) {
+    uint32_t offset = 2;
+
+    DroppedItem it;
+    readBuff(rec->data, offset, it);
+
+    droppedItems.push_back(it);
 }

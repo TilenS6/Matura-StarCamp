@@ -14,6 +14,7 @@
 #include <thread>
 #include "graphics/graphics.h"
 #include "basicui/basicui.h"
+#include "inventory.h"
 
 #define WIDTH 1920 / 2
 #define HEIGHT 1080 / 2
@@ -22,10 +23,21 @@
 #define MAX_DT 0.005
 #define CAMERA_STIFFNESS .3 // s kksno vrednostjo ostane stara vrednost pozicije kamere po 1s
 
-#define INVENTORY_SIZE 5
-#define INVENTORY_TEXTURE_SIZE 50
-#define INVENTORY_TEXTURE_BORDER 2
-#define INVENTORY_TEXTURE_BORDER_COLOUR 255, 255, 255
+#define writeBuff(buff, offset, a)        \
+    memcpy(&buff[offset], &a, sizeof(a)); \
+    offset += sizeof(a);
+
+#define readBuff(buff, offset, a)         \
+    memcpy(&a, buff + offset, sizeof(a)); \
+    offset += sizeof(a);
+
+#define readBuff_c(buff, offset, bufflen, a) \
+    if (offset + sizeof(a) > bufflen) {      \
+        requestInitialFromServer();          \
+        return;                              \
+    } else {                                 \
+        readBuff(buff, offset, a);           \
+    };
 
 using namespace std;
 // class Player;
@@ -34,60 +46,11 @@ class ParticleS;
 class Generator;
 class Game;
 
-#define writeBuff(buff, offset, a)        \
-    memcpy(&buff[offset], &a, sizeof(a)); \
-    offset += sizeof(a);
-
-#define readBuff(buff, offset, a) \
-    memcpy(&a, buff + offset, sizeof(a)); \
-    offset += sizeof(a);
-
-#define readBuff_c(buff, offset, bufflen, a) \
-        if (offset + sizeof(a) > bufflen) { \
-            requestInitialFromServer(); \
-            return; \
-        } else { \
-            readBuff(buff, offset, a); \
-        };
-/*
-class Player
-{
-    double p[8][2] = {
-        // initial points
-        {1, 1},
-        {0, 2},
-        {1, 3},
-        {2, 3},
-        {3, 2},
-        {2, 1},
-        {2, 0.3},
-        {1, 0.3},
-    };
-    Point p_min, p_max, p_avg;
-
-    PhWorld *w;
-    Keyboard *kb;
-    int centerId;
-    FastCont<int> ids;    // 8+1
-    FastCont<int> thrsId; // 8
-
-    SDL_Texture *texture;
-
-public:
-    void init(PhWorld *, Keyboard *, Camera *, double, double);
-    void update();
-    void render(Camera *);
-
-    friend class Game;
-};
-
-*/
-
 class Generator {
-    Game* g = nullptr;
+    Game *g = nullptr;
 
 public:
-    void init(Game*);
+    void init(Game *);
     void newPlayerAt(Point, int);
 
     unsigned long PlanetGenSeed;
@@ -97,7 +60,7 @@ public:
 };
 
 class GameRenderer {
-    SDL_Window* wind;
+    SDL_Window *wind;
 
 public:
     Camera cam;
@@ -112,17 +75,7 @@ public:
     friend class Game;
 };
 
-struct InventoryEntry {
-    int ID, count;
-};
-class Inventory {
-    public:
-    InventoryEntry inv[INVENTORY_SIZE];
-    int selected;
 
-    Inventory();
-    void render(Camera *);
-};
 
 struct LoginEntry {
     string username, password;
@@ -131,8 +84,8 @@ struct LoginEntry {
 
 FastCont<LoginEntry> login;
 class Game {
-    GameRenderer* grend;
-    SDL_Window* wind;
+    GameRenderer *grend;
+    SDL_Window *wind;
 
     Mouse m;
     Keyboard kb;
@@ -169,44 +122,59 @@ class Game {
     void renderHUD();
 
 public:
-    Game(GameRenderer*, string, string, string, bool);
+    Game(GameRenderer *, string, string, string, bool);
     ~Game();
+
+    // -- basic
     void update();
     void render();
 
     bool looping() { return running; }
-    static void networkManagerC(Game*); // static zarad thread-ov
-    static void networkManagerS(Game*); // static zarad thread-ov
+
+    // -- network
+    static void networkManagerC(Game *); // static zarad thread-ov
+    static void networkManagerS(Game *); // static zarad thread-ov
 
     void requestInitialFromServer();
-    void requestUpdateAllFromServer();
-    void process_init();
-    void process_update_all();
     void send_init(int, int);
+    void process_init();
+
+    void requestUpdateAllFromServer();
     void send_update_all(int);
+    void process_update_all();
 
     void send_updatePlayerControls();
-    void process_updatePlayerControls(RecievedData*);
+    void process_updatePlayerControls(RecievedData *);
 
     void send_bye();
     void send_removedPoints(int); // removed points logged in removedPoints
     void process_deletePoints();
 
     void handle_newPlayer(int);
-    void followCamera(double);
-
     void handle_playerLeft(int);
-
-    // -------- login --------
+    void followCamera(double);
+    
     void sendLoginInfo(string, string);
-    int resolveLoginInfo(RecievedData*);
+    int resolveLoginInfo(RecievedData *);
+
+    void sendPickup(int, DroppedItem); // server use
+    void process_pickup(); // client use
+
+    void sendDrop(DroppedItem); // client use
+    void process_drop(RecievedData *); // server user
+
+
+    // -- inventory (v inventory.cpp)
+    FastCont<DroppedItem> droppedItems;
+    int dropInventoryItem(int, int, Point);
+    void updatePlayersPickupFromFloor();
 
     friend class Generator;
 };
 
-#include "game/generator.cpp"
+#include "generator.cpp"
 #include "game_networking_c.cpp"
 #include "game_networking_s.cpp"
-#include "game/gamerenderer.cpp"
-#include "game/inventory.cpp"
-#include "game/game.cpp"
+#include "gamerenderer.cpp"
+#include "game_inventory.cpp"
+#include "game.cpp"

@@ -4,9 +4,11 @@
 
 using namespace std;
 
+#define debug(x) std::cout << #x << " = " << x << std::endl;
+
 string server = "127.0.0.1";
 string checkConnection_report = "";
-string username = "", password = "";
+string username = "a", password = "a";
 bool pingingServer = true, pingingServer_accepted = true;
 bool terminatePing = false;
 bool terminatePing_accepted = false;
@@ -31,7 +33,20 @@ int main(int argc, char *argv[]) {
             else
                 ret = qeMenu_game;
 
-            if (ret == -1) return 0;
+            if (ret == -1) {
+                int i = 0;
+                terminatePing = true;
+                while (!terminatePing_accepted) {
+                    gr.basicEvents();
+                    SDL_Rect rct = {rand() % gr.cam.w, rand() % gr.cam.h, 10, 10};
+                    SDL_SetRenderDrawColor(gr.cam.r, 0, 0, 0, 255);
+                    SDL_RenderFillRect(gr.cam.r, &rct);
+                    gr.represent();
+                    ++i;
+                }
+                thr.join();
+                return 0;
+            }
 
             if (ret == gameAction_addUser) {
                 if (new_username.length() >= 3 && new_password.length() >= 3) {
@@ -44,11 +59,10 @@ int main(int argc, char *argv[]) {
         terminatePing = true;
 
         int i = 0;
-        gr.clear();
         while (!terminatePing_accepted) {
             gr.basicEvents();
             SDL_Rect rct = {rand() % gr.cam.w, rand() % gr.cam.h, 5, 5};
-            SDL_SetRenderDrawColor(gr.cam.r, 0, 50, 0, 255);
+            SDL_SetRenderDrawColor(gr.cam.r, 0, 0, 0, 255);
             SDL_RenderFillRect(gr.cam.r, &rct);
             gr.represent();
             ++i;
@@ -56,6 +70,7 @@ int main(int argc, char *argv[]) {
         thr.join();
 
         // PLAY
+        SDL_ShowCursor(SDL_ENABLE);
         bool launchServer = ret == gameAction_launchServer;
         cout << &gr << endl;
         Game game(&gr, server, username, password, launchServer);

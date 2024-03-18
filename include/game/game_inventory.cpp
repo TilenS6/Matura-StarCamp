@@ -1,0 +1,36 @@
+#include "game.h"
+
+void Game::updatePlayersPickupFromFloor() {
+    for (int i = 0; i < phisics.points.size; ++i) {
+        PhPoint *p = phisics.points.at_index(i);
+        if (!p->virt) continue;
+        if (server.getLastData(p->ownership) == nullptr) continue; // server ownership
+
+        for (int j = 0; j < droppedItems.size; ++j) {
+            DroppedItem *it = droppedItems.at_index(j);
+
+            if (distancePow2(it->pos, p->pos) <= PICKUP_RANGE_POW2) {
+                sendPickup(p->ownership, *it);
+                droppedItems.remove_index(j);
+                j--;
+            }
+        }
+    }
+}
+
+int Game::dropInventoryItem(int what, int howMuch, Point where) {
+    if (what < 0 || what >= INVENTORY_SIZE) return -1;
+    if (client_inventory.inv[what].count < howMuch) return -2;
+
+
+    DroppedItem tmp;
+    sendDrop(tmp);
+    tmp.entr.ID = client_inventory.inv[what].ID;
+    tmp.entr.count = client_inventory.inv[what].count;
+    tmp.pos = where;
+    droppedItems.push_back(tmp);
+
+    client_inventory.inv[what].count -= howMuch;
+    if (client_inventory.inv[what].count <= 0) client_inventory.inv[what].ID = none;
+    return 0;
+}

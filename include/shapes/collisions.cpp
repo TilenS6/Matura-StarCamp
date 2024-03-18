@@ -1,7 +1,5 @@
 #include "shapes/shapes.h"
 
-#define DEBUG(x) std::cout << #x << " = " << x << std::endl;
-
 // LINE/LINE
 bool collisionLineLine(Line l1, Line l2, Point *intersection = nullptr) {
     if (l1 == l2)

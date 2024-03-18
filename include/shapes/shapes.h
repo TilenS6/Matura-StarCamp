@@ -78,3 +78,4 @@ public:
 
 #include "shapes/shapes.cpp"
 #include "shapes/collisions.cpp"
+#include "shapes/shapesFunctions.cpp"

@@ -242,7 +242,7 @@ void Game::process_init() {
     */
     uint32_t len;
     readBuff_c(buff, offset, bufflen, len);
-    cout << "points len = " << len <<endl;
+    cout << "points len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         double x;
@@ -274,7 +274,7 @@ void Game::process_init() {
         readBuff_c(buff, offset, bufflen, static_koef);
         readBuff_c(buff, offset, bufflen, kinetic_koef);
         readBuff_c(buff, offset, bufflen, virt);
-        
+
         phisics.createNewPoint(x, y, mass, collisionGroup, static_koef, kinetic_koef, id);
         phisics.points.at_id(id)->setVirtual(virt);
 
@@ -300,7 +300,7 @@ void Game::process_init() {
         int PhWorld::createNewLineObst(double x1, double y1, double x2, double y2, int coll_group = 0) {
     */
     readBuff_c(buff, offset, bufflen, len);
-    cout << "lineObst len = " << len <<endl;
+    cout << "lineObst len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         double x1;
@@ -326,7 +326,7 @@ void Game::process_init() {
         int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
     */
     readBuff_c(buff, offset, bufflen, len);
-    cout << "links len = " << len <<endl;
+    cout << "links len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int idA;
@@ -356,7 +356,7 @@ void Game::process_init() {
         int PhWorld::createNewMuscleBetween(int idA, int idB, double spring_koef = 100, double damp_koef = 10, double muscle_range = .5, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
     */
     readBuff_c(buff, offset, bufflen, len);
-    cout << "muscles len = " << len <<endl;
+    cout << "muscles len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int idA;
@@ -388,7 +388,7 @@ void Game::process_init() {
         int PhWorld::createNewLinkObst(int linkId, int collG = 0) {
     */
     readBuff_c(buff, offset, bufflen, len);
-    cout << "lineObst len = " << len <<endl;
+    cout << "lineObst len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int linkId;
@@ -410,7 +410,7 @@ void Game::process_init() {
             * + char[8] controlls
     */
     readBuff_c(buff, offset, bufflen, len);
-    cout << "rocketThr len = " << len <<endl;
+    cout << "rocketThr len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int attached;
@@ -454,7 +454,7 @@ void Game::process_init() {
         int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit=50000) {
     */
     readBuff_c(buff, offset, bufflen, len);
-    cout << "fuelCont len = " << len <<endl;
+    cout << "fuelCont len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         double _capacity;
@@ -490,7 +490,7 @@ void Game::process_init() {
         (double) normA_x, normA_y, normB...
     */
     readBuff_c(buff, offset, bufflen, len);
-    cout << "textures len = " << len <<endl;
+    cout << "textures len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
         PhTexture tmpText;
 
@@ -656,4 +656,63 @@ void Game::send_updatePlayerControls() { // TODO to se lahko izvaja v posebnem t
     }
 
     client.sendData(buff, offset);
+}
+
+// -------- inventory --------
+
+void Game::sendDrop(DroppedItem it) {
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_PICKUP_ITEM;
+    uint64_t offset = 2;
+
+    writeBuff(buff, offset, it);
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        client.sendData(buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- all updated data sent as server (length: " << offset << ")\n";
+#endif
+    }
+}
+
+void Game::process_pickup() {
+    uint32_t offset = 2;
+
+    DroppedItem it;
+    readBuff(client.recvbuf, offset, it);
+
+    // ---- processing
+    // removing
+    double min_distPow2 = 1, index = -1;
+    for (int i = 0; i < droppedItems.size; ++i) {
+        DroppedItem p = *droppedItems.at_index(i);
+        if (p.entr.ID != it.entr.ID) continue;
+        double tmp = distancePow2(p.pos, it.pos);
+        if (min_distPow2 > tmp) {
+            min_distPow2 = tmp;
+            index = i;
+        }
+    }
+    if (index != -1) droppedItems.remove_index(index);
+
+    // sorting in inventory
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        if (client_inventory.inv[i].ID == it.entr.ID) {
+            client_inventory.inv[i].count += it.entr.count;
+
+            if (client_inventory.inv[i].count > stackSizes[client_inventory.inv[i].ID]) {
+                it.entr.count = client_inventory.inv[i].count - stackSizes[client_inventory.inv[i].ID];
+                client_inventory.inv[i].count = stackSizes[client_inventory.inv[i].ID];
+            }
+        }
+        if (it.entr.count <= 0) break;
+    }
+
+    // sending back remains (if any)
+    if (it.entr.count > 0) sendDrop(it);
 }
