@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
         int i = 0;
         while (!terminatePing_accepted) {
             gr.basicEvents();
-            SDL_Rect rct = {rand() % gr.cam.w, rand() % gr.cam.h, 5, 5};
+            SDL_Rect rct = {rand() % gr.cam.w, rand() % gr.cam.h, 10, 10};
             SDL_SetRenderDrawColor(gr.cam.r, 0, 0, 0, 255);
             SDL_RenderFillRect(gr.cam.r, &rct);
             gr.represent();

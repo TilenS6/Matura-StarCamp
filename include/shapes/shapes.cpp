@@ -6,6 +6,12 @@ void Point::render(Camera *cam) {
     if (tx < 0 || ty < 0 || tx >= cam->w || ty >= cam->h) return;
     SDL_RenderDrawPoint(cam->r, tx, ty);
 }
+Point Point::renderAt(Camera *cam) {
+    Point t;
+    t.x = (x - cam->x) * cam->scale;
+    t.y = cam->h - (y - cam->y) * cam->scale;
+    return t;
+}
 
 Point Point::operator+(Point a) {
     Point tmp;

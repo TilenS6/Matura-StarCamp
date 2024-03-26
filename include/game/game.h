@@ -169,6 +169,8 @@ public:
     int dropInventoryItem(int, int, Point);
     void updatePlayersPickupFromFloor();
 
+    void renderDroppedItems(Camera *);
+
     friend class Generator;
 };
 

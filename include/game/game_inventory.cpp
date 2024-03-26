@@ -24,13 +24,21 @@ int Game::dropInventoryItem(int what, int howMuch, Point where) {
 
 
     DroppedItem tmp;
-    sendDrop(tmp);
     tmp.entr.ID = client_inventory.inv[what].ID;
     tmp.entr.count = client_inventory.inv[what].count;
     tmp.pos = where;
+    sendDrop(tmp);
     droppedItems.push_back(tmp);
 
     client_inventory.inv[what].count -= howMuch;
     if (client_inventory.inv[what].count <= 0) client_inventory.inv[what].ID = none;
-    return 0;
+    return howMuch;
+}
+
+void Game::renderDroppedItems(Camera *cam) {
+    for (int i=0;i<droppedItems.size; ++i) {
+        // cout << "render @ Game::renderDroppedItems\n";
+        droppedItems.at_index(i)->render(cam);
+
+    }
 }

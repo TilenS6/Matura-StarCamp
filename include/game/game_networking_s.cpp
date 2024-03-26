@@ -110,6 +110,9 @@ void Game::networkManagerS(Game *g) {
 
                         g->process_updatePlayerControls(rec);
                         break;
+                    case NETSTD_DROP_ITEM:
+                        g->process_drop(rec);
+                        break;
                     default:
                         cout << "HEADER_DATA: unknown data\n";
                         break;
@@ -752,7 +755,10 @@ void Game::process_drop(RecievedData *rec) {
     uint32_t offset = 2;
 
     DroppedItem it;
-    readBuff(rec->data, offset, it);
+    readBuff(rec->data, offset, it.pos.x);
+    readBuff(rec->data, offset, it.pos.y);
+    readBuff(rec->data, offset, it.entr.ID);
+    readBuff(rec->data, offset, it.entr.count);
 
     droppedItems.push_back(it);
 }

@@ -66,8 +66,8 @@ void ParticleS::setRandomises(double _randDir = 0, double _randSpeed = 0, double
 }
 void ParticleS::moveSpawner(Point new_spwnPoint, double new_dir) {
     __spwnPnt = new_spwnPoint;
-    __spwnPnt.x -= __size / 2;
-    __spwnPnt.y += __size / 2;
+    // __spwnPnt.x -= __size / 2;
+    // __spwnPnt.y += __size / 2;
     __dir = new_dir;
 }
 

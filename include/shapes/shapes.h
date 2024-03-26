@@ -8,6 +8,7 @@ public:
     double x, y;
 
     void render(Camera *);
+    Point renderAt(Camera *);
 
     Point operator+(Point);
     Point operator-(Point);

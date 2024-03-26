@@ -7,7 +7,7 @@ void Game::requestInitialFromServer() {
     if (client.getConnectionStatus() != 0) {
         cout << "E@ Game::requestInitialFromServer() - Server error!\n";
     }
-    char data[] = {NETSTD_HEADER_REQUEST, NETSTD_INIT};
+    char data[] = { NETSTD_HEADER_REQUEST, NETSTD_INIT };
     client.sendData(data, sizeof(data));
 }
 
@@ -18,11 +18,11 @@ void Game::requestUpdateAllFromServer() {
     if (client.getConnectionStatus() != 0) {
         cout << "E@ Game::requestInitialFromServer() - Server error!\n";
     }
-    char data[] = {NETSTD_HEADER_REQUEST, NETSTD_UPDATE_ALL};
+    char data[] = { NETSTD_HEADER_REQUEST, NETSTD_UPDATE_ALL };
     client.sendData(data, sizeof(data));
 }
 
-void Game::networkManagerC(Game *g) {
+void Game::networkManagerC(Game* g) {
     cout << "Client ran...\n";
     g->netRequestTimer.interval();
     while (g->running) {
@@ -55,6 +55,9 @@ void Game::networkManagerC(Game *g) {
                     break;
                 case NETSTD_DELETE:
                     g->process_deletePoints();
+                    break;
+                case NETSTD_PICKUP_ITEM:
+                    g->process_pickup();
                     break;
                 default:
                     cout << "HEADER_DATA: unknown data\n";
@@ -97,7 +100,8 @@ void Game::networkManagerC(Game *g) {
     } while (ret == recieveData_NO_NEW_DATA);
     if (g->client.recvbuf[0] == NETSTD_HEADER_DATA && g->client.recvbuf[1] == NETSTD_BYE) {
         cout << "connection closed successfuly\n";
-    } else {
+    }
+    else {
         cout << "error while closing connection!\n";
     }
 }
@@ -160,7 +164,8 @@ void Game::send_bye() {
     if (offset >= MAX_BUF_LEN) {
         cout << "Data buffer overflowed, not sending anything\n";
         // TODO kaj ce OF
-    } else {
+    }
+    else {
         client.sendData(buff, offset);
 #ifdef CONSOLE_LOGGING
         cout << "- bye sent\n";
@@ -292,7 +297,7 @@ void Game::process_init() {
         readBuff_c(buff, offset, bufflen, velocity_x);
         readBuff_c(buff, offset, bufflen, velocity_y);
 
-        phisics.points.at_id(id)->vel = {velocity_x, velocity_y};
+        phisics.points.at_id(id)->vel = { velocity_x, velocity_y };
     }
 
     // lineobst
@@ -503,7 +508,7 @@ void Game::process_init() {
         readBuff_c(buff, offset, bufflen, id);
 
         phisics.textures.force_import(id, tmpText);
-        PhTexture *tx = phisics.textures.at_id(id);
+        PhTexture* tx = phisics.textures.at_id(id);
 
         char c;
         do {
@@ -574,13 +579,13 @@ void Game::process_update_all() {
 
         readBuff(buff, offset, added_weight);
 
-        PhPoint *p = phisics.points.at_id(id);
+        PhPoint* p = phisics.points.at_id(id);
         if (p == nullptr) {
             requestInitialFromServer();
             return;
         }
-        p->pos = {pos_x, pos_y};
-        p->vel = {vel_x, vel_y};
+        p->pos = { pos_x, pos_y };
+        p->vel = { vel_x, vel_y };
         p->addedMass = added_weight;
     }
 
@@ -597,7 +602,7 @@ void Game::process_update_all() {
         readBuff(buff, offset, id);
         readBuff(buff, offset, power);
 
-        PhRocketThr *p = phisics.rocketThrs.at_id(id);
+        PhRocketThr* p = phisics.rocketThrs.at_id(id);
         if (p == nullptr) {
             requestInitialFromServer();
             return;
@@ -618,7 +623,7 @@ void Game::process_update_all() {
         readBuff(buff, offset, id);
         readBuff(buff, offset, currentFuel);
 
-        FuelCont *p = phisics.fuelConts.at_id(id);
+        FuelCont* p = phisics.fuelConts.at_id(id);
         if (p == nullptr) {
             requestInitialFromServer();
             return;
@@ -664,15 +669,19 @@ void Game::sendDrop(DroppedItem it) {
     char buff[MAX_BUF_LEN];
     // header
     buff[0] = NETSTD_HEADER_DATA;
-    buff[1] = NETSTD_PICKUP_ITEM;
+    buff[1] = NETSTD_DROP_ITEM;
     uint64_t offset = 2;
 
-    writeBuff(buff, offset, it);
+    writeBuff(buff, offset, it.pos.x);
+    writeBuff(buff, offset, it.pos.y);
+    writeBuff(buff, offset, it.entr.ID);
+    writeBuff(buff, offset, it.entr.count);
 
     if (offset >= MAX_BUF_LEN) {
         cout << "Data buffer overflowed, not sending anything\n";
         // TODO kaj ce OF
-    } else {
+    }
+    else {
         client.sendData(buff, offset);
 #ifdef CONSOLE_LOGGING
         cout << "- all updated data sent as server (length: " << offset << ")\n";
@@ -701,7 +710,13 @@ void Game::process_pickup() {
     if (index != -1) droppedItems.remove_index(index);
 
     // sorting in inventory
+    // cout << it.entr.ID << ", " << it.entr.count << endl;
     for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        if (client_inventory.inv[i].ID == none) {
+            client_inventory.inv[i] = it.entr;
+            it.entr.count = 0;
+            break;
+        }
         if (client_inventory.inv[i].ID == it.entr.ID) {
             client_inventory.inv[i].count += it.entr.count;
 
@@ -714,5 +729,16 @@ void Game::process_pickup() {
     }
 
     // sending back remains (if any)
-    if (it.entr.count > 0) sendDrop(it);
+    if (it.entr.count > 0)  {
+        cout << "posiljam nazaj\n";
+        sendDrop(it);
+    }
+
+    /*
+    if (offset != client.recvbuflen) {
+        uint8_t tmp = 0;
+        readBuff(client.recvbuf + offset, tmp, client.recvbuf);
+        process_pickup();
+    }
+    */
 }

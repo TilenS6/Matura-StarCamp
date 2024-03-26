@@ -8,16 +8,18 @@ uint16_t charToScancode(char c) {
 
     if (c >= 'A' && c <= 'Z') {
         return c - 'A' + SDL_SCANCODE_A;
-    } else if (c >= '1' && c <= '9') {
+    }
+    else if (c >= '1' && c <= '9') {
         return c - '1' + SDL_SCANCODE_1;
-    } else if (c == '0') {
+    }
+    else if (c == '0') {
         return SDL_SCANCODE_0;
     }
 
     return SDL_SCANCODE_UNKNOWN;
 }
 
-Game::Game(GameRenderer *_grend, string srvr, string username, string password, bool launchAsServer) {
+Game::Game(GameRenderer* _grend, string srvr, string username, string password, bool launchAsServer) {
     grend = _grend;
     serverRole = launchAsServer;
 
@@ -28,7 +30,7 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
     phisics.gravity_accel = 0; // vesolje
     phisics.vel_mult_second = .5;
 
-    gameArea.a = {0, 0};
+    gameArea.a = { 0, 0 };
     gameArea.setRadius(20);
 
     if (serverRole)
@@ -38,6 +40,8 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
 
     grend->cam.x = -(grend->cam.w / grend->cam.scale) / 2;
     grend->cam.y = -(grend->cam.h / grend->cam.scale) / 2;
+
+    client_inventory.loadTextures(&_grend->cam);
 
     // phisics.loadWorldFromFile("TEST.WRD");
 
@@ -60,15 +64,16 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
     // -------- net --------
 
     if (serverRole) {
-        LoginEntry entr = {"a", "a", {1, 1}};
+        LoginEntry entr = { "a", "a", {1, 1} };
         login.push_back(entr);
-        entr = {"b", "b", {-1, 1}};
+        entr = { "b", "b", {-1, 1} };
         login.push_back(entr);
 
         server.init();
         networkThr = thread(networkManagerS, this);
         gen.planets(1234, 10); // seed, count
-    } else {
+    }
+    else {
         client.init(srvr);
         sendLoginInfo(username, password);
         networkThr = thread(networkManagerC, this);
@@ -111,16 +116,23 @@ void Game::update() {
                 if (client_inventory.selected >= INVENTORY_SIZE) client_inventory.selected = INVENTORY_SIZE - 1;
             }
         }
-            switch (event.key.keysym.scancode) {
-            case SDL_SCANCODE_ESCAPE:
-                running = false;
-                break;
-
-            default:
-                break;
-            }
-
+        switch (event.key.keysym.scancode) {
+        case SDL_SCANCODE_ESCAPE:
+            running = false;
             break;
+        case SDL_SCANCODE_B:
+            if (!serverRole) {
+                Point p = { m.x / grend->cam.scale + grend->cam.x, (grend->cam.h - m.y) / grend->cam.scale + grend->cam.y };
+                int sel = client_inventory.selected;
+                if (client_inventory.inv[sel].ID == none) break;
+                cout << "drop: " << dropInventoryItem(sel, client_inventory.inv[sel].count, p) << endl;
+            }
+            break;
+
+        default:
+            break;
+        }
+        break;
 
         case SDL_KEYUP:
             switch (event.key.keysym.scancode) {
@@ -148,7 +160,7 @@ void Game::update() {
         cout << "L click at " << m.x << ", " << m.y << endl;
     }
     if (m_ev & Mouse::M_RClickMask) {
-        cout << "R click at " << m.x << ", " << m.y << endl;
+        cout << "R click at (world) " << m.x / grend->cam.scale + grend->cam.x << ", " << m.y / grend->cam.scale + grend->cam.y << endl;
     }
 
     if (serverRole) {
@@ -235,7 +247,8 @@ void Game::update() {
 
     if (!serverRole) {
         followCamera(dt);
-    } else {
+    }
+    else {
         updatePlayersPickupFromFloor();
     }
 
@@ -244,7 +257,7 @@ void Game::update() {
 
 void Game::followCamera(double dt) {
     FastCont<Point> controllsAt;
-    Point avg = {0, 0}, min = {INFINITY, INFINITY}, max = {-INFINITY, -INFINITY};
+    Point avg = { 0, 0 }, min = { INFINITY, INFINITY }, max = { -INFINITY, -INFINITY };
     int count = 0;
     for (int i = 0; i < phisics.rocketThrs.size; ++i) {
         if (phisics.rocketThrs.at_index(i)->controlls[0] != '\0') {
@@ -270,7 +283,7 @@ void Game::followCamera(double dt) {
 
     avg /= (double)count;
 
-    Point newPos = {avg.x - (grend->cam.w / grend->cam.scale) / 2, avg.y - (grend->cam.h / grend->cam.scale) / 2};
+    Point newPos = { avg.x - (grend->cam.w / grend->cam.scale) / 2, avg.y - (grend->cam.h / grend->cam.scale) / 2 };
     double k = pow(CAMERA_STIFFNESS, dt);
     grend->cam.x = grend->cam.x * k + newPos.x * (1. - k);
     grend->cam.y = grend->cam.y * k + newPos.y * (1. - k);
@@ -295,6 +308,8 @@ void Game::render() {
 
     phisics.render(&grend->cam);
 
+    renderDroppedItems(&grend->cam);
+
     // if (serverRole)
     //    player.render(&cam);
 
@@ -305,7 +320,8 @@ void Game::render() {
         for (uint16_t y = 0, y2 = 0; y < grend->cam.h; y += grend->cam.scale) {
             if (y2) {
                 SDL_SetRenderDrawColor(grend->cam.r, 255, 0, 0, 255);
-            } else {
+            }
+            else {
                 SDL_SetRenderDrawColor(grend->cam.r, 0, 0, 255, 255);
             }
             y2 = !y2;
@@ -313,14 +329,14 @@ void Game::render() {
         }
     }
 
-    Point p = {0, 0};
+    Point p = { 0, 0 };
     SDL_SetRenderDrawColor(grend->cam.r, 255, 0, 0, 255); // r b g a
     p.render(&grend->cam);
 
     class Rectangle rec;
     SDL_SetRenderDrawColor(grend->cam.r, 255, 255, 255, 255); // r b g a
-    rec.a = {0, 0};
-    rec.dimensions = {1, 1};
+    rec.a = { 0, 0 };
+    rec.dimensions = { 1, 1 };
     rec.render(&grend->cam);
 
     renderHUD();
