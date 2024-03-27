@@ -6,7 +6,7 @@ void Point::render(Camera *cam) {
     if (tx < 0 || ty < 0 || tx >= cam->w || ty >= cam->h) return;
     SDL_RenderDrawPoint(cam->r, tx, ty);
 }
-Point Point::renderAt(Camera *cam) {
+Point Point::getRenderPos(Camera *cam) {
     Point t;
     t.x = (x - cam->x) * cam->scale;
     t.y = cam->h - (y - cam->y) * cam->scale;
@@ -108,14 +108,19 @@ void Circle::render(Camera *cam) {
             if (x * x + y * y <= rPow2)
                 SDL_RenderDrawPoint(cam->r, ax + x, ay + y);
 }
-void Rectangle::render(Camera *cam) {
+
+SDL_Rect Rectng::getRenderPos(Camera *cam) {
     SDL_Rect rect;
     rect.w = dimensions.x * cam->scale;
     rect.h = dimensions.y * cam->scale;
 
     rect.x = (a.x - cam->x) * cam->scale;
-    rect.y = cam->h - (a.y - cam->y) * cam->scale-rect.w;
+    rect.y = (cam->h - (a.y - cam->y) * cam->scale) - rect.w;
+    return rect;
+}
 
+void Rectng::render(Camera *cam) {
+    SDL_Rect rect = getRenderPos(cam);
     if (rect.x > cam->w) return;
     if (rect.y > cam->h) return;
     if (rect.x + rect.w < 0) return;
@@ -202,11 +207,11 @@ void Point3::operator=(Point3 a) {
 void Point3::render(Camera *cam) {
     Point t = {(x - cam->x) * cam->scale, cam->h - (y - cam->y) * cam->scale};
     double mult = pow(.5, z);
-    t.x-=cam->w/2;
-    t.y-=cam->h/2;
+    t.x -= cam->w / 2;
+    t.y -= cam->h / 2;
     t *= mult;
-    t.x+=cam->w/2;
-    t.y+=cam->h/2;
+    t.x += cam->w / 2;
+    t.y += cam->h / 2;
 
     if (t.x < 0 || t.y < 0 || t.x >= cam->w || t.y >= cam->h) return;
     SDL_RenderDrawPoint(cam->r, t.x, t.y);
@@ -215,11 +220,11 @@ void Point3::render(Camera *cam) {
 Point Point3::renderAt(Camera *cam) {
     Point t = {(x - cam->x) * cam->scale, cam->h - (y - cam->y) * cam->scale};
     double mult = pow(.5, z);
-    t.x-=cam->w/2;
-    t.y-=cam->h/2;
+    t.x -= cam->w / 2;
+    t.y -= cam->h / 2;
     t *= mult;
-    t.x+=cam->w/2;
-    t.y+=cam->h/2;
-    
+    t.x += cam->w / 2;
+    t.y += cam->h / 2;
+
     return t;
 }

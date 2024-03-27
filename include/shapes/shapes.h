@@ -8,7 +8,7 @@ public:
     double x, y;
 
     void render(Camera *);
-    Point renderAt(Camera *);
+    Point getRenderPos(Camera *);
 
     Point operator+(Point);
     Point operator-(Point);
@@ -70,10 +70,11 @@ public:
     void render(Camera *);
 };
 
-class Rectangle {
+class Rectng {
 public:
     Point a;          // top left corner
     Point dimensions; // (width/height), should be +
+    SDL_Rect getRenderPos(Camera *);
     void render(Camera *);
 };
 

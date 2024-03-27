@@ -10,7 +10,7 @@ void PhLineObst::render(Camera *cam) {
     l.a = {(line.a.x - cam->x) * cam->scale, cam->h - ((line.a.y - cam->y) * cam->scale)};
     l.b = {(line.b.x - cam->x) * cam->scale, cam->h - ((line.b.y - cam->y) * cam->scale)};
 
-    Rectangle rec;
+    Rectng rec;
     rec.a = {0, 0};
     rec.dimensions = {(double)cam->w, (double)cam->h};
     if (!collisionLineRectangle(l, rec)) return;

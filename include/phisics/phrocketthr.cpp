@@ -75,7 +75,7 @@ void PhRocketThr::render(Camera *cam) {
         Point attached = p1->getPos();
         Point facing = p2->getPos();
         double dir = atan2(attached.y - facing.y, attached.x - facing.x) + PI + dirOffset;
-        Rectangle rect;
+        Rectng rect;
         rect.a = attached;
         rect.a.x -= .05;
         rect.a.y += .05;

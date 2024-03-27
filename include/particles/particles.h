@@ -13,7 +13,7 @@ class Particle;
 class ParticleS;
 
 class Particle {
-    Rectangle r;
+    Rectng r;
     Point vel;
     double vel_mult_second; // vel *= 1 - ((1 - vel_mult_second) * dt);
     double rem_life, init_life;

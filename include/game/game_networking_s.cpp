@@ -147,7 +147,7 @@ void Game::networkManagerS(Game *g) {
                         --i;
                         break;
                     default:
-                        cout << "HEADER_REQUEST: unknown data\n";
+                        cout << "HEADER_REQUEST: unknown request\n";
                         break;
                     }
 

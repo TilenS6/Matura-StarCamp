@@ -77,6 +77,9 @@ int main(int argc, char *argv[]) {
         while (game.looping()) {
             game.update();
         }
+        game.end();
+
+        cout << "quit reason: " << game.getQuitInfo() << endl;
     }
     return 0;
 }

@@ -23,6 +23,9 @@
 #define MAX_DT 0.005
 #define CAMERA_STIFFNESS .3 // s kksno vrednostjo ostane stara vrednost pozicije kamere po 1s
 
+#define ANIMATION_SPEED 0.01
+#define BUTTON_DISTANCE 1.5
+
 #define writeBuff(buff, offset, a)        \
     memcpy(&buff[offset], &a, sizeof(a)); \
     offset += sizeof(a);
@@ -75,8 +78,40 @@ public:
     friend class Game;
 };
 
+// ------ INTERACTIVE --------
+class InteractiveDropoffArea {
+    Rectng rect;
+    DroppedItem containing;
 
+public:
+    double rotation; // !! in DEG !!
+    bool hijacked;
+    InteractiveDropoffArea();
+    void setRect(double, double, double, double);
 
+    bool update(FastCont<DroppedItem> *, Inventory *);
+    void pickupToInv(Inventory *);
+    void updateHijack(Keyboard *, Mouse *, Inventory *, Camera *);
+
+    void render(Camera *);
+};
+
+class InteractiveButton {
+    SDL_Texture *textT;
+    int tw, th;
+    string txt;
+    
+    Point pos;
+    double animationK;
+
+public:
+    InteractiveButton();
+    void init(Point, string, Camera *);
+    bool update(Point, double, Keyboard *); // TODO nej shran void* do funkcije, nej jo klice ko je aktiveran
+    void render(Camera *);
+};
+
+// -------- GAME CLASS --------
 struct LoginEntry {
     string username, password;
     Point logoutPos;
@@ -97,10 +132,12 @@ class Game {
 
     // ---- client ----
     Inventory client_inventory;
+    Point playerMedian;
 
     // ---- network ----
     NetClient client;
     NetServer server;
+    FastCont<int> clientIds; // everyone in server [loginID] => [clientConnectionID]
     Timer netRequestTimer;
     thread networkThr;
     bool running, networkingActive;
@@ -117,13 +154,18 @@ class Game {
 
     // ---- gameplay ----
     Circle gameArea;
-    FastCont<int> clientIds; // everyone in server [loginID] => [clientConnectionID]
+    FastCont<DroppedItem> droppedItems;
+    FastCont<InteractiveDropoffArea> dropoffAreas;
+    FastCont<InteractiveButton> intButtons;
+
+    string quitInfo;
 
     void renderHUD();
 
 public:
     Game(GameRenderer *, string, string, string, bool);
     ~Game();
+    void end();
 
     // -- basic
     void update();
@@ -153,23 +195,25 @@ public:
     void handle_newPlayer(int);
     void handle_playerLeft(int);
     void followCamera(double);
-    
+
     void sendLoginInfo(string, string);
     int resolveLoginInfo(RecievedData *);
 
     void sendPickup(int, DroppedItem); // server use
-    void process_pickup(); // client use
+    void process_pickup();             // client use
 
-    void sendDrop(DroppedItem); // client use
+    void sendDrop(DroppedItem);        // client use
     void process_drop(RecievedData *); // server user
 
-
     // -- inventory (v inventory.cpp)
-    FastCont<DroppedItem> droppedItems;
     int dropInventoryItem(int, int, Point);
     void updatePlayersPickupFromFloor();
+    void updateInteractiveItems();
 
     void renderDroppedItems(Camera *);
+
+    // getterji/setterji
+    string getQuitInfo() { return quitInfo; }
 
     friend class Generator;
 };
@@ -179,4 +223,5 @@ public:
 #include "game_networking_s.cpp"
 #include "gamerenderer.cpp"
 #include "game_inventory.cpp"
+#include "interactive.cpp"
 #include "game.cpp"

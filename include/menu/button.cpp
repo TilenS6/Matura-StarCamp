@@ -22,11 +22,11 @@ void Button::move(int x, int y, int w, int h) {
     textRect.y = _y;
 }
 
-void Button::changeText(SDL_Renderer *r, string a) {
+void Button::changeText(SDL_Renderer* r, string a) {
     if (text != NULL) SDL_DestroyTexture(text);
 
-    TTF_Font *font = TTF_OpenFont("fonts/nasalization-free/nasalization-rg.ttf", 24);
-    SDL_Surface *textSurface = TTF_RenderText_Blended(font, a.c_str(), SDL_Color({TEXT_COLOUR})); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
+    TTF_Font* font = TTF_OpenFont("fonts/nasalization-free/nasalization-rg.ttf", 24);
+    SDL_Surface* textSurface = TTF_RenderText_Blended(font, a.c_str(), SDL_Color({ TEXT_COLOUR })); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
     text = SDL_CreateTextureFromSurface(r, textSurface);
     SDL_FreeSurface(textSurface);
 
@@ -43,21 +43,22 @@ void Button::changeStyle(int styleNo) {
         style = styleNo;
 }
 
-bool Button::clicked(Mouse *m) {
-    bool res = !lastMLeft && m->left && m->x >= _x && m->x <= _x + _w && m->y >= _y && m->y <= _y + _h;
-
+bool Button::hover(Mouse* m) {
+    hovering = m->x >= _x && m->x <= _x + _w && m->y >= _y && m->y <= _y + _h;
+    clicked = hovering && !lastMLeft && m->left;
     lastMLeft = m->left;
-    return res;
+
+    return hovering;
 }
 
-void Button::render(SDL_Renderer *r) {
+void Button::render(SDL_Renderer* r) {
     if (style == 0)
         renderStyle0(r);
     else if (style == 1)
         renderStyle1(r);
 }
 
-void Button::renderStyle0(SDL_Renderer *r) {
+void Button::renderStyle0(SDL_Renderer* r) {
     double sec;
     if (animated)
         sec = t.getTime() * 1.4 - (_y / 500.);
@@ -69,9 +70,14 @@ void Button::renderStyle0(SDL_Renderer *r) {
     int alpha = sec * 255;
     SDL_SetTextureAlphaMod(text, alpha);
 
-    SDL_Rect borders = {_x, _y, rendW, _h};
+    // SDL_Rect borders = { _x, _y, rendW, _h };
 
-    int x = _x, y = _y, w = rendW, h = _h;
+
+    int hoTarget = hovering * 7;
+    double k = pow(CURSOR_STIFFNESS, .01);
+    ho = ho * k + hoTarget * (1. - k);
+
+    int x = _x - ho * 2, y = _y - ho*.8, w = rendW + ho * 4, h = _h + ho * 1.6;
     SDL_Point corners[5] = {
         {x, y + h},
         {(x + (h / 2)), y},
@@ -141,7 +147,7 @@ void Button::renderStyle0(SDL_Renderer *r) {
     };
     int ind[6] = {
         0, 1, 2,
-        0, 2, 3};
+        0, 2, 3 };
 
     // SDL_SetRenderDrawColor(r, MENU_COLOUR1, 255);
     // SDL_RenderFillRect(r, &borders);
@@ -161,7 +167,7 @@ void Button::renderStyle0(SDL_Renderer *r) {
     SDL_RenderCopy(r, text, NULL, &textRect);
 }
 
-void Button::renderStyle1(SDL_Renderer *r) {
+void Button::renderStyle1(SDL_Renderer* r) {
     int ofsY = -3;
     double sec;
     if (animated)

@@ -1,6 +1,6 @@
 #include "particles/particles.h"
 /*
-    Rectangle r;
+    Rectng r;
     Point vel;
     double vel_mult_second; // vel
     SDL_Colour colour;
@@ -97,7 +97,7 @@ void ParticleS::update(double dt, double addMult = 1.0, Point relvel = {0, 0}) {
 
 void ParticleS::render(Camera *cam) {
     /*
-        Rectangle r;
+        Rectng r;
         r.a = __spwnPnt;
         r.dimensions = {__size, __size};
         SDL_SetRenderDrawColor(cam->r, 255, 255, 255, 255);

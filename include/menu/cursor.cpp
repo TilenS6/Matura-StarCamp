@@ -41,9 +41,7 @@ void Cursor::update(double dt) {
     spd = (dx * dx + dy * dy) * dt * .5;
     if (spd > 50) spd = 50;
 }
-void Cursor::render(SDL_Renderer *r) {
-
-    double displayRad = 20;
+void Cursor::render(SDL_Renderer *r, double displayRad) {
     SDL_FRect dest = {
         (float)(pos.x - displayRad),
         (float)(pos.y - displayRad),

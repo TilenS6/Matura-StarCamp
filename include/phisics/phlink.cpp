@@ -84,7 +84,7 @@ void PhLink::render(Camera* cam) {
     l.a = { (pointA->pos.x - cam->x) * cam->scale, cam->h - ((pointA->pos.y - cam->y) * cam->scale) };
     l.b = { (pointB->pos.x - cam->x) * cam->scale, cam->h - ((pointB->pos.y - cam->y) * cam->scale) };
 
-    Rectangle rec;
+    Rectng rec;
     rec.a = { 0, 0 };
     rec.dimensions = { (double)cam->w, (double)cam->h };
     if (!collisionLineRectangle(l, rec)) return;

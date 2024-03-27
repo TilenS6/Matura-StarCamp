@@ -69,7 +69,7 @@ bool collisionCircleCircle(Circle c1, Circle c2) {
 }
 
 // LINE/RECTANGLE
-bool collisionLineRectangle(Line l, class Rectangle b) {
+bool collisionLineRectangle(Line l, class Rectng b) {
     if (l.a.x > b.a.x && l.a.x < b.a.x + b.dimensions.x && l.a.y > b.a.y && l.a.y < b.a.y + b.dimensions.y) return true; // both points inside rect.
     Line tmp;
 
@@ -94,7 +94,7 @@ bool collisionLineRectangle(Line l, class Rectangle b) {
 }
 
 // POINT/RECTANGLE
-bool collisionPointRectangle(Point p, class Rectangle b) {
+bool collisionPointRectangle(Point p, class Rectng b) {
     return (p.x >= b.a.x && p.x <= b.a.x + b.dimensions.x &&
             p.y >= b.a.y && p.y <= b.a.y + b.dimensions.y);
 }
