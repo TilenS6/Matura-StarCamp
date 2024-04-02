@@ -75,6 +75,7 @@ public:
     Point a;          // top left corner
     Point dimensions; // (width/height), should be +
     SDL_Rect getRenderPos(Camera *);
+    SDL_FRect getRenderPosF(Camera *);
     void render(Camera *);
 };
 

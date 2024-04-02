@@ -50,18 +50,18 @@ void Star::render(Camera *cam) {
     Point at = pos.renderAt(cam);
     double k = pow(.5, pos.z) * sizeMult;
 
-    SDL_Rect rect;
+    SDL_FRect rect;
     rect.x = at.x;
     rect.y = at.y;
     rect.w = (w * cam->scale) * k;
     rect.h = (h * cam->scale) * k;
-    rect.x -= rect.w / 2;
-    rect.y -= rect.h / 2;
+    rect.x -= rect.w / 2.;
+    rect.y -= rect.h / 2.;
 
     if (rect.x > cam->w) return;
     if (rect.y > cam->h) return;
     if (rect.x + rect.w < 0) return;
     if (rect.y + rect.h < 0) return;
 
-    SDL_RenderCopy(cam->r, texture, NULL, &rect);
+    SDL_RenderCopyF(cam->r, texture, NULL, &rect);
 }

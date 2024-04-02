@@ -6,6 +6,7 @@ class Keyboard {
     const uint8_t n = 64;
     uint8_t arr[64]; // each key is single bit, marked by SDL_scancode.h
     uint8_t freshPressArr[64];
+    char lastC;
 
 public:
     Keyboard();
@@ -15,6 +16,7 @@ public:
 
     bool get(SDL_Scancode);
     bool pressedNow(SDL_Scancode);
+    char getLastChar();
 
     void newFrame();
 };

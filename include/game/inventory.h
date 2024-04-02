@@ -11,6 +11,7 @@
 #define PICKUP_RANGE_POW2 PICKUP_RANGE *PICKUP_RANGE
 
 
+// to nej ostane v tem vrstnem redu!... je dependent na game_shipbuilder.cpp
 enum InventoryIDs {
     ore_rock = 0,
     ore_iron,

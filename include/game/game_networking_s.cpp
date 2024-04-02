@@ -38,7 +38,7 @@ void Game::networkManagerS(Game *g) {
                     goto cancel_new_client;
                 }
 
-                int loginId = g->resolveLoginInfo(rec);
+                int loginId = g->resolve_loginInfo(rec);
                 if (loginId == -1) { // no username/password exists
                     cout << "This username/password don't exist!\n";
                     g->server.closeConnection(id);
@@ -189,7 +189,7 @@ void Game::networkManagerS(Game *g) {
 */
 
 /** @return -1 on unsuccessful login, or return ID of user on success (>=0) */
-int Game::resolveLoginInfo(RecievedData *rec) {
+int Game::resolve_loginInfo(RecievedData *rec) {
     string username = "", password = "";
     uint32_t offset = 0;
 
@@ -731,7 +731,7 @@ void Game::process_updatePlayerControls(RecievedData *rec) {
 /*
 DroppedItem(struct)
 */
-void Game::sendPickup(int clientId, DroppedItem it) {
+void Game::send_pickup(int clientId, DroppedItem it) {
     char buff[MAX_BUF_LEN];
     // header
     buff[0] = NETSTD_HEADER_DATA;

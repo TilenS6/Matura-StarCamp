@@ -1,6 +1,6 @@
 #include "game/game.h"
 
-void Game::requestInitialFromServer() {
+void Game::request_initialFromServer() {
 #ifdef CONSOLE_LOGGING
     cout << "- init requested...\n";
 #endif
@@ -11,7 +11,7 @@ void Game::requestInitialFromServer() {
     client.sendData(data, sizeof(data));
 }
 
-void Game::requestUpdateAllFromServer() {
+void Game::request_updateAllFromServer() {
 #ifdef CONSOLE_LOGGING
     cout << "- update all requested...\n";
 #endif
@@ -94,7 +94,7 @@ void Game::networkManagerC(Game *g) {
 #ifdef CONSOLE_LOGGING
             cout << "- request sent\n";
 #endif
-            g->requestUpdateAllFromServer();
+            g->request_updateAllFromServer();
             g->netRequestTimer.interval();
         }
     }
@@ -121,7 +121,7 @@ void Game::networkManagerC(Game *g) {
  char c0, c1, c2...
 
 */
-void Game::sendLoginInfo(string username, string password) {
+void Game::send_loginInfo(string username, string password) {
     char buff[MAX_BUF_LEN];
     uint64_t offset = 0;
 
@@ -584,7 +584,7 @@ void Game::process_update_all() {
 
         PhPoint *p = phisics.points.at_id(id);
         if (p == nullptr) {
-            requestInitialFromServer();
+            request_initialFromServer();
             return;
         }
         p->pos = {pos_x, pos_y};
@@ -607,7 +607,7 @@ void Game::process_update_all() {
 
         PhRocketThr *p = phisics.rocketThrs.at_id(id);
         if (p == nullptr) {
-            requestInitialFromServer();
+            request_initialFromServer();
             return;
         }
         p->setState(power);
@@ -628,7 +628,7 @@ void Game::process_update_all() {
 
         FuelCont *p = phisics.fuelConts.at_id(id);
         if (p == nullptr) {
-            requestInitialFromServer();
+            request_initialFromServer();
             return;
         }
         p->setFuel(currentFuel);
@@ -668,7 +668,7 @@ void Game::send_updatePlayerControls() { // TODO to se lahko izvaja v posebnem t
 
 // -------- inventory --------
 
-void Game::sendDrop(DroppedItem it) {
+void Game::send_drop(DroppedItem it) {
     char buff[MAX_BUF_LEN];
     // header
     buff[0] = NETSTD_HEADER_DATA;
@@ -737,7 +737,7 @@ void Game::process_pickup() {
     // sending back remains (if any)
     if (it.entr.count > 0) {
         cout << "posiljam nazaj\n";
-        sendDrop(it);
+        send_drop(it);
     }
 
     /*

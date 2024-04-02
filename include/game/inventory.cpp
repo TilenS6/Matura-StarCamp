@@ -1,4 +1,4 @@
-#include "game.h"
+#include "inventory.h"
 
 Inventory::Inventory() {
     selected = 0;

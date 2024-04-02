@@ -118,6 +118,15 @@ SDL_Rect Rectng::getRenderPos(Camera *cam) {
     rect.y = (cam->h - (a.y - cam->y) * cam->scale) - rect.w;
     return rect;
 }
+SDL_FRect Rectng::getRenderPosF(Camera *cam) {
+    SDL_FRect rect;
+    rect.w = dimensions.x * cam->scale;
+    rect.h = dimensions.y * cam->scale;
+
+    rect.x = (a.x - cam->x) * cam->scale;
+    rect.y = (cam->h - (a.y - cam->y) * cam->scale) - rect.w;
+    return rect;
+}
 
 void Rectng::render(Camera *cam) {
     SDL_Rect rect = getRenderPos(cam);

@@ -16,6 +16,11 @@ uint16_t charToScancode(char c) {
 
     return SDL_SCANCODE_UNKNOWN;
 }
+/*
+void testF() {
+    cout << "sm v f.\n";
+}
+*/
 
 Game::Game(GameRenderer *_grend, string srvr, string username, string password, bool launchAsServer) {
     grend = _grend;
@@ -47,14 +52,26 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
 
     gen.stars(100);
 
+    // -- ship builder
+    shipbuilder.init(0, 0, this);
+
+    InteractiveButton buildBtn;
+    buildBtn.init({-1., 0.}, "Build", &grend->cam, std::bind(&ShipBuilder::build, &shipbuilder));
+    intButtons.push_back(buildBtn);
+
     // -------------- TEST --------------
+    /*
     InteractiveDropoffArea tmp;
     tmp.setRect(0, -2, 2, 2);
     dropoffAreas.push_back(tmp);
+    */
 
+    /*
     InteractiveButton tmp2;
-    tmp2.init({-1., 0.}, "Test", &grend->cam);
+    tmp2.init({-1., 0.}, "Test", &grend->cam, testF);
     intButtons.push_back(tmp2);
+    */
+    // -------------- TEST --------------
 
     // -------- net --------
 
@@ -69,7 +86,7 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
         gen.planets(1234, 10); // seed, count
     } else {
         client.init(srvr);
-        sendLoginInfo(username, password);
+        send_loginInfo(username, password);
         networkThr = thread(networkManagerC, this);
         // send_init();
     }

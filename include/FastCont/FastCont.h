@@ -22,6 +22,9 @@ public:
     ~FastCont();
     FastCont();
     FastCont(bool);
+    FastCont(T...);
+    void handleInfArgs(T, T...);
+    void handleInfArgs(T);
 
     id_data_type push_back(T);
     void pop_back();

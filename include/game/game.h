@@ -15,6 +15,8 @@
 #include "graphics/graphics.h"
 #include "basicui/basicui.h"
 #include "inventory.h"
+#include "interactive.h"
+#include "shipbuilder.h"
 
 #define WIDTH 1920 / 2
 #define HEIGHT 1080 / 2
@@ -23,8 +25,10 @@
 #define MAX_DT 0.005
 #define CAMERA_STIFFNESS .3 // s kksno vrednostjo ostane stara vrednost pozicije kamere po 1s
 
-#define ANIMATION_SPEED 0.01
-#define BUTTON_DISTANCE 1.5
+#define BUILDING_BLOCK_SIZE 1.
+#define BUILDING_BLOCK_SPRING 100
+#define BUILDING_BLOCK_DAMP 2
+#define BUILDING_BLOCK_MERGEDISTANCE .1
 
 #define writeBuff(buff, offset, a)        \
     memcpy(&buff[offset], &a, sizeof(a)); \
@@ -36,7 +40,7 @@
 
 #define readBuff_c(buff, offset, bufflen, a) \
     if (offset + sizeof(a) > bufflen) {      \
-        requestInitialFromServer();          \
+        request_initialFromServer();         \
         return;                              \
     } else {                                 \
         readBuff(buff, offset, a);           \
@@ -47,6 +51,7 @@ using namespace std;
 class Particle;
 class ParticleS;
 class Generator;
+class ShipBuilder;
 class Game;
 
 class Generator {
@@ -78,45 +83,22 @@ public:
     friend class Game;
 };
 
-// ------ INTERACTIVE --------
-class InteractiveDropoffArea {
-    Rectng rect;
-    DroppedItem containing;
-
-public:
-    double rotation; // !! in DEG !!
-    bool hijacked;
-    InteractiveDropoffArea();
-    void setRect(double, double, double, double);
-
-    bool update(FastCont<DroppedItem> *, Inventory *);
-    void pickupToInv(Inventory *);
-    void updateHijack(Keyboard *, Mouse *, Inventory *, Camera *);
-
-    void render(Camera *);
-};
-
-class InteractiveButton {
-    SDL_Texture *textT;
-    int tw, th;
-    string txt;
-    
-    Point pos;
-    double animationK;
-
-public:
-    InteractiveButton();
-    void init(Point, string, Camera *);
-    bool update(Point, double, Keyboard *); // TODO nej shran void* do funkcije, nej jo klice ko je aktiveran
-    void render(Camera *);
-};
-
-// -------- GAME CLASS --------
 struct LoginEntry {
     string username, password;
     Point logoutPos;
 };
 
+class ShipBuilder { // TODOO testerej!
+    InteractiveDropoffArea areaGrid[SHIPBUILDER_GRID_H][SHIPBUILDER_GRID_W];
+    Game *g;
+
+public:
+    void init(double, double, Game *);
+    void build();
+    void render(Camera *);
+};
+
+// -------- GAME CLASS --------
 FastCont<LoginEntry> login;
 class Game {
     GameRenderer *grend;
@@ -129,6 +111,7 @@ class Game {
     PhWorld phisics;
 
     Generator gen;
+    ShipBuilder shipbuilder;
 
     // ---- client ----
     Inventory client_inventory;
@@ -161,6 +144,7 @@ class Game {
     string quitInfo;
 
     void renderHUD();
+    void process_buildShip_placeBlock(int, double, double, double);
 
 public:
     Game(GameRenderer *, string, string, string, bool);
@@ -173,15 +157,17 @@ public:
 
     bool looping() { return running; }
 
+    void followCamera(double);
+
     // -- network
     static void networkManagerC(Game *); // static zarad thread-ov
     static void networkManagerS(Game *); // static zarad thread-ov
 
-    void requestInitialFromServer();
+    void request_initialFromServer();
     void send_init(int, int);
     void process_init();
 
-    void requestUpdateAllFromServer();
+    void request_updateAllFromServer();
     void send_update_all(int);
     void process_update_all();
 
@@ -194,16 +180,18 @@ public:
 
     void handle_newPlayer(int);
     void handle_playerLeft(int);
-    void followCamera(double);
 
-    void sendLoginInfo(string, string);
-    int resolveLoginInfo(RecievedData *);
+    void send_loginInfo(string, string);
+    int resolve_loginInfo(RecievedData *);
 
-    void sendPickup(int, DroppedItem); // server use
-    void process_pickup();             // client use
+    void send_pickup(int, DroppedItem); // server use
+    void process_pickup();              // client use
 
-    void sendDrop(DroppedItem);        // client use
+    void send_drop(DroppedItem);       // client use
     void process_drop(RecievedData *); // server user
+
+    void send_buildShip(int *, double, double, int, int); // array, offX, offY, w, h
+    void process_buildShip(RecievedData *);
 
     // -- inventory (v inventory.cpp)
     int dropInventoryItem(int, int, Point);
@@ -216,12 +204,14 @@ public:
     string getQuitInfo() { return quitInfo; }
 
     friend class Generator;
+    friend class ShipBuilder;
 };
 
 #include "generator.cpp"
+#include "shipbuilder.cpp"
 #include "game_networking_c.cpp"
 #include "game_networking_s.cpp"
 #include "gamerenderer.cpp"
 #include "game_inventory.cpp"
-#include "interactive.cpp"
+#include "game_shipbuilder.cpp"
 #include "game.cpp"

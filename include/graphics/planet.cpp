@@ -95,7 +95,7 @@ void Planet::generate(Camera *cam, int _w, int _h, int realW, Point3 at, int rd 
 
     SDL_SetRenderTarget(cam->r, texture);
     SDL_SetTextureBlendMode(planet, SDL_BLENDMODE_BLEND);
-    SDL_RenderCopy(cam->r, planet, NULL, NULL);
+    SDL_RenderCopyF(cam->r, planet, NULL, NULL);
     SDL_DestroyTexture(planet);
 
     // ring, zadnji del
@@ -127,18 +127,18 @@ void Planet::render(Camera *cam) {
     Point at = pos.renderAt(cam);
     double k = pow(.5, pos.z) * sizeMult;
 
-    SDL_Rect rect;
+    SDL_FRect rect;
     rect.x = at.x;
     rect.y = at.y;
     rect.w = (w * cam->scale) * k;
     rect.h = (h * cam->scale) * k;
-    rect.x -= rect.w / 2;
-    rect.y -= rect.h / 2;
+    rect.x -= rect.w / 2.;
+    rect.y -= rect.h / 2.;
 
     if (rect.x > cam->w) return;
     if (rect.y > cam->h) return;
     if (rect.x + rect.w < 0) return;
     if (rect.y + rect.h < 0) return;
 
-    SDL_RenderCopy(cam->r, texture, NULL, &rect);
+    SDL_RenderCopyF(cam->r, texture, NULL, &rect);
 }

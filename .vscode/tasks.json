@@ -29,6 +29,12 @@
                 "-lSDL2main",
                 "-lSDL2",
                 "-lSDL2_ttf",
+                "-lSDL2_image",
+
+                "-lWs2_32",
+                "-lMswsock",
+                "-lAdvApi32",
+
                 "-static-libstdc++",
                 "-static-libgcc"
             ],
@@ -73,7 +79,7 @@
                 "-lAdvApi32",
 
                 "-static-libstdc++",
-                "-static-libgcc"
+                "-static-libgcc",
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

@@ -10,7 +10,7 @@ void Game::updatePlayersPickupFromFloor() {
             DroppedItem *it = droppedItems.at_index(j);
 
             if (distancePow2(it->pos, p->pos) <= PICKUP_RANGE_POW2) {
-                sendPickup(p->ownership, *it);
+                send_pickup(p->ownership, *it);
                 droppedItems.remove_index(j);
                 j--;
             }
@@ -34,7 +34,7 @@ int Game::dropInventoryItem(int what, int howMuch, Point where) {
     updateInteractiveItems();
 
     if (droppedItems.at_id(tmpid) != nullptr)
-        sendDrop(tmp);
+        send_drop(tmp);
 
     return howMuch;
 }
