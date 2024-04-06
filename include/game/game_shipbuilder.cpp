@@ -41,20 +41,33 @@ void Game::process_buildShip(RecievedData *rec) {
     readBuff(rec->data, offset, h);
 
     // -- building the ship
+    FuelCont tmp;
+    tmp.virtIDs.set_memory_leak_safety(false);
+    int virtID = phisics.fuelConts.push_back(tmp);
+    FuelCont *virtP = phisics.fuelConts.at_id(virtID);
+    // virtP->init(0, 0, nullptr, (int[4]){0,0,0,0}, 0, 0, 0);
+    virtP->initVirtual(&phisics.fuelConts);
+    cout << "AAA: " << virtP->virtIDs.size << endl;
+
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
             int id;
             // readBuff(rec->data, offset, arr[y][x]);
             readBuff(rec->data, offset, id);
-
-            process_buildShip_placeBlock(id, offX + x * BUILDING_BLOCK_SIZE, offY + y * BUILDING_BLOCK_SIZE, BUILDING_BLOCK_SIZE);
+            if (id == none) continue;
+            // dobi ID novo kreiranga fuel containerja (ali -1 ce ga ni naredu)
+            int fcID = process_buildShip_placeBlock(id, offX + x * BUILDING_BLOCK_SIZE, offY + y * BUILDING_BLOCK_SIZE, BUILDING_BLOCK_SIZE, virtID); // TODOO ko dodajas thrusterje zbrise vse, ko dodas seat ni seat-a
+            if (fcID >= 0) {
+                cout << "dodajam fc v virt: " << fcID << endl;
+                virtP->virtIDs.push_back(fcID);
+            }
         }
     }
 
-    // -- mergin near points
+    // -- merging near points
     for (int i = 0; i < phisics.points.size; ++i) {
         Point p = phisics.points.at_index(i)->getPos();
-        for (int j = i; j < phisics.points.size; ++j) {
+        for (int j = i+1; j < phisics.points.size; ++j) {
             Point p2 = phisics.points.at_index(j)->getPos();
             // najdemo dve tocki ko sta zlo blizu
             if (distancePow2(p, p2) <= BUILDING_BLOCK_MERGEDISTANCE * BUILDING_BLOCK_MERGEDISTANCE) {
@@ -102,22 +115,36 @@ void Game::process_buildShip(RecievedData *rec) {
         }
     }
 }
-void Game::process_buildShip_placeBlock(int id, double offX, double offY, double scale) {
+
+/// @return ID of newly created FuelCont (or -1 if it isn't created at all)
+int Game::process_buildShip_placeBlock(int id, double offX, double offY, double scale, int thrsFuelContID) {
+    int ret = -1;
     if (id < building_basic || id >= none) {
         cout << "E: Game::process_buildShip_placeBlock... buildShip building block ID not in range!\n";
-        return;
+        return -1;
     }
+
+    FastCont<int> pids;
 
     for (int i = 0; i < constructions[id].phpoints.size; ++i) {
         Point *p = constructions[id].phpoints.at_index(i);
-        phisics.createNewPoint(offX + p->x, offY + p->y, 1, 0);
+
+        int id = phisics.createNewPoint(offX + p->x, offY + p->y, 1, 0);
+        pids.push_back(id);
     }
     for (int i = 0; i < constructions[id].links.size; ++i) {
         LinkStr *p = constructions[id].links.at_index(i);
-        phisics.createNewLinkBetween(p->idA, p->idB, BUILDING_BLOCK_SPRING, BUILDING_BLOCK_DAMP);
+        phisics.createNewLinkBetween(*pids.at_index(p->idA), *pids.at_index(p->idB), BUILDING_BLOCK_SPRING, BUILDING_BLOCK_DAMP);
     }
     for (int i = 0; i < constructions[id].thrs.size; ++i) {
         RocketThrStr *p = constructions[id].thrs.at_index(i);
-        phisics.createNewThrOn(p->ID, p->facing, 0);
+        int tmpid = phisics.createNewThrOn(*pids.at_index(p->ID), *pids.at_index(p->facing), 0);
+        phisics.rocketThrs.at_id(tmpid)->setFuelSource(thrsFuelContID);
     }
+    for (int i = 0; i < constructions[id].fuelConts.size; ++i) {
+        FuelContStr *p = constructions[id].fuelConts.at_index(i);
+        int arr[4] = { *pids.at_index(p->idA), *pids.at_index(p->idB), *pids.at_index(p->idC), *pids.at_index(p->idD) };
+        ret = phisics.createNewFuelContainer(BUILDING_FUEL_CAPACITY, BUILDING_FUEL_RECHARGE, arr);
+    }
+    return ret;
 }

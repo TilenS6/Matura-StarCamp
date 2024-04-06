@@ -29,6 +29,8 @@
 #define BUILDING_BLOCK_SPRING 100
 #define BUILDING_BLOCK_DAMP 2
 #define BUILDING_BLOCK_MERGEDISTANCE .1
+#define BUILDING_FUEL_CAPACITY 100
+#define BUILDING_FUEL_RECHARGE 1
 
 #define writeBuff(buff, offset, a)        \
     memcpy(&buff[offset], &a, sizeof(a)); \
@@ -88,13 +90,15 @@ struct LoginEntry {
     Point logoutPos;
 };
 
-class ShipBuilder { // TODOO testerej!
+class ShipBuilder {
     InteractiveDropoffArea areaGrid[SHIPBUILDER_GRID_H][SHIPBUILDER_GRID_W];
     Game *g;
 
 public:
     void init(double, double, Game *);
     void build();
+    void update(FastCont<DroppedItem> *, Inventory *);
+    void updateHijack(Keyboard *, Mouse *, Inventory *, Camera *);
     void render(Camera *);
 };
 
@@ -144,7 +148,7 @@ class Game {
     string quitInfo;
 
     void renderHUD();
-    void process_buildShip_placeBlock(int, double, double, double);
+    int process_buildShip_placeBlock(int, double, double, double, int);
 
 public:
     Game(GameRenderer *, string, string, string, bool);

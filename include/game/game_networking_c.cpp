@@ -459,12 +459,38 @@ void Game::process_init() {
 
     // fuelConts
     /*
-        int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit=50000) {
+        int ID
+        bool virt
+        if (virt)
+            uint32_t virtPLen
+            int ID1, ID2...
+        else
+            int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit=50000) {
     */
     readBuff_c(buff, offset, bufflen, len);
     cout << "fuelCont len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
         int id;
+        bool virt;
+        readBuff_c(buff, offset, bufflen, id);
+        readBuff_c(buff, offset, bufflen, virt);
+        // cout << id << ". virt? " << virt << endl;
+
+        if (virt) {
+            phisics.createNewFuelContainer(0, 0, 0, 0, 0, 0, id); // ker je capacity na 0 je virtual
+            // phisics.fuelConts.at_id(id)->initVirtual(&phisics.fuelConts);
+
+            uint32_t virtLen;
+            readBuff_c(buff, offset, bufflen, virtLen);
+            for (uint32_t j = 0; j < virtLen; ++j) {
+                int tmpVirtId;
+                readBuff_c(buff, offset, bufflen, tmpVirtId);
+                phisics.fuelConts.at_id(id)->virtIDs.push_back(tmpVirtId);
+            }
+            // cout << "virt init-an\n";
+            continue;
+        }
+
         double _capacity;
         double recharge_per_second;
         int pointIdsForWeights[4];
@@ -474,7 +500,6 @@ void Game::process_init() {
 
         // --------------------------------
 
-        readBuff_c(buff, offset, bufflen, id);
         readBuff_c(buff, offset, bufflen, _capacity);
         readBuff_c(buff, offset, bufflen, recharge_per_second);
 

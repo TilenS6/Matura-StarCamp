@@ -53,7 +53,7 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
     gen.stars(100);
 
     // -- ship builder
-    shipbuilder.init(0, 0, this);
+    shipbuilder.init(2, 0, this);
 
     InteractiveButton buildBtn;
     buildBtn.init({-1., 0.}, "Build", &grend->cam, std::bind(&ShipBuilder::build, &shipbuilder));
@@ -186,6 +186,8 @@ void Game::update() {
     for (int i = 0; i < dropoffAreas.size; ++i) {
         dropoffAreas.at_index(i)->updateHijack(&kb, &m, &client_inventory, &grend->cam);
     }
+    shipbuilder.updateHijack(&kb, &m, &client_inventory, &grend->cam);
+
     // kb hijacking --
     for (int i = 0; i < intButtons.size; ++i) {
         if (intButtons.at_index(i)->update(playerMedian, dt, &kb)) {
@@ -240,7 +242,7 @@ void Game::update() {
     for (int i = 0; i < PHISICS_SUBSTEPS; ++i) {
         phisics.applyGravity();
 
-        // -------- CLINET
+        // -------- CLIENT
         if (!serverRole) {
             for (int i = 0; i < phisics.rocketThrs.size; ++i) {
                 if (phisics.rocketThrs.at_index(i)->controlls[0] == '\0')
@@ -341,6 +343,7 @@ void Game::render() {
     phisics.render(&grend->cam);
 
     // interactive items --
+    shipbuilder.render(&grend->cam);
     for (int i = 0; i < dropoffAreas.size; ++i) {
         dropoffAreas.at_index(i)->render(&grend->cam);
     }
@@ -394,4 +397,5 @@ void Game::updateInteractiveItems() {
     for (int i = 0; i < dropoffAreas.size; ++i) {
         dropoffAreas.at_index(i)->update(&droppedItems, &client_inventory);
     }
+    shipbuilder.update(&droppedItems, &client_inventory);
 }

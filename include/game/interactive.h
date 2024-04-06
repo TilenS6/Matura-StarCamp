@@ -24,6 +24,8 @@ public:
     DroppedItem getContaining() { return containing; }
 
     void render(Camera *);
+
+    friend class ShipBuilder;
 };
 
 class InteractiveButton {

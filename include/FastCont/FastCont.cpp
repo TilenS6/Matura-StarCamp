@@ -1,10 +1,6 @@
 #include "FastCont/FastCont.h"
 
 template <class T, class id_data_type>
-FastContElement<T, id_data_type>::FastContElement(T _data, id_data_type _id) : data(_data), id(_id) {
-}
-
-template <class T, class id_data_type>
 id_data_type FastCont<T, id_data_type>::push_back(T _a) {
     // FastContElement<T, id_data_type> a(_a, rollingID++);
 
@@ -73,13 +69,13 @@ void FastCont<T, id_data_type>::clear() {
     size = 0;
 }
 template <class T, class id_data_type>
-T* FastCont<T, id_data_type>::at_index(uint32_t at) {
+T *FastCont<T, id_data_type>::at_index(uint32_t at) {
     if (at >= size) throw invalid_argument("\"at\" out of bounds");
     return &((p + at)->data);
 }
 
 template <class T, class id_data_type>
-T* FastCont<T, id_data_type>::at_id(id_data_type searchForID) {
+T *FastCont<T, id_data_type>::at_id(id_data_type searchForID) {
     for (uint32_t i = 0; i < size; ++i) {
         if ((p + i)->id == searchForID) {
             return &((p + i)->data);
@@ -138,23 +134,26 @@ FastCont<T, id_data_type>::FastCont() {
 }
 
 template <class T, class id_data_type>
-FastCont<T, id_data_type>::FastCont(T data...) {
+template <typename... Args>
+FastCont<T, id_data_type>::FastCont(T a, Args... data) {
     memory_leak_safety = true;
     p = nullptr;
     rollingID = 0;
     alloc_size = 0;
     size = 0;
 
-    handleInfArgs(data);
+    push_back(a);
+    handleInfArgs(data...);
 }
 template <class T, class id_data_type>
-void FastCont<T, id_data_type>::handleInfArgs(T a, T data...) {
+template <typename... Args>
+void FastCont<T, id_data_type>::handleInfArgs(T a, Args... data) {
     push_back(a);
-    handleInfArgs(data);
+    handleInfArgs(data...);
 }
 template <class T, class id_data_type>
-void FastCont<T, id_data_type>::handleInfArgs(T a) {
-    push_back(a);
+void FastCont<T, id_data_type>::handleInfArgs() {
+    return;
 }
 template <class T, class id_data_type>
 FastCont<T, id_data_type>::~FastCont() {

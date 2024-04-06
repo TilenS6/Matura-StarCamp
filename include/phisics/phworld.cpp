@@ -128,7 +128,7 @@ void PhWorld::removePointById(int id, FastCont<int> *removedPointsList = nullptr
         if (points.at_index(i)->virt) {
             for (int j = 0; j < points.at_index(i)->virtAvgPoints.size; ++j) {
                 if (*points.at_index(i)->virtAvgPoints.at_index(j) == id) {
-                    
+
                     if (removedPointsList != nullptr)
                         removedPointsList->push_back(points.get_id_at_index(i));
 
@@ -207,16 +207,31 @@ int PhWorld::createNewWeightOn(int for_point_id, int forceId = -1) {
     return forceId;
 }
 
+/// @brief 
+/// @param _capacity ce je na 0 nardi FuelContainer VIRTUAL
+/// @param recharge_per_second 
+/// @param pointIdsForWeights 
+/// @param empty_kg 
+/// @param kg_perFuelUnit 
+/// @param Ns_perFuelUnit 
+/// @param forceId 
+/// @return 
 int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit = 50000, int forceId = -1) {
     FuelCont tmp;
-    if (forceId == -1) {
-        int id = fuelConts.push_back(tmp);
-        fuelConts.at_id(id)->init(_capacity, recharge_per_second, this, pointIdsForWeights, empty_kg, kg_perFuelUnit, Ns_perFuelUnit);
-        return id;
+    if (forceId != -1) {
+        fuelConts.force_import(forceId, tmp);
+        if (_capacity > 0)
+            fuelConts.at_id(forceId)->init(_capacity, recharge_per_second, this, pointIdsForWeights, empty_kg, kg_perFuelUnit, Ns_perFuelUnit);
+        else
+            fuelConts.at_id(forceId)->initVirtual(&fuelConts);
+        return forceId;
     }
-    fuelConts.force_import(forceId, tmp);
-    fuelConts.at_id(forceId)->init(_capacity, recharge_per_second, this, pointIdsForWeights, empty_kg, kg_perFuelUnit, Ns_perFuelUnit);
-    return forceId;
+    int id = fuelConts.push_back(tmp);
+    if (_capacity > 0)
+        fuelConts.at_id(id)->init(_capacity, recharge_per_second, this, pointIdsForWeights, empty_kg, kg_perFuelUnit, Ns_perFuelUnit);
+    else
+        fuelConts.at_id(id)->initVirtual(&fuelConts);
+    return id;
 }
 
 void PhWorld::applyGravity() {
@@ -342,6 +357,9 @@ void PhWorld::render(Camera *cam) {
 
     for (int i = 0; i < textures.size; ++i) {
         textures.at_index(i)->render(cam, this);
+    }
+    for (int i = 0; i < fuelConts.size; ++i) {
+        fuelConts.at_index(i)->render(cam);
     }
 }
 

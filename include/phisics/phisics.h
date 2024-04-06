@@ -208,8 +208,14 @@ class FuelCont {
 
     int weightIds[4], pointIDs[4];
 
+    bool virt;
+    FastCont<FuelCont> *fcp = nullptr;
+
 public:
+    FastCont<int> virtIDs;
     void init(double, double, PhWorld *, int[4], double, double, double);
+    void initVirtual(FastCont<FuelCont> *);
+
     void setFuel(double);
     double getFuel();
 

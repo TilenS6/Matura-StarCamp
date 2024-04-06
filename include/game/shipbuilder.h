@@ -1,10 +1,12 @@
 #pragma once
 #include "game.h"
 
-#define BUILDING_BLOCK_WH 0.5
+#define BUILDING_BLOCK_WH 1
 
 #define SHIPBUILDER_GRID_W 11
 #define SHIPBUILDER_GRID_H 11
+
+//! class ShipBuilder v game.h
 
 struct LinkStr {
     int idA, idB;

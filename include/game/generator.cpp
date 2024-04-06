@@ -11,10 +11,6 @@ string controlls[8] = {
     "DQ",
 };
 
-double map(double x, double in_min, double in_max, double out_min, double out_max) {
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-
 void Generator::init(Game *_g) {
     g = _g;
 }

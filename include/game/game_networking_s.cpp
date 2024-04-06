@@ -113,6 +113,9 @@ void Game::networkManagerS(Game *g) {
                     case NETSTD_DROP_ITEM:
                         g->process_drop(rec);
                         break;
+                    case NETSTD_BUILD:
+                        g->process_buildShip(rec);
+                        break;
                     default:
                         cout << "HEADER_DATA: unknown data\n";
                         break;
@@ -503,7 +506,13 @@ void Game::send_init(int network_clientId, int playerID) {
 
     // fuelConts
     /*
-        int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit=50000) {
+        int ID
+        bool virt
+        if (virt)
+            uint32_t virtPLen
+            int ID1, ID2...
+        else
+            int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit=50000) {
     */
     len = phisics.fuelConts.size;
     writeBuff(buff, offset, len);
@@ -511,6 +520,18 @@ void Game::send_init(int network_clientId, int playerID) {
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.fuelConts.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
+
+        bool tmpVirt = phisics.fuelConts.at_index(i)->virt;
+        writeBuff(buff, offset, tmpVirt);
+        if (tmpVirt) {
+            uint32_t virtLen = phisics.fuelConts.at_index(i)->virtIDs.size;
+            writeBuff(buff, offset, virtLen);
+            for (uint32_t j = 0; j < virtLen; ++j) {
+                int virtID = *phisics.fuelConts.at_index(i)->virtIDs.at_index(j);
+                writeBuff(buff, offset, virtID);
+            }
+            continue;
+        }
 
         double tmp2 = phisics.fuelConts.at_index(i)->capacity;
         writeBuff(buff, offset, tmp2);
