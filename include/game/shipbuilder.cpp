@@ -10,11 +10,12 @@ void ShipBuilder::init(double dx, double dy, Game *_gp) {
 }
 void ShipBuilder::build() {
     cout << "buildam\n";
-    int gridIDs[SHIPBUILDER_GRID_H][SHIPBUILDER_GRID_W];
+    BuildingBlockData gridIDs[SHIPBUILDER_GRID_H][SHIPBUILDER_GRID_W];
 
     for (int y = 0; y < SHIPBUILDER_GRID_H; ++y) {
         for (int x = 0; x < SHIPBUILDER_GRID_W; ++x) {
-            gridIDs[y][x] = areaGrid[y][x].containing.entr.ID;
+            gridIDs[y][x].ID = areaGrid[y][x].containing.entr.ID;
+            gridIDs[y][x].keybind = areaGrid[y][x].thrusterKeybind;
             areaGrid[y][x].containing.entr.count--;
             if (areaGrid[y][x].containing.entr.count <= 0) {
                 areaGrid[y][x].containing.entr.count = 0;

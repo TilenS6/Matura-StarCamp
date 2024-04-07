@@ -114,7 +114,7 @@ void Game::networkManagerS(Game *g) {
                         g->process_drop(rec);
                         break;
                     case NETSTD_BUILD:
-                        g->process_buildShip(rec);
+                        g->process_buildShip(rec, id);
                         break;
                     default:
                         cout << "HEADER_DATA: unknown data\n";
@@ -138,8 +138,8 @@ void Game::networkManagerS(Game *g) {
 #endif
                         g->send_update_all(id);
                         break;
-                    case NETSTD_BYE:
 
+                    case NETSTD_BYE:
                         cout << "Connection to " << id << " closed\n";
                         g->handle_playerLeft(id);
                         {

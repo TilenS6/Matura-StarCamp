@@ -26,9 +26,9 @@
 #define CAMERA_STIFFNESS .3 // s kksno vrednostjo ostane stara vrednost pozicije kamere po 1s
 
 #define BUILDING_BLOCK_SIZE 1.
-#define BUILDING_BLOCK_SPRING 100
+#define BUILDING_BLOCK_SPRING 1000
 #define BUILDING_BLOCK_DAMP 2
-#define BUILDING_BLOCK_MERGEDISTANCE .1
+#define BUILDING_BLOCK_MERGEDISTANCE .01
 #define BUILDING_FUEL_CAPACITY 100
 #define BUILDING_FUEL_RECHARGE 1
 
@@ -102,6 +102,11 @@ public:
     void render(Camera *);
 };
 
+struct BuildingBlockData {
+    int ID;
+    char keybind;
+};
+
 // -------- GAME CLASS --------
 FastCont<LoginEntry> login;
 class Game {
@@ -148,7 +153,7 @@ class Game {
     string quitInfo;
 
     void renderHUD();
-    int process_buildShip_placeBlock(int, double, double, double, int);
+    int process_buildShip_placeBlock(int, double, double, double, int, int, char);
 
 public:
     Game(GameRenderer *, string, string, string, bool);
@@ -194,8 +199,8 @@ public:
     void send_drop(DroppedItem);       // client use
     void process_drop(RecievedData *); // server user
 
-    void send_buildShip(int *, double, double, int, int); // array, offX, offY, w, h
-    void process_buildShip(RecievedData *);
+    void send_buildShip(BuildingBlockData *, double, double, int, int); // array, offX, offY, w, h
+    void process_buildShip(RecievedData *, int);
 
     // -- inventory (v inventory.cpp)
     int dropInventoryItem(int, int, Point);

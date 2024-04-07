@@ -13,6 +13,9 @@ void FuelCont::init(double _capacity, double recharge_per_second, PhWorld *_w, i
     virt = false;
     fcp = nullptr;
 
+    virtIDs.clear();
+    virtIDs.reset();
+
     for (int i = 0; i < 4; ++i) {
         pointIDs[i] = pointIdsForWeights[i];
         weightIds[i] = w->createNewWeightOn(pointIdsForWeights[i]);
@@ -23,6 +26,9 @@ void FuelCont::initVirtual(FastCont<FuelCont> *p) {
     virt = true;
     fcp = p;
     empty_kg = -1;
+    
+    virtIDs.clear();
+    virtIDs.reset();
 }
 
 void FuelCont::setFuel(double val) {

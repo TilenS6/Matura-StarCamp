@@ -452,7 +452,7 @@ void Game::process_init() {
         for (int j = 0; j < 8; ++j) {
             char tmp;
             readBuff_c(buff, offset, bufflen, tmp);
-            // cout << "thr " << i << ": " << j << "=" << (int)tmp << endl;
+            cout << "thr " << i << ": " << j << "=" << (int)tmp << endl;
             phisics.rocketThrs.at_id(id)->controlls[j] = tmp;
         }
     }

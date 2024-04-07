@@ -1,5 +1,10 @@
 #include "game.h"
-void Game::send_buildShip(int *arr, double offX, double offY, int w, int h) {
+/*
+    double offsetX, offsetY
+    int w, h
+    (najprej po X: 0->w, pol po Y: 0->h) : {int ID, char keybind}
+*/
+void Game::send_buildShip(BuildingBlockData *arr, double offX, double offY, int w, int h) {
     char buff[MAX_BUF_LEN];
     // header
     buff[0] = NETSTD_HEADER_DATA;
@@ -15,7 +20,8 @@ void Game::send_buildShip(int *arr, double offX, double offY, int w, int h) {
 
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
-            writeBuff(buff, offset, arr[y * w + x]);
+            writeBuff(buff, offset, arr[y * w + x].ID);
+            writeBuff(buff, offset, arr[y * w + x].keybind);
         }
     }
 
@@ -29,7 +35,7 @@ void Game::send_buildShip(int *arr, double offX, double offY, int w, int h) {
 #endif
     }
 }
-void Game::process_buildShip(RecievedData *rec) {
+void Game::process_buildShip(RecievedData *rec, int playerID) {
     uint32_t offset = 2;
 
     double offX, offY;
@@ -42,24 +48,22 @@ void Game::process_buildShip(RecievedData *rec) {
 
     // -- building the ship
     FuelCont tmp;
-    tmp.virtIDs.set_memory_leak_safety(false);
-    int virtID = phisics.fuelConts.push_back(tmp);
-    FuelCont *virtP = phisics.fuelConts.at_id(virtID);
-    // virtP->init(0, 0, nullptr, (int[4]){0,0,0,0}, 0, 0, 0);
-    virtP->initVirtual(&phisics.fuelConts);
-    cout << "AAA: " << virtP->virtIDs.size << endl;
+    // tmp.virtIDs.set_memory_leak_safety(false);
+    int virtID = phisics.createNewFuelContainer(0, 0, 0); // postane virtual
 
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
             int id;
+            char keybind;
             // readBuff(rec->data, offset, arr[y][x]);
             readBuff(rec->data, offset, id);
+            readBuff(rec->data, offset, keybind);
             if (id == none) continue;
             // dobi ID novo kreiranga fuel containerja (ali -1 ce ga ni naredu)
-            int fcID = process_buildShip_placeBlock(id, offX + x * BUILDING_BLOCK_SIZE, offY + y * BUILDING_BLOCK_SIZE, BUILDING_BLOCK_SIZE, virtID); // TODOO ko dodajas thrusterje zbrise vse, ko dodas seat ni seat-a
+            int fcID = process_buildShip_placeBlock(id, offX + x * BUILDING_BLOCK_SIZE, offY + y * BUILDING_BLOCK_SIZE, BUILDING_BLOCK_SIZE, virtID, playerID, keybind); // TODOO: vcasih (ko dodajas thrusterje se playerju reseta Q/E), thrusterjem ne dela keybind, ko dodas seat ni seat-a
             if (fcID >= 0) {
                 cout << "dodajam fc v virt: " << fcID << endl;
-                virtP->virtIDs.push_back(fcID);
+                phisics.fuelConts.at_id(virtID)->virtIDs.push_back(fcID);
             }
         }
     }
@@ -67,7 +71,7 @@ void Game::process_buildShip(RecievedData *rec) {
     // -- merging near points
     for (int i = 0; i < phisics.points.size; ++i) {
         Point p = phisics.points.at_index(i)->getPos();
-        for (int j = i+1; j < phisics.points.size; ++j) {
+        for (int j = i + 1; j < phisics.points.size; ++j) {
             Point p2 = phisics.points.at_index(j)->getPos();
             // najdemo dve tocki ko sta zlo blizu
             if (distancePow2(p, p2) <= BUILDING_BLOCK_MERGEDISTANCE * BUILDING_BLOCK_MERGEDISTANCE) {
@@ -117,7 +121,7 @@ void Game::process_buildShip(RecievedData *rec) {
 }
 
 /// @return ID of newly created FuelCont (or -1 if it isn't created at all)
-int Game::process_buildShip_placeBlock(int id, double offX, double offY, double scale, int thrsFuelContID) {
+int Game::process_buildShip_placeBlock(int id, double offX, double offY, double scale, int thrsFuelContID, int ownerID, char keybind) {
     int ret = -1;
     if (id < building_basic || id >= none) {
         cout << "E: Game::process_buildShip_placeBlock... buildShip building block ID not in range!\n";
@@ -129,21 +133,25 @@ int Game::process_buildShip_placeBlock(int id, double offX, double offY, double 
     for (int i = 0; i < constructions[id].phpoints.size; ++i) {
         Point *p = constructions[id].phpoints.at_index(i);
 
-        int id = phisics.createNewPoint(offX + p->x, offY + p->y, 1, 0);
+        int id = phisics.createNewPoint(offX + p->x, offY + p->y, 1);
+        phisics.points.at_id(id)->ownership = ownerID;
         pids.push_back(id);
     }
     for (int i = 0; i < constructions[id].links.size; ++i) {
         LinkStr *p = constructions[id].links.at_index(i);
-        phisics.createNewLinkBetween(*pids.at_index(p->idA), *pids.at_index(p->idB), BUILDING_BLOCK_SPRING, BUILDING_BLOCK_DAMP);
+        int id = phisics.createNewLinkBetween(*pids.at_index(p->idA), *pids.at_index(p->idB), BUILDING_BLOCK_SPRING, BUILDING_BLOCK_DAMP);
     }
     for (int i = 0; i < constructions[id].thrs.size; ++i) {
         RocketThrStr *p = constructions[id].thrs.at_index(i);
         int tmpid = phisics.createNewThrOn(*pids.at_index(p->ID), *pids.at_index(p->facing), 0);
         phisics.rocketThrs.at_id(tmpid)->setFuelSource(thrsFuelContID);
+        phisics.rocketThrs.at_id(tmpid)->controlls[0] = keybind;
+        phisics.rocketThrs.at_id(tmpid)->controlls[1] = '\0';
+        phisics.rocketThrs.at_id(tmpid)->forPlayerID = ownerID;
     }
     for (int i = 0; i < constructions[id].fuelConts.size; ++i) {
         FuelContStr *p = constructions[id].fuelConts.at_index(i);
-        int arr[4] = { *pids.at_index(p->idA), *pids.at_index(p->idB), *pids.at_index(p->idC), *pids.at_index(p->idD) };
+        int arr[4] = {*pids.at_index(p->idA), *pids.at_index(p->idB), *pids.at_index(p->idC), *pids.at_index(p->idD)};
         ret = phisics.createNewFuelContainer(BUILDING_FUEL_CAPACITY, BUILDING_FUEL_RECHARGE, arr);
     }
     return ret;
