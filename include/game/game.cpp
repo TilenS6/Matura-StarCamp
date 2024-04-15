@@ -183,13 +183,13 @@ void Game::update() {
     }
 
     // -- kb hijacking
-    for (int i = 0; i < dropoffAreas.size; ++i) {
+    for (int i = 0; i < dropoffAreas.size(); ++i) {
         dropoffAreas.at_index(i)->updateHijack(&kb, &m, &client_inventory, &grend->cam);
     }
     shipbuilder.updateHijack(&kb, &m, &client_inventory, &grend->cam);
 
     // kb hijacking --
-    for (int i = 0; i < intButtons.size; ++i) {
+    for (int i = 0; i < intButtons.size(); ++i) {
         if (intButtons.at_index(i)->update(playerMedian, dt, &kb)) {
             cout << i << " pressed\n";
         }
@@ -244,7 +244,7 @@ void Game::update() {
 
         // -------- CLIENT
         if (!serverRole) {
-            for (int i = 0; i < phisics.rocketThrs.size; ++i) {
+            for (int i = 0; i < phisics.rocketThrs.size(); ++i) {
                 if (phisics.rocketThrs.at_index(i)->controlls[0] == '\0')
                     continue;
 
@@ -266,14 +266,14 @@ void Game::update() {
                 }
             }
 
-            if (thrSendBuffer.size > 0)
+            if (thrSendBuffer.size() > 0)
                 send_updatePlayerControls();
         }
         // -------- END CLIENT
 
         phisics.update(dtPerStep);
 
-        for (int i = 0; i < particleSs.size; ++i)
+        for (int i = 0; i < particleSs.size(); ++i)
             particleSs.at_index(i)->update(dt);
     } // end: substeping
 
@@ -290,7 +290,7 @@ void Game::update() {
 void Game::followCamera(double dt) {
     Point avg = {0, 0}, min = {INFINITY, INFINITY}, max = {-INFINITY, -INFINITY};
     int count = 0;
-    for (int i = 0; i < phisics.rocketThrs.size; ++i) {
+    for (int i = 0; i < phisics.rocketThrs.size(); ++i) {
         if (phisics.rocketThrs.at_index(i)->controlls[0] != '\0') {
             ++count;
             int pid = phisics.rocketThrs.at_index(i)->attachedPID;
@@ -332,11 +332,11 @@ void Game::render() {
     grend->clear();
 
     // zvezde
-    for (int i = 0; i < stars.size; ++i) {
+    for (int i = 0; i < stars.size(); ++i) {
         stars.at_index(i)->render(&grend->cam);
     }
     // planeti
-    for (int i = 0; i < planets.size; ++i) {
+    for (int i = 0; i < planets.size(); ++i) {
         planets.at_index(i)->render(&grend->cam);
     }
 
@@ -344,10 +344,10 @@ void Game::render() {
 
     // interactive items --
     shipbuilder.render(&grend->cam);
-    for (int i = 0; i < dropoffAreas.size; ++i) {
+    for (int i = 0; i < dropoffAreas.size(); ++i) {
         dropoffAreas.at_index(i)->render(&grend->cam);
     }
-    for (int i = 0; i < intButtons.size; ++i) {
+    for (int i = 0; i < intButtons.size(); ++i) {
         intButtons.at_index(i)->render(&grend->cam);
     }
     // -- interactive items
@@ -357,7 +357,7 @@ void Game::render() {
     // if (serverRole)
     //    player.render(&cam);
 
-    for (int i = 0; i < particleSs.size; ++i)
+    for (int i = 0; i < particleSs.size(); ++i)
         particleSs.at_index(i)->render(&grend->cam);
 
     if (drawRuller) {
@@ -394,7 +394,7 @@ void Game::renderHUD() {
 }
 
 void Game::updateInteractiveItems() {
-    for (int i = 0; i < dropoffAreas.size; ++i) {
+    for (int i = 0; i < dropoffAreas.size(); ++i) {
         dropoffAreas.at_index(i)->update(&droppedItems, &client_inventory);
     }
     shipbuilder.update(&droppedItems, &client_inventory);

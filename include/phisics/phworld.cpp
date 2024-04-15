@@ -74,37 +74,37 @@ int PhWorld::createNewLinkObst(int linkId, int collG = 0, int forceId = -1) {
 }
 
 void PhWorld::removePointById(int id, FastCont<int> *removedPointsList = nullptr) {
-    for (int i = 0; i < linkObst.size; ++i) {
+    for (int i = 0; i < linkObst.size(); ++i) {
         if (id == links.at_id(linkObst.at_index(i)->linkId)->idPointA || id == links.at_id(linkObst.at_index(i)->linkId)->idPointB) {
             linkObst.remove_index(i);
             --i;
         }
     }
-    for (int i = 0; i < links.size; ++i) {
+    for (int i = 0; i < links.size(); ++i) {
         if (id == links.at_index(i)->idPointA || id == links.at_index(i)->idPointB) {
             links.remove_index(i);
             --i;
         }
     }
-    for (int i = 0; i < muscles.size; ++i) {
+    for (int i = 0; i < muscles.size(); ++i) {
         if (id == muscles.at_index(i)->idPointA || id == muscles.at_index(i)->idPointB) {
             muscles.remove_index(i);
             --i;
         }
     }
-    for (int i = 0; i < weights.size; ++i) {
+    for (int i = 0; i < weights.size(); ++i) {
         if (id == weights.at_index(i)->p) {
             weights.remove_index(i);
             --i;
         }
     }
-    for (int i = 0; i < rocketThrs.size; ++i) {
+    for (int i = 0; i < rocketThrs.size(); ++i) {
         if (id == rocketThrs.at_index(i)->attachedPID) {
             rocketThrs.remove_index(i);
             --i;
         }
     }
-    for (int i = 0; i < fuelConts.size; ++i) {
+    for (int i = 0; i < fuelConts.size(); ++i) {
         for (int j = 0; j < 4; ++j) {
             if (id == fuelConts.at_index(i)->pointIDs[j]) {
                 fuelConts.remove_index(i);
@@ -113,9 +113,9 @@ void PhWorld::removePointById(int id, FastCont<int> *removedPointsList = nullptr
             }
         }
     }
-    for (int i = 0; i < textures.size; ++i) {
+    for (int i = 0; i < textures.size(); ++i) {
         PhTexture *tx = textures.at_index(i);
-        for (int j = 0; j < tx->indiciesTrises.size; ++j) {
+        for (int j = 0; j < tx->indiciesTrises.size(); ++j) {
             PhTextureTris *tx2 = tx->indiciesTrises.at_index(j);
             if (tx2->idA == id || tx2->idB == id || tx2->idC == id) {
                 textures.remove_index(i);
@@ -124,9 +124,9 @@ void PhWorld::removePointById(int id, FastCont<int> *removedPointsList = nullptr
             }
         }
     }
-    for (int i = 0; i < points.size; ++i) {
+    for (int i = 0; i < points.size(); ++i) {
         if (points.at_index(i)->virt) {
-            for (int j = 0; j < points.at_index(i)->virtAvgPoints.size; ++j) {
+            for (int j = 0; j < points.at_index(i)->virtAvgPoints.size(); ++j) {
                 if (*points.at_index(i)->virtAvgPoints.at_index(j) == id) {
 
                     if (removedPointsList != nullptr)
@@ -235,21 +235,21 @@ int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second
 }
 
 void PhWorld::applyGravity() {
-    for (int i = 0; i < points.size; ++i) {
+    for (int i = 0; i < points.size(); ++i) {
         PhPoint *pt = points.at_index(i);
         pt->force.y -= pt->mass * gravity_accel;
     }
 }
 
 void PhWorld::update(double dt) {
-    for (int i = 0; i < fuelConts.size; ++i) {
+    for (int i = 0; i < fuelConts.size(); ++i) {
         fuelConts.at_index(i)->update(dt);
     }
-    for (int i = 0; i < rocketThrs.size; ++i) {
+    for (int i = 0; i < rocketThrs.size(); ++i) {
         rocketThrs.at_index(i)->update(dt);
     }
 
-    for (int i = 0; i < links.size; ++i) {
+    for (int i = 0; i < links.size(); ++i) {
         // cout << "upd: " << i << endl;
         if (links.at_index(i)->update(dt)) { // requested self delete
 #ifdef CONSOLE_LOGGING
@@ -262,14 +262,14 @@ void PhWorld::update(double dt) {
             --i;
 
             bool deleteA = true, deleteB = true;
-            for (int i = 0; (i < links.size) && (deleteA || deleteB); ++i) {
+            for (int i = 0; (i < links.size()) && (deleteA || deleteB); ++i) {
                 if (deleteA && (a == links.at_index(i)->idPointA || a == links.at_index(i)->idPointB))
                     deleteA = false;
 
                 if (deleteB && (b == links.at_index(i)->idPointA || b == links.at_index(i)->idPointB))
                     deleteB = false;
             }
-            for (int i = 0; i < muscles.size; ++i) {
+            for (int i = 0; i < muscles.size(); ++i) {
                 if (deleteA && (a == muscles.at_index(i)->idPointA || a == muscles.at_index(i)->idPointB))
                     deleteA = false;
 
@@ -283,7 +283,7 @@ void PhWorld::update(double dt) {
         }
     }
 
-    for (int i = 0; i < muscles.size; ++i) {
+    for (int i = 0; i < muscles.size(); ++i) {
         if (muscles.at_index(i)->update(dt)) { // requested self delete
 #ifdef CONSOLE_LOGGING
             cout << "strgam muscle\n";
@@ -293,14 +293,14 @@ void PhWorld::update(double dt) {
             --i;
 
             bool deleteA = true, deleteB = true;
-            for (int i = 0; (i < links.size) && (deleteA || deleteB); ++i) {
+            for (int i = 0; (i < links.size()) && (deleteA || deleteB); ++i) {
                 if (deleteA && (a == links.at_index(i)->idPointA || a == links.at_index(i)->idPointB))
                     deleteA = false;
 
                 if (deleteB && (b == links.at_index(i)->idPointA || b == links.at_index(i)->idPointB))
                     deleteB = false;
             }
-            for (int i = 0; i < muscles.size; ++i) {
+            for (int i = 0; i < muscles.size(); ++i) {
                 if (deleteA && (a == muscles.at_index(i)->idPointA || a == muscles.at_index(i)->idPointB))
                     deleteA = false;
 
@@ -313,64 +313,64 @@ void PhWorld::update(double dt) {
                 removePointById(b);
         }
     }
-    for (int i = 0; i < points.size; ++i)
+    for (int i = 0; i < points.size(); ++i)
         points.at_index(i)->resolveCollisions(dt, &lineObst, &links, &linkObst, &points);
 
     // Everything is planed, apply those changes
 
-    for (int i = 0; i < points.size; ++i) {
+    for (int i = 0; i < points.size(); ++i) {
         points.at_index(i)->applyChanges(dt);
         points.at_index(i)->vel *= 1 - ((1 - vel_mult_second) * dt);
         auto p = points.at_index(i);
     }
-    for (int i = 0; i < points.size; ++i) {
+    for (int i = 0; i < points.size(); ++i) {
         points.at_index(i)->updateVirtual(this);
     }
 }
 
 void PhWorld::render(Camera *cam) {
     SDL_SetRenderDrawColor(cam->r, 200, 50, 50, 255);
-    for (int i = 0; i < rocketThrs.size; ++i) {
+    for (int i = 0; i < rocketThrs.size(); ++i) {
         rocketThrs.at_index(i)->render(cam);
     }
 
     SDL_SetRenderDrawColor(cam->r, 100, 100, 100, 255);
-    for (int i = 0; i < links.size; ++i) {
+    for (int i = 0; i < links.size(); ++i) {
         links.at_index(i)->render(cam);
     }
 
     SDL_SetRenderDrawColor(cam->r, 200, 100, 100, 255);
-    for (int i = 0; i < muscles.size; ++i) {
+    for (int i = 0; i < muscles.size(); ++i) {
         muscles.at_index(i)->render(cam);
     }
 
     SDL_SetRenderDrawColor(cam->r, 255, 255, 255, 255);
-    for (int i = 0; i < lineObst.size; ++i) {
+    for (int i = 0; i < lineObst.size(); ++i) {
         lineObst.at_index(i)->render(cam);
     }
-    for (int i = 0; i < points.size; ++i) {
+    for (int i = 0; i < points.size(); ++i) {
         points.at_index(i)->render(cam);
     }
-    for (int i = 0; i < linkObst.size; ++i) {
+    for (int i = 0; i < linkObst.size(); ++i) {
         linkObst.at_index(i)->render(cam);
     }
 
-    for (int i = 0; i < textures.size; ++i) {
+    for (int i = 0; i < textures.size(); ++i) {
         textures.at_index(i)->render(cam, this);
     }
-    for (int i = 0; i < fuelConts.size; ++i) {
+    for (int i = 0; i < fuelConts.size(); ++i) {
         fuelConts.at_index(i)->render(cam);
     }
 }
 
 bool PhWorld::removeLinkByIds(int idA, int idB) {
-    for (int i = 0; i < linkObst.size; ++i) {
+    for (int i = 0; i < linkObst.size(); ++i) {
         if ((idA == links.at_id(linkObst.at_index(i)->linkId)->idPointA && idB == links.at_id(linkObst.at_index(i)->linkId)->idPointB) || (idB == links.at_id(linkObst.at_index(i)->linkId)->idPointA && idA == links.at_id(linkObst.at_index(i)->linkId)->idPointB)) {
             linkObst.remove_index(i);
             --i;
         }
     }
-    for (int i = 0; i < links.size; ++i) {
+    for (int i = 0; i < links.size(); ++i) {
         PhLink *l = links.at_index(i);
         if ((l->idPointA == idA && l->idPointB == idB) || (l->idPointA == idB && l->idPointB == idA)) {
             links.remove_index(i);
@@ -381,7 +381,7 @@ bool PhWorld::removeLinkByIds(int idA, int idB) {
 }
 
 bool PhWorld::removeMuscleByIds(int idA, int idB) {
-    for (int i = 0; i < muscles.size; ++i) {
+    for (int i = 0; i < muscles.size(); ++i) {
         PhLink *l = muscles.at_index(i);
         if ((l->idPointA == idA && l->idPointB == idB) || (l->idPointA == idB && l->idPointB == idA)) {
             muscles.remove_index(i);
@@ -395,7 +395,7 @@ bool PhWorld::removeLineObstById(int id) {
     return true;
 }
 bool PhWorld::removeLinkObstByIds(int idA, int idB) {
-    for (int i = 0; i < linkObst.size; ++i) {
+    for (int i = 0; i < linkObst.size(); ++i) {
         if ((idA == links.at_id(linkObst.at_index(i)->linkId)->idPointA && idB == links.at_id(linkObst.at_index(i)->linkId)->idPointB) || (idB == links.at_id(linkObst.at_index(i)->linkId)->idPointA && idA == links.at_id(linkObst.at_index(i)->linkId)->idPointB)) {
             linkObst.remove_index(i);
             return true;
@@ -411,10 +411,10 @@ void PhWorld::removeFuelContById(int id) {
 }
 
 void PhWorld::translateEverything(Point d) {
-    for (int i = 0; i < points.size; ++i) {
+    for (int i = 0; i < points.size(); ++i) {
         points.at_index(i)->pos += d;
     }
-    for (int i = 0; i < lineObst.size; ++i) {
+    for (int i = 0; i < lineObst.size(); ++i) {
         lineObst.at_index(i)->line.a += d;
         lineObst.at_index(i)->line.b += d;
     }

@@ -7,7 +7,7 @@ void Game::request_initialFromServer() {
     if (client.getConnectionStatus() != 0) {
         cout << "E@ Game::requestInitialFromServer() - Server error!\n";
     }
-    char data[] = {NETSTD_HEADER_REQUEST, NETSTD_INIT};
+    char data[] = { NETSTD_HEADER_REQUEST, NETSTD_INIT };
     client.sendData(data, sizeof(data));
 }
 
@@ -18,7 +18,7 @@ void Game::request_updateAllFromServer() {
     if (client.getConnectionStatus() != 0) {
         cout << "E@ Game::requestInitialFromServer() - Server error!\n";
     }
-    char data[] = {NETSTD_HEADER_REQUEST, NETSTD_UPDATE_ALL};
+    char data[] = { NETSTD_HEADER_REQUEST, NETSTD_UPDATE_ALL };
     client.sendData(data, sizeof(data));
 }
 
@@ -300,7 +300,7 @@ void Game::process_init() {
         readBuff_c(buff, offset, bufflen, velocity_x);
         readBuff_c(buff, offset, bufflen, velocity_y);
 
-        phisics.points.at_id(id)->vel = {velocity_x, velocity_y};
+        phisics.points.at_id(id)->vel = { velocity_x, velocity_y };
     }
 
     // lineobst
@@ -612,8 +612,8 @@ void Game::process_update_all() {
             request_initialFromServer();
             return;
         }
-        p->pos = {pos_x, pos_y};
-        p->vel = {vel_x, vel_y};
+        p->pos = { pos_x, pos_y };
+        p->vel = { vel_x, vel_y };
         p->addedMass = added_weight;
     }
 
@@ -669,8 +669,8 @@ header: DATA, CONTROLS
 data: (int)thrID_1, (double)power_1, ...
 */
 
-void Game::send_updatePlayerControls() { // TODO to se lahko izvaja v posebnem threadu
-    if (thrSendBuffer.size == 0) return;
+void Game::send_updatePlayerControls() { // TO---DO to se lahko izvaja v posebnem threadu
+    if (thrSendBuffer.size() == 0) return;
 
     char buff[MAX_BUF_LEN];
     // header
@@ -678,14 +678,15 @@ void Game::send_updatePlayerControls() { // TODO to se lahko izvaja v posebnem t
     buff[1] = NETSTD_UPDATE_PLAYER_CONTROLS;
     uint64_t offset = 2;
 
-    int n = thrSendBuffer.size;
+    int n = thrSendBuffer.size();
     writeBuff(buff, offset, n);
 
-    for (int i = 0; i < thrSendBuffer.size; ++i) {
+    for (int i = 0; i < thrSendBuffer.size(); ++i) {
         int tmp = thrSendBuffer.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
         double st = *thrSendBuffer.at_index(i);
         writeBuff(buff, offset, st);
+        cout << tmp << ", " << st << endl;
     }
 
     client.sendData(buff, offset);
@@ -725,7 +726,7 @@ void Game::process_pickup() {
     // ---- processing
     // removing
     double min_distPow2 = 1, index = -1;
-    for (int i = 0; i < droppedItems.size; ++i) {
+    for (int i = 0; i < droppedItems.size(); ++i) {
         DroppedItem p = *droppedItems.at_index(i);
         if (p.entr.ID != it.entr.ID) continue;
         double tmp = distancePow2(p.pos, it.pos);

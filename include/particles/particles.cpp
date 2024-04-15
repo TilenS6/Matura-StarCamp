@@ -87,7 +87,7 @@ void ParticleS::update(double dt, double addMult = 1.0, Point relvel = {0, 0}) {
         // ps.at_id(id)->vel = {spd * cos(dir), spd * sin(dir)};
     }
 
-    for (int i = 0; i < ps.size; ++i) {
+    for (int i = 0; i < ps.size(); ++i) {
         if (ps.at_index(i)->update(dt)) { // zelja po izbrisu
             ps.remove_index(i);
             --i;
@@ -104,7 +104,7 @@ void ParticleS::render(Camera *cam) {
         r.render(cam);
     */
 
-    for (int i = 0; i < ps.size; ++i) {
+    for (int i = 0; i < ps.size(); ++i) {
         ps.at_index(i)->render(cam);
     }
 }

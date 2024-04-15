@@ -41,7 +41,7 @@ double FuelCont::getFuel() {
     if (!virt) return currentFuel;
 
     double sum = 0;
-    for (int i = 0; i < virtIDs.size; ++i)
+    for (int i = 0; i < virtIDs.size(); ++i)
         sum += fcp->at_id(*virtIDs.at_index(i))->currentFuel;
 
     return sum;
@@ -62,14 +62,14 @@ void FuelCont::update(double dt) {
 
 double FuelCont::take(double val, double *koef = nullptr) {
     if (virt) {
-        double takePerCont = val / virtIDs.size;
+        double takePerCont = val / virtIDs.size();
         double k = 0;
-        for (int i = 0; i < virtIDs.size; ++i) {
+        for (int i = 0; i < virtIDs.size(); ++i) {
             double tmp = 0;
             fcp->at_id(*virtIDs.at_index(i))->take(takePerCont, &tmp);
             k += tmp;
         }
-        k /= virtIDs.size;
+        k /= virtIDs.size();
         if (koef != nullptr) *koef = k;
 
         return Ns_perUnit * val * k;

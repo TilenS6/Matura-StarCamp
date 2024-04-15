@@ -88,7 +88,7 @@ void NetServer::init()
 
 NetServer::~NetServer()
 { // shutdown the connection since we're done
-    while (ClientSockets.size > 0)
+    while (ClientSockets.size() > 0)
     {
         int iResult = shutdown(ClientSockets.at_index(0)->socket, SD_SEND);
         if (iResult == SOCKET_ERROR)

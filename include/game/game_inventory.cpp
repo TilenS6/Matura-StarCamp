@@ -1,12 +1,12 @@
 #include "game.h"
 
 void Game::updatePlayersPickupFromFloor() {
-    for (int i = 0; i < phisics.points.size; ++i) {
+    for (int i = 0; i < phisics.points.size(); ++i) {
         PhPoint *p = phisics.points.at_index(i);
         if (!p->virt) continue;
         if (server.getLastData(p->ownership) == nullptr) continue; // server ownership
 
-        for (int j = 0; j < droppedItems.size; ++j) {
+        for (int j = 0; j < droppedItems.size(); ++j) {
             DroppedItem *it = droppedItems.at_index(j);
 
             if (distancePow2(it->pos, p->pos) <= PICKUP_RANGE_POW2) {
@@ -40,7 +40,7 @@ int Game::dropInventoryItem(int what, int howMuch, Point where) {
 }
 
 void Game::renderDroppedItems(Camera *cam) {
-    for (int i = 0; i < droppedItems.size; ++i) {
+    for (int i = 0; i < droppedItems.size(); ++i) {
         // cout << "render @ Game::renderDroppedItems\n";
         droppedItems.at_index(i)->render(cam);
     }

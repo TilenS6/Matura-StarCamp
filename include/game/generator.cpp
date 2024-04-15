@@ -173,7 +173,7 @@ void Generator::planets(unsigned long seed, int count = 10) {
         bool ins = false;
 
         // insertion sort
-        for (int j = 0; j < zs.size; ++j) {
+        for (int j = 0; j < zs.size(); ++j) {
             if (val > *zs.at_index(j)) {
                 zs.insert(val, j);
                 ins = true;

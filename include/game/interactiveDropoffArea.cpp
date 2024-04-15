@@ -20,7 +20,7 @@ void InteractiveDropoffArea::setRect(double x, double y, double w, double h) {
     rect.dimensions = { w, h };
 }
 bool InteractiveDropoffArea::update(FastCont<DroppedItem>* di, Inventory* inv = nullptr) {
-    for (int i = 0; i < di->size; ++i) {
+    for (int i = 0; i < di->size(); ++i) {
         if (collisionPointRectangle(di->at_index(i)->pos, rect)) {
             if (containing.entr.ID == none) {
                 // gre not

@@ -8,6 +8,21 @@ Planet::~Planet() {
     if (texture != nullptr)
         SDL_DestroyTexture(texture);
 }
+/*
+void save_texture(const char *file_name, SDL_Renderer *renderer, SDL_Texture *texture) {
+    SDL_Texture *target = SDL_GetRenderTarget(renderer);
+    SDL_SetRenderTarget(renderer, texture);
+    int width, height;
+    SDL_QueryTexture(texture, NULL, NULL, &width, &height);
+    SDL_Surface *surface = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
+    SDL_RenderReadPixels(renderer, NULL, surface->format->format, surface->pixels, surface->pitch);
+    IMG_SavePNG(surface, file_name);
+    SDL_FreeSurface(surface);
+    SDL_SetRenderTarget(renderer, target);
+}
+
+bool first = true;
+*/
 
 void Planet::generate(Camera *cam, int _w, int _h, int realW, Point3 at, int rd = 255, int gr = 170, int bl = 79, bool ring = true) {
     if (texture != nullptr) {
@@ -67,6 +82,8 @@ void Planet::generate(Camera *cam, int _w, int _h, int realW, Point3 at, int rd 
             SDL_Ellipse(cam->r, centerX, centerY, w / 2 - (ringDist + i), h / 4 - ((ringDist + i) / 2), 1, 1, 0, 0);
         }
     }
+//    if (first)
+//        save_texture("pl_1.png", cam->r, texture);
 
     // planetek
     SDL_Texture *planet = SDL_CreateTexture(cam->r, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, w + 1, h);
@@ -77,6 +94,8 @@ void Planet::generate(Camera *cam, int _w, int _h, int realW, Point3 at, int rd 
     SDL_SetRenderDrawColor(cam->r, rd, gr, bl, 255);
     SDL_FilledCircle(cam->r, centerX, centerY, centerY);
 
+//    if (first)
+//        save_texture("pl_2.png", cam->r, planet);
     // okrogle crte
     SDL_SetRenderDrawColor(cam->r, 240, 240, 240, 255);
     SDL_SetRenderDrawBlendMode(cam->r, SDL_BLENDMODE_MUL);
@@ -96,9 +115,13 @@ void Planet::generate(Camera *cam, int _w, int _h, int realW, Point3 at, int rd 
     SDL_SetRenderTarget(cam->r, texture);
     SDL_SetTextureBlendMode(planet, SDL_BLENDMODE_BLEND);
     SDL_RenderCopyF(cam->r, planet, NULL, NULL);
+//    if (first)
+//        save_texture("pl_3.png", cam->r, planet);
     SDL_DestroyTexture(planet);
 
-    // ring, zadnji del
+//    if (first)
+//        save_texture("pl_4.png", cam->r, texture);
+    // ring, sprednji del
     SDL_SetRenderDrawBlendMode(cam->r, SDL_BLENDMODE_BLEND);
     if (ring) {
         int count = 0;
@@ -112,6 +135,10 @@ void Planet::generate(Camera *cam, int _w, int _h, int realW, Point3 at, int rd 
             SDL_Ellipse(cam->r, centerX, centerY, w / 2 - (ringDist + i), h / 4 - ((ringDist + i) / 2), 0, 0, 1, 1);
         }
     }
+
+//    if (first)
+//        save_texture("pl_5.png", cam->r, texture);
+//    first = false;
 
     // -------- nazaj render target
     SDL_SetRenderTarget(cam->r, orgTarget);

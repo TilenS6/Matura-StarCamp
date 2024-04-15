@@ -297,24 +297,30 @@ void PhWorld::saveWorldToFile(string fileName) {
     uint32_t fileV = FILE_VERSION;
     out.write((char *)&fileV, sizeof(fileV));
 
-    out.write((char *)&points.size, sizeof(points.size));
-    out.write((char *)&links.size, sizeof(links.size));
-    out.write((char *)&muscles.size, sizeof(muscles.size));
-    out.write((char *)&lineObst.size, sizeof(lineObst.size));
-    out.write((char *)&linkObst.size, sizeof(linkObst.size));
+    uint32_t tmpSize = points.size();
+    out.write((char *)&tmpSize, sizeof(tmpSize));
+    tmpSize = links.size();
+    out.write((char *)&tmpSize, sizeof(tmpSize));
+    tmpSize = muscles.size();
+    out.write((char *)&tmpSize, sizeof(tmpSize));
+    tmpSize = lineObst.size();
+    out.write((char *)&tmpSize, sizeof(tmpSize));
+    tmpSize = linkObst.size();
+    out.write((char *)&tmpSize, sizeof(tmpSize));
 
     out.write((char *)&gravity_accel, sizeof(gravity_accel));
 
     // POINTS
     FastCont<int> pointIDs;
-    for (uint32_t i = 0; i < points.size; ++i) {
+    for (uint32_t i = 0; i < points.size(); ++i) {
         out.write((char *)&points.at_index(i)->pos.x, sizeof(points.at_index(i)->pos.x));
         out.write((char *)&points.at_index(i)->pos.y, sizeof(points.at_index(i)->pos.y));
         out.write((char *)&points.at_index(i)->mass, sizeof(points.at_index(i)->mass));
         out.write((char *)&points.at_index(i)->KoF_static, sizeof(points.at_index(i)->KoF_static));
         out.write((char *)&points.at_index(i)->KoF_kinetic, sizeof(points.at_index(i)->KoF_kinetic));
-        out.write((char *)&points.at_index(i)->collisionGroups.size, sizeof(points.at_index(i)->collisionGroups.size));
-        for (uint32_t j = 0; j < points.at_index(i)->collisionGroups.size; ++j)
+        tmpSize = points.at_index(i)->collisionGroups.size();
+        out.write((char *)&tmpSize, sizeof(tmpSize));
+        for (uint32_t j = 0; j < points.at_index(i)->collisionGroups.size(); ++j)
             out.write((char *)points.at_index(i)->collisionGroups.at_index(j), sizeof(*points.at_index(i)->collisionGroups.at_index(j)));
 
         pointIDs.push_back(points.get_id_at_index(i));
@@ -322,7 +328,7 @@ void PhWorld::saveWorldToFile(string fileName) {
 
     // LINKS
     FastCont<int> linksIDs;
-    for (uint32_t i = 0; i < links.size; ++i) {
+    for (uint32_t i = 0; i < links.size(); ++i) {
         int a = pointIDs.find_and_return_index(links.at_index(i)->idPointA);
         int b = pointIDs.find_and_return_index(links.at_index(i)->idPointB);
         out.write((char *)&a, sizeof(a));
@@ -338,7 +344,7 @@ void PhWorld::saveWorldToFile(string fileName) {
     }
 
     // MUSCLES
-    for (uint32_t i = 0; i < muscles.size; ++i) {
+    for (uint32_t i = 0; i < muscles.size(); ++i) {
         int a = pointIDs.find_and_return_index(muscles.at_index(i)->idPointA);
         int b = pointIDs.find_and_return_index(muscles.at_index(i)->idPointB);
         out.write((char *)&a, sizeof(a));
@@ -357,7 +363,7 @@ void PhWorld::saveWorldToFile(string fileName) {
     }
 
     // LINE OBSTACLES
-    for (uint32_t i = 0; i < lineObst.size; ++i) {
+    for (uint32_t i = 0; i < lineObst.size(); ++i) {
         out.write((char *)&lineObst.at_index(i)->line.a.x, sizeof(lineObst.at_index(i)->line.a.x));
         out.write((char *)&lineObst.at_index(i)->line.a.y, sizeof(lineObst.at_index(i)->line.a.y));
         out.write((char *)&lineObst.at_index(i)->line.b.x, sizeof(lineObst.at_index(i)->line.b.x));
@@ -366,7 +372,7 @@ void PhWorld::saveWorldToFile(string fileName) {
     }
 
     // LINK OBSTACLES
-    for (uint32_t i = 0; i < linkObst.size; ++i) {
+    for (uint32_t i = 0; i < linkObst.size(); ++i) {
         int id = linksIDs.find_and_return_index(linkObst.at_index(i)->linkId);
         out.write((char *)&id, sizeof(id));
         out.write((char *)&linkObst.at_index(i)->collisionGroup, sizeof(linkObst.at_index(i)->collisionGroup));

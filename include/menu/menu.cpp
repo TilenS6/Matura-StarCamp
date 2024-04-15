@@ -112,14 +112,14 @@ int Menu::chose(SDL_Renderer* r, string s[], uint8_t n, string title, string qeM
         c.update(dt);
 
         cursorSizeTarget = 15;
-        for (int i = 0; i < btns.size; ++i) {
+        for (int i = 0; i < btns.size(); ++i) {
             if (btns.at_index(i)->hover(&m)) {
                 cursorSizeTarget = 20;
                 if (btns.at_index(i)->alsoClicked())
                     return i;
             }
         }
-        for (int i = 0; i < inputs.size; ++i) {
+        for (int i = 0; i < inputs.size(); ++i) {
             inputs.at_index(i)->update(&m, r);
         }
 
@@ -159,17 +159,17 @@ int Menu::chose(SDL_Renderer* r, string s[], uint8_t n, string title, string qeM
             SDL_RenderDrawRect(r, &tmp);
         }
 
-        for (int i = 0; i < btns.size; ++i) {
+        for (int i = 0; i < btns.size(); ++i) {
             btns.at_index(i)->render(r);
         }
 
-        for (int i = 0; i < rects.size; ++i) {
+        for (int i = 0; i < rects.size(); ++i) {
             rects.at_index(i)->render(r);
         }
-        for (int i = 0; i < texts.size; ++i) {
+        for (int i = 0; i < texts.size(); ++i) {
             texts.at_index(i)->render(r);
         }
-        for (int i = 0; i < inputs.size; ++i) {
+        for (int i = 0; i < inputs.size(); ++i) {
             inputs.at_index(i)->render(r);
         }
 

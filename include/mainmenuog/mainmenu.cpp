@@ -53,7 +53,7 @@ int Menu::chose(SDL_Renderer *r, string s[], uint8_t n, string title) {
         m.update();
 
         uint8_t i = 0;
-        for (int i = 0; i < btns.size; ++i) {
+        for (int i = 0; i < btns.size(); ++i) {
             if (btns.at_index(i)->clicked(m)) {
                 return i;
             }
@@ -64,7 +64,7 @@ int Menu::chose(SDL_Renderer *r, string s[], uint8_t n, string title) {
 
         SDL_RenderCopy(r, titleTexture, NULL, &titleTextureRect);
 
-        for (int i = 0; i < btns.size; ++i) {
+        for (int i = 0; i < btns.size(); ++i) {
             btns.at_index(i)->render(r);
         }
 

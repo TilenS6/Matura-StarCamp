@@ -32,9 +32,9 @@ PhPoint::PhPoint(double x, double y, double _mass, FastCont<int> collisionGroupC
 }
 void PhPoint::move(double x, double y) {
     pos = {x, y};
-    for (int i = 0; i < touchingList.size; ++i)
+    for (int i = 0; i < touchingList.size(); ++i)
         *touchingList.at_index(i) = false;
-    for (int i = 0; i < touchingLinksList.size; ++i)
+    for (int i = 0; i < touchingLinksList.size(); ++i)
         *touchingLinksList.at_index(i) = false;
 }
 void PhPoint::setVirtual(bool isVirtual) {
@@ -148,34 +148,34 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
     if (virt) {
         return;
     }
-    while (obst->size > touchingList.size) {
+    while (obst->size() > touchingList.size()) {
         touchingList.push_back(false);
     }
-    while (linkObst->size > touchingLinksList.size) {
+    while (linkObst->size() > touchingLinksList.size()) {
         touchingLinksList.push_back(false);
     }
 
-    if (obst->size < touchingList.size) {
-        while (obst->size < touchingList.size) {
+    if (obst->size() < touchingList.size()) {
+        while (obst->size() < touchingList.size()) {
             touchingList.pop_back();
         }
-        for (int i = 0; i < touchingList.size; ++i)
+        for (int i = 0; i < touchingList.size(); ++i)
             *touchingList.at_index(i) = false; // TODO to je mal tko tko, ne glih tanajboljs
     }
-    if (linkObst->size < touchingLinksList.size) {
-        while (obst->size < touchingLinksList.size) {
+    if (linkObst->size() < touchingLinksList.size()) {
+        while (obst->size() < touchingLinksList.size()) {
             touchingLinksList.pop_back();
         }
-        for (int i = 0; i < touchingLinksList.size; ++i)
+        for (int i = 0; i < touchingLinksList.size(); ++i)
             *touchingLinksList.at_index(i) = false;
     }
 
     Point nextPos = pos + (vel + (force / (mass + addedMass)) * dt) * dt;
     Line movement = {pos, nextPos};
-    for (int i = 0; i < obst->size; ++i) {
+    for (int i = 0; i < obst->size(); ++i) {
         // ali je v istem collision groupu
         bool found = false;
-        for (int j = 0; j < collisionGroups.size; ++j) {
+        for (int j = 0; j < collisionGroups.size(); ++j) {
             if (*collisionGroups.at_index(j) == obst->at_index(i)->collisionGroup) {
                 found = true;
                 break;
@@ -187,10 +187,10 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
         Line obstVel = {{0, 0}, {0, 0}};
         calculateCollisions(&touchingList, i, movement, obstacle, obstVel, dt);
     }
-    for (int i = 0; i < linkObst->size; ++i) {
+    for (int i = 0; i < linkObst->size(); ++i) {
         // ali je v istem collision groupu
         bool found = false;
-        for (int j = 0; j < collisionGroups.size; ++j) {
+        for (int j = 0; j < collisionGroups.size(); ++j) {
             if (*collisionGroups.at_index(j) == linkObst->at_index(i)->collisionGroup) {
                 found = true;
                 break;
@@ -231,10 +231,10 @@ void PhPoint::updateVirtual(PhWorld *world) {
     if (!virt) return;
     // samo za virtual
     pos = {0, 0};
-    for (int i = 0; i < virtAvgPoints.size; ++i)
+    for (int i = 0; i < virtAvgPoints.size(); ++i)
         pos += world->points.at_id(*virtAvgPoints.at_index(i))->getPos();
 
-    pos /= virtAvgPoints.size;
+    pos /= virtAvgPoints.size();
     return;
 }
 

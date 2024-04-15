@@ -32,7 +32,7 @@ void Game::networkManagerS(Game *g) {
             } else {
                 RecievedData *rec = g->server.getLastData(id);
                 if (rec->len == 1 && rec->data[0] == 0) { // ping
-                    char data[] = {1};
+                    char data[] = { 1 };
                     g->server.sendData(id, data, 1); // pong
                     g->server.closeConnection(id);
                     goto cancel_new_client;
@@ -64,7 +64,7 @@ void Game::networkManagerS(Game *g) {
             }
         }
 
-        for (int i = 0; i < g->clientIds.size; ++i) {
+        for (int i = 0; i < g->clientIds.size(); ++i) {
             int id = *g->clientIds.at_index(i);
             int res = g->server.recieveData(id);
             switch (res) {
@@ -92,7 +92,7 @@ void Game::networkManagerS(Game *g) {
 
                 if (rec->len == 1) { // ping packet
                     if (rec->data[0] != 0) break;
-                    char data[] = {1};
+                    char data[] = { 1 };
                     g->server.sendData(id, data, 1); // pong
                     break;
                 }
@@ -143,7 +143,7 @@ void Game::networkManagerS(Game *g) {
                         cout << "Connection to " << id << " closed\n";
                         g->handle_playerLeft(id);
                         {
-                            char data[2] = {NETSTD_HEADER_DATA, NETSTD_BYE};
+                            char data[2] = { NETSTD_HEADER_DATA, NETSTD_BYE };
                             g->server.sendData(id, data, 2);
                         }
                         g->clientIds.remove_index(i);
@@ -171,7 +171,7 @@ void Game::networkManagerS(Game *g) {
             g->halt = false;
         }
 
-        for (int i = 0; i < g->clientIds.size; ++i) {
+        for (int i = 0; i < g->clientIds.size(); ++i) {
             g->send_removedPoints(*g->clientIds.at_index(i));
         }
         g->removedPoints.clear(); // size = 0
@@ -213,7 +213,7 @@ int Game::resolve_loginInfo(RecievedData *rec) {
 
     cout << "usr=" << username << ", pas=" << password << endl;
 
-    for (int i = 0; i < login.size; ++i) {
+    for (int i = 0; i < login.size(); ++i) {
         LoginEntry *usr = login.at_index(i);
         if (usr->username == username && usr->password == password) {
             return login.get_id_at_index(i);
@@ -223,7 +223,7 @@ int Game::resolve_loginInfo(RecievedData *rec) {
 }
 
 void Game::send_removedPoints(int clientID) {
-    if (removedPoints.size == 0) return;
+    if (removedPoints.size() == 0) return;
 
     char buff[MAX_BUF_LEN];
     // header
@@ -236,7 +236,7 @@ void Game::send_removedPoints(int clientID) {
     /*
        uint32_t len
     */
-    uint32_t len = removedPoints.size;
+    uint32_t len = removedPoints.size();
     writeBuff(buff, offset, len);
 
     // ids
@@ -253,7 +253,7 @@ void Game::send_removedPoints(int clientID) {
 
 void Game::handle_playerLeft(int playerID) {
     int loginId = -1;
-    for (int i = 0; i < clientIds.size; ++i) {
+    for (int i = 0; i < clientIds.size(); ++i) {
         if (*clientIds.at_index(i) == playerID) {
             loginId = clientIds.get_id_at_index(i);
             break;
@@ -261,7 +261,7 @@ void Game::handle_playerLeft(int playerID) {
     }
 
     if (loginId != -1) {
-        for (int i = 0; i < phisics.points.size; ++i) {
+        for (int i = 0; i < phisics.points.size(); ++i) {
             if (phisics.points.at_index(i)->ownership == playerID && phisics.points.at_index(i)->virt) {
                 // ce je owner in je virt tocka to
                 login.at_id(loginId)->logoutPos = phisics.points.at_index(i)->pos;
@@ -270,7 +270,7 @@ void Game::handle_playerLeft(int playerID) {
         }
     }
 
-    for (int i = 0; i < phisics.points.size; ++i) {
+    for (int i = 0; i < phisics.points.size(); ++i) {
         int id = phisics.points.get_id_at_index(i);
         PhPoint *p = phisics.points.at_index(i);
         if (phisics.points.at_index(i)->ownership == playerID) {
@@ -283,7 +283,7 @@ void Game::handle_playerLeft(int playerID) {
 
 // TODO not in use anymore
 void Game::handle_newPlayer(int playerID) {
-    gen.newPlayerAt({(double)playerID, 0}, playerID);
+    gen.newPlayerAt({ (double)playerID, 0 }, playerID);
 }
 
 // poslje vse
@@ -315,7 +315,7 @@ void Game::send_init(int network_clientId, int playerID) {
         * + bool virt (if virt: uint16_t len, id1, id2,...)
         * + double velocity_x, double velocity_y
     */
-    uint32_t len = phisics.points.size;
+    uint32_t len = phisics.points.size();
     writeBuff(buff, offset, len);
     cout << "points len = " << len << endl;
     for (int i = 0; i < len; ++i) {
@@ -329,7 +329,7 @@ void Game::send_init(int network_clientId, int playerID) {
         double tmp2 = phisics.points.at_index(i)->mass;
         writeBuff(buff, offset, tmp2);
 
-        uint32_t jn = phisics.points.at_index(i)->collisionGroups.size;
+        uint32_t jn = phisics.points.at_index(i)->collisionGroups.size();
         writeBuff(buff, offset, jn);
         for (int j = 0; j < jn; ++j) {
             int tmp3 = *phisics.points.at_index(i)->collisionGroups.at_index(j);
@@ -345,7 +345,7 @@ void Game::send_init(int network_clientId, int playerID) {
         writeBuff(buff, offset, tmp3);
 
         if (tmp3) {
-            uint16_t len = phisics.points.at_index(i)->virtAvgPoints.size;
+            uint16_t len = phisics.points.at_index(i)->virtAvgPoints.size();
             writeBuff(buff, offset, len);
             for (uint16_t j = 0; j < len; ++j) {
                 tmpid = *phisics.points.at_index(i)->virtAvgPoints.at_index(j);
@@ -363,7 +363,7 @@ void Game::send_init(int network_clientId, int playerID) {
     /*
         int PhWorld::createNewLineObst(double x1, double y1, double x2, double y2, int coll_group = 0) {
     */
-    len = phisics.lineObst.size;
+    len = phisics.lineObst.size();
     writeBuff(buff, offset, len);
     cout << "lineObst len = " << len << endl;
     for (int i = 0; i < len; ++i) {
@@ -384,7 +384,7 @@ void Game::send_init(int network_clientId, int playerID) {
     /*
         int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
     */
-    len = phisics.links.size;
+    len = phisics.links.size();
     writeBuff(buff, offset, len);
     cout << "links len = " << len << endl;
     for (int i = 0; i < len; ++i) {
@@ -414,7 +414,7 @@ void Game::send_init(int network_clientId, int playerID) {
     /*
         int PhWorld::createNewMuscleBetween(int idA, int idB, double spring_koef = 100, double damp_koef = 10, double muscle_range = .5, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
     */
-    len = phisics.muscles.size;
+    len = phisics.muscles.size();
     writeBuff(buff, offset, len);
     cout << "muscles len = " << len << endl;
     for (int i = 0; i < len; ++i) {
@@ -446,7 +446,7 @@ void Game::send_init(int network_clientId, int playerID) {
     /*
         int PhWorld::createNewLinkObst(int linkId, int collG = 0) {
     */
-    len = phisics.linkObst.size;
+    len = phisics.linkObst.size();
     writeBuff(buff, offset, len);
     cout << "linkObst len = " << len << endl;
     for (int i = 0; i < len; ++i) {
@@ -466,7 +466,7 @@ void Game::send_init(int network_clientId, int playerID) {
             * + int fuel_source
             * + char[8] controlls
     */
-    len = phisics.rocketThrs.size;
+    len = phisics.rocketThrs.size();
     writeBuff(buff, offset, len);
     cout << "rocketThr len = " << len << endl;
     for (uint32_t i = 0; i < len; ++i) {
@@ -514,7 +514,7 @@ void Game::send_init(int network_clientId, int playerID) {
         else
             int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit=50000) {
     */
-    len = phisics.fuelConts.size;
+    len = phisics.fuelConts.size();
     writeBuff(buff, offset, len);
     cout << "fuelCont len = " << len << endl;
     for (int i = 0; i < len; ++i) {
@@ -524,7 +524,7 @@ void Game::send_init(int network_clientId, int playerID) {
         bool tmpVirt = phisics.fuelConts.at_index(i)->virt;
         writeBuff(buff, offset, tmpVirt);
         if (tmpVirt) {
-            uint32_t virtLen = phisics.fuelConts.at_index(i)->virtIDs.size;
+            uint32_t virtLen = phisics.fuelConts.at_index(i)->virtIDs.size();
             writeBuff(buff, offset, virtLen);
             for (uint32_t j = 0; j < virtLen; ++j) {
                 int virtID = *phisics.fuelConts.at_index(i)->virtIDs.at_index(j);
@@ -559,7 +559,7 @@ void Game::send_init(int network_clientId, int playerID) {
         (int) idA, idB, idC
         (double) normA_x, normA_y, normB...
     */
-    len = phisics.textures.size;
+    len = phisics.textures.size();
     writeBuff(buff, offset, len);
     cout << "textures len = " << len << endl;
     for (int i = 0; i < len; ++i) {
@@ -573,7 +573,7 @@ void Game::send_init(int network_clientId, int playerID) {
         char c = '\0';
         writeBuff(buff, offset, c);
 
-        uint32_t jn = phisics.textures.at_index(i)->indiciesTrises.size;
+        uint32_t jn = phisics.textures.at_index(i)->indiciesTrises.size();
         writeBuff(buff, offset, jn);
         for (uint32_t j = 0; j < jn; ++j) {
             PhTextureTris *tr = phisics.textures.at_index(i)->indiciesTrises.at_index(j);
@@ -657,7 +657,7 @@ void Game::send_update_all(int clientId) {
         double vel_x, vel_y
         * double added_weight
     */
-    uint32_t len = phisics.points.size;
+    uint32_t len = phisics.points.size();
     writeBuff(buff, offset, len);
     for (uint32_t i = 0; i < len; ++i) {
         int id = phisics.points.get_id_at_index(i);
@@ -680,7 +680,7 @@ void Game::send_update_all(int clientId) {
         int id
         double power
     */
-    len = phisics.rocketThrs.size;
+    len = phisics.rocketThrs.size();
     writeBuff(buff, offset, len);
     for (uint32_t i = 0; i < len; ++i) {
         int id = phisics.rocketThrs.get_id_at_index(i);
@@ -695,7 +695,7 @@ void Game::send_update_all(int clientId) {
         int id
         double currentFuel
     */
-    len = phisics.fuelConts.size;
+    len = phisics.fuelConts.size();
     writeBuff(buff, offset, len);
     for (uint32_t i = 0; i < len; ++i) {
         int id = phisics.fuelConts.get_id_at_index(i);
@@ -744,6 +744,8 @@ void Game::process_updatePlayerControls(RecievedData *rec) {
         readBuff(rec->data, offset, st);
 
         phisics.rocketThrs.at_id(thrId)->setState(st);
+
+        cout << thrId << ", " << st << endl;
     }
 }
 

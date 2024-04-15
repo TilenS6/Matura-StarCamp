@@ -47,17 +47,17 @@ void PhTexture::push_indicie(int idA, int idB, int idC, Point normA, Point normB
 void PhTexture::render(Camera *cam, PhWorld *w) {
     if (!inited)
         cout << "W: @PhTexture::render - texture not initialized!\n";
-    if (indiciesTrises.size == 0)
+    if (indiciesTrises.size() == 0)
         cout << "W: @PhTexture::render - indiciesTrises not seted!\n";
     if (texture == nullptr)
         return;
 
     // ----------------------
 
-    SDL_Vertex vert[indiciesTrises.size * 3];
+    SDL_Vertex vert[indiciesTrises.size() * 3];
     int c = 0;
 
-    for (int i = 0; i < indiciesTrises.size; ++i) {
+    for (int i = 0; i < indiciesTrises.size(); ++i) {
         // Point point = {p[i][0], p[i][1]};
         PhTextureTris tr = *indiciesTrises.at_index(i);
         Point rend = w->points.at_id(tr.idA)->getRenderPos(cam);
@@ -82,5 +82,5 @@ void PhTexture::render(Camera *cam, PhWorld *w) {
         };
     }
 
-    SDL_RenderGeometry(cam->r, texture, vert, indiciesTrises.size * 3, NULL, 0);
+    SDL_RenderGeometry(cam->r, texture, vert, indiciesTrises.size() * 3, NULL, 0);
 }
