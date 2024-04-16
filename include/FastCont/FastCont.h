@@ -21,8 +21,10 @@ public:
     FastCont();
     FastCont(bool);
 
-    template<typename... Args> FastCont(T, Args...);
-    template <typename... Args> void handleInfArgs(T, Args...);
+    template <typename... Args>
+    FastCont(T, Args...);
+    template <typename... Args>
+    void handleInfArgs(T, Args...);
     void handleInfArgs();
 
     uint32_t size() { return _size; };
@@ -46,6 +48,7 @@ public:
     int64_t find_and_return_index(T); // -1 če ne najde
 
     void force_import(id_data_type, T); // nastavi ID in podatke
+    void set_rollingID(id_data_type new_roll) { rollingID = new_roll; }
 };
 
 #include "FastCont/FastCont.cpp"

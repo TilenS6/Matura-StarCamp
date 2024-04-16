@@ -73,10 +73,10 @@ Construction constructions[none]{
             (LinkStr){6, 7},
             (LinkStr){7, 0},
 
-            (LinkStr){1, 3},
-            (LinkStr){2, 3},
             (LinkStr){1, 4},
             (LinkStr){2, 4},
+            (LinkStr){1, 7},
+            (LinkStr){2, 7},
 
             (LinkStr){5, 0},
             (LinkStr){6, 0},

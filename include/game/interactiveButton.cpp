@@ -1,5 +1,5 @@
 #include "game.h"
-
+#ifdef GAME_EXISTS
 InteractiveButton::InteractiveButton() {
     animationK = 0.;
     pos = { 0., 0. };
@@ -8,12 +8,11 @@ InteractiveButton::InteractiveButton() {
     th = 0;
 }
 
-/// @param funct please use following function to generate proper class: std::bind(Class::method_name, &object) (ex. ShipBuilder::build, &shipbuilder)
-void InteractiveButton::init(Point where, string displayText, Camera* cam, function<void()> funct) {
+/// @pa-ram funct please use following function to generate proper class: std::bind(Class::method_name, &object) (ex. ShipBuilder::build, &shipbuilder)
+void InteractiveButton::init(Point where, string displayText, Camera* cam, int onPressReturn) {
     pos = where;
     txt = displayText;
-
-    fp = funct;
+    onPress = onPressReturn;
 
     if (textT != nullptr) SDL_DestroyTexture(textT);
 
@@ -26,14 +25,14 @@ void InteractiveButton::init(Point where, string displayText, Camera* cam, funct
     TTF_CloseFont(font);
 }
 
-bool InteractiveButton::update(Point playerPos, double dt, Keyboard* kb) {
+int InteractiveButton::update(Point playerPos, double dt, Keyboard* kb) {
     if (textT == nullptr) {
         cout << "InteractiveButton@update not inited!\n";
         return false;
     }
     double k = pow(ANIMATION_SPEED, dt);
     double target_animationK = 0;
-    bool ret = false;
+    int ret = onpress_notpressed;
 
     Circle c;
     c.a = pos;
@@ -41,8 +40,9 @@ bool InteractiveButton::update(Point playerPos, double dt, Keyboard* kb) {
     if (collisionPointCircle(playerPos, c)) {
         target_animationK = 1;
         if (kb->pressedNow(SDL_SCANCODE_F)) {
-            fp();
-            ret = true;
+            // fp();
+            // sb->build();
+            ret = onPress;
             kb->newFrame();
         }
 
@@ -94,3 +94,4 @@ void InteractiveButton::render(Camera* cam) {
     SDL_RenderDrawRectF(cam->r, &rect);
     SDL_RenderCopyF(cam->r, textT, NULL, &rect);
 }
+#endif

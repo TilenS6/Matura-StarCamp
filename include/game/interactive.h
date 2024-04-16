@@ -1,8 +1,14 @@
-#pragma once
 #include "game.h"
+#pragma once
 
 #define ANIMATION_SPEED 0.01
 #define BUTTON_DISTANCE 1.5
+
+enum OnPress {
+    onpress_notpressed,
+    onpress_build,
+    onpress_sit,
+};
 
 class InteractiveDropoffArea {
     Rectng rect;
@@ -36,14 +42,19 @@ class InteractiveButton {
     Point pos;
     double animationK;
     // void (*fp)(void);
-    function<void()> fp;
+    // function<void()> fp;
+    // ShipBuilder *sb;
+    int onPress;
 
 public:
+    int moreData;
     InteractiveButton();
-    void init(Point, string, Camera *, function<void()>); // void (*fPointer)()
-    bool update(Point, double, Keyboard *); // TODO nej shran void* do funkcije, nej jo klice ko je aktiveran
+    void init(Point, string, Camera *, int); //ShipBuilder *); //function<void()> // void (*fPointer)()
+    int update(Point, double, Keyboard *);
     void render(Camera *);
+    
+    friend class PlayerSeat;
 };
 
-#include "interactiveDropoffArea.cpp"
-#include "interactiveButton.cpp"
+// #include "interactiveDropoffArea.cpp"
+// #include "interactiveButton.cpp"

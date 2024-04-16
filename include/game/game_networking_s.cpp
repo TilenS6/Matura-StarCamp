@@ -32,7 +32,7 @@ void Game::networkManagerS(Game *g) {
             } else {
                 RecievedData *rec = g->server.getLastData(id);
                 if (rec->len == 1 && rec->data[0] == 0) { // ping
-                    char data[] = { 1 };
+                    char data[] = {1};
                     g->server.sendData(id, data, 1); // pong
                     g->server.closeConnection(id);
                     goto cancel_new_client;
@@ -92,7 +92,7 @@ void Game::networkManagerS(Game *g) {
 
                 if (rec->len == 1) { // ping packet
                     if (rec->data[0] != 0) break;
-                    char data[] = { 1 };
+                    char data[] = {1};
                     g->server.sendData(id, data, 1); // pong
                     break;
                 }
@@ -115,6 +115,12 @@ void Game::networkManagerS(Game *g) {
                         break;
                     case NETSTD_BUILD:
                         g->process_buildShip(rec, id);
+                        break;
+                    case NETSTD_SITDOWN:
+                        g->process_sitdown(rec, id);
+                        break;
+                    case NETSTD_STANDUP:
+                        g->process_standup(rec, id);
                         break;
                     default:
                         cout << "HEADER_DATA: unknown data\n";
@@ -143,7 +149,7 @@ void Game::networkManagerS(Game *g) {
                         cout << "Connection to " << id << " closed\n";
                         g->handle_playerLeft(id);
                         {
-                            char data[2] = { NETSTD_HEADER_DATA, NETSTD_BYE };
+                            char data[2] = {NETSTD_HEADER_DATA, NETSTD_BYE};
                             g->server.sendData(id, data, 2);
                         }
                         g->clientIds.remove_index(i);
@@ -283,7 +289,7 @@ void Game::handle_playerLeft(int playerID) {
 
 // TODO not in use anymore
 void Game::handle_newPlayer(int playerID) {
-    gen.newPlayerAt({ (double)playerID, 0 }, playerID);
+    gen.newPlayerAt({(double)playerID, 0}, playerID);
 }
 
 // poslje vse
@@ -601,6 +607,30 @@ void Game::send_init(int network_clientId, int playerID) {
         }
     }
 
+    // dropped items
+    /*
+        (struct DroppedItem) item
+    */
+    len = droppedItems.size();
+    writeBuff(buff, offset, len);
+    cout << "dropped items len = " << len << endl;
+    for (int i = 0; i < len; ++i) {
+        DroppedItem tmp = *droppedItems.at_index(i);
+        writeBuff(buff, offset, tmp);
+    }
+
+    // seats
+    /*
+        (int) atPID
+    */
+    len = seats.size();
+    writeBuff(buff, offset, len);
+    cout << "seats len = " << len << endl;
+    for (int i = 0; i < len; ++i) {
+        int tmp = seats.at_index(i)->PID;
+        writeBuff(buff, offset, tmp);
+    }
+
     if (offset >= MAX_BUF_LEN) {
         cout << "Data buffer overflowed, not sending anything\n";
         // TODO kaj ce OF
@@ -745,7 +775,7 @@ void Game::process_updatePlayerControls(RecievedData *rec) {
 
         phisics.rocketThrs.at_id(thrId)->setState(st);
 
-        cout << thrId << ", " << st << endl;
+        // cout << thrId << ", " << st << endl;
     }
 }
 
@@ -784,4 +814,24 @@ void Game::process_drop(RecievedData *rec) {
     readBuff(rec->data, offset, it.entr.count);
 
     droppedItems.push_back(it);
+}
+
+void Game::process_sitdown(RecievedData *rec, int clientId) {
+    uint32_t offset = 2;
+    int seatID;
+    readBuff(rec->data, offset, seatID);
+
+    for (int i = 0; i < phisics.points.size(); ++i) {
+        if (phisics.points.at_index(i)->ownership == clientId)
+            phisics.removePointById(phisics.points.get_id_at_index(i));
+    }
+
+    send_init(clientId, -seatID);
+}
+
+void Game::process_standup(RecievedData *rec, int clientId) {
+    Point pos = {};
+    gen.newPlayerAt(pos, clientId);
+
+    send_init(clientId, clientId);
 }

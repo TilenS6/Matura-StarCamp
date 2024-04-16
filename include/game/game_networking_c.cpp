@@ -7,7 +7,7 @@ void Game::request_initialFromServer() {
     if (client.getConnectionStatus() != 0) {
         cout << "E@ Game::requestInitialFromServer() - Server error!\n";
     }
-    char data[] = { NETSTD_HEADER_REQUEST, NETSTD_INIT };
+    char data[] = {NETSTD_HEADER_REQUEST, NETSTD_INIT};
     client.sendData(data, sizeof(data));
 }
 
@@ -18,7 +18,7 @@ void Game::request_updateAllFromServer() {
     if (client.getConnectionStatus() != 0) {
         cout << "E@ Game::requestInitialFromServer() - Server error!\n";
     }
-    char data[] = { NETSTD_HEADER_REQUEST, NETSTD_UPDATE_ALL };
+    char data[] = {NETSTD_HEADER_REQUEST, NETSTD_UPDATE_ALL};
     client.sendData(data, sizeof(data));
 }
 
@@ -221,6 +221,11 @@ void Game::process_init() {
     uint64_t offset = 2;
     phisics.resetWorld();
 
+    droppedItems.clear();
+    droppedItems.reset();
+    seats.clear();
+    seats.reset();
+
     // meta
     /*
         double gravity_accel;
@@ -300,7 +305,7 @@ void Game::process_init() {
         readBuff_c(buff, offset, bufflen, velocity_x);
         readBuff_c(buff, offset, bufflen, velocity_y);
 
-        phisics.points.at_id(id)->vel = { velocity_x, velocity_y };
+        phisics.points.at_id(id)->vel = {velocity_x, velocity_y};
     }
 
     // lineobst
@@ -569,6 +574,34 @@ void Game::process_init() {
             cout << idA << "," << idB << "," << idC << ": " << normA.x << "," << normA.y << ";" << normB.x << "," << normB.y << ";" << normC.x << "," << normC.y << "," << endl;
         }
     }
+
+    // dropped items
+    /*
+        (struct DroppedItem) item
+    */
+    readBuff_c(buff, offset, bufflen, len);
+    cout << "dropped items len = " << len << endl;
+    for (uint32_t i = 0; i < len; ++i) {
+        DroppedItem item;
+        readBuff_c(buff, offset, bufflen, item);
+        droppedItems.push_back(item);
+    }
+
+    // seats
+    /*
+        (int) atPID
+    */
+    readBuff_c(buff, offset, bufflen, len);
+    cout << "seats len = " << len << endl;
+    for (uint32_t i = 0; i < len; ++i) {
+        int PID;
+        readBuff_c(buff, offset, bufflen, PID);
+
+        PlayerSeat tmpSeat;
+        tmpSeat.init(PID, this);
+        seats.push_back(tmpSeat);
+    }
+
 #ifdef CONSOLE_LOGGING
     cout << "Init data processed\n";
     cout << "offset on " << offset << "/" << client.recvbuflen << endl;
@@ -612,8 +645,8 @@ void Game::process_update_all() {
             request_initialFromServer();
             return;
         }
-        p->pos = { pos_x, pos_y };
-        p->vel = { vel_x, vel_y };
+        p->pos = {pos_x, pos_y};
+        p->vel = {vel_x, vel_y};
         p->addedMass = added_weight;
     }
 
@@ -686,7 +719,7 @@ void Game::send_updatePlayerControls() { // TO---DO to se lahko izvaja v posebne
         writeBuff(buff, offset, tmp);
         double st = *thrSendBuffer.at_index(i);
         writeBuff(buff, offset, st);
-        cout << tmp << ", " << st << endl;
+        // cout << tmp << ", " << st << endl;
     }
 
     client.sendData(buff, offset);
@@ -741,6 +774,7 @@ void Game::process_pickup() {
     for (int i = 0; i < INVENTORY_SIZE; ++i) {
         if (client_inventory.inv[i].ID == it.entr.ID) {
             client_inventory.inv[i].count += it.entr.count;
+            it.entr.count = 0;
 
             if (client_inventory.inv[i].count > stackSizes[client_inventory.inv[i].ID]) {
                 it.entr.count = client_inventory.inv[i].count - stackSizes[client_inventory.inv[i].ID];
@@ -773,4 +807,42 @@ void Game::process_pickup() {
         process_pickup();
     }
     */
+}
+
+void Game::send_sitdown(int seatID) {
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_SITDOWN;
+    uint64_t offset = 2;
+
+    writeBuff(buff, offset, seatID);
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        client.sendData(buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- all updated data sent as server (length: " << offset << ")\n";
+#endif
+    }
+}
+
+void Game::send_standup() {
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_STANDUP;
+    uint64_t offset = 2;
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        client.sendData(buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- all updated data sent as server (length: " << offset << ")\n";
+#endif
+    }
 }

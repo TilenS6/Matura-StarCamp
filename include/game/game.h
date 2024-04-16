@@ -26,10 +26,10 @@
 #define CAMERA_STIFFNESS .3 // s kksno vrednostjo ostane stara vrednost pozicije kamere po 1s
 
 #define BUILDING_BLOCK_SIZE 1.
-#define BUILDING_BLOCK_SPRING 1000
-#define BUILDING_BLOCK_DAMP 2
+#define BUILDING_BLOCK_SPRING 2000
+#define BUILDING_BLOCK_DAMP 3
 #define BUILDING_BLOCK_MERGEDISTANCE .01
-#define BUILDING_FUEL_CAPACITY 100
+#define BUILDING_FUEL_CAPACITY 20
 #define BUILDING_FUEL_RECHARGE 1
 
 #define writeBuff(buff, offset, a)        \
@@ -85,11 +85,6 @@ public:
     friend class Game;
 };
 
-struct LoginEntry {
-    string username, password;
-    Point logoutPos;
-};
-
 class ShipBuilder {
     InteractiveDropoffArea areaGrid[SHIPBUILDER_GRID_H][SHIPBUILDER_GRID_W];
     Game *g;
@@ -107,7 +102,27 @@ struct BuildingBlockData {
     char keybind;
 };
 
+class PlayerSeat {
+    InteractiveButton btn;
+    Point lastPos;
+    int PID = -1;
+    Game *g;
+
+public:
+    void init(int, Game *);
+    void standUpCurrentPlayer();
+    bool update(double); // true: pressed, send_sitdown(..)
+    void render();
+
+    friend class Game;
+};
+
 // -------- GAME CLASS --------
+struct LoginEntry {
+    string username, password;
+    Point logoutPos;
+};
+
 FastCont<LoginEntry> login;
 class Game {
     GameRenderer *grend;
@@ -149,6 +164,7 @@ class Game {
     FastCont<DroppedItem> droppedItems;
     FastCont<InteractiveDropoffArea> dropoffAreas;
     FastCont<InteractiveButton> intButtons;
+    FastCont<PlayerSeat> seats;
 
     string quitInfo;
 
@@ -202,6 +218,11 @@ public:
     void send_buildShip(BuildingBlockData *, double, double, int, int); // array, offX, offY, w, h
     void process_buildShip(RecievedData *, int);
 
+    void send_sitdown(int);
+    void process_sitdown(RecievedData *, int);
+    void send_standup();
+    void process_standup(RecievedData *, int);
+
     // -- inventory (v inventory.cpp)
     int dropInventoryItem(int, int, Point);
     void updatePlayersPickupFromFloor();
@@ -214,6 +235,7 @@ public:
 
     friend class Generator;
     friend class ShipBuilder;
+    friend class PlayerSeat;
 };
 
 #include "generator.cpp"
@@ -224,3 +246,6 @@ public:
 #include "game_inventory.cpp"
 #include "game_shipbuilder.cpp"
 #include "game.cpp"
+#include "interactiveDropoffArea.cpp"
+#include "interactiveButton.cpp"
+#include "playerseat.cpp"

@@ -61,7 +61,7 @@ void Game::process_buildShip(RecievedData *rec, int playerID) {
             if (id == none) continue;
             // dobi ID novo kreiranga fuel containerja (ali -1 ce ga ni naredu)
             int fcID = process_buildShip_placeBlock(id, offX + x * BUILDING_BLOCK_SIZE, offY + y * BUILDING_BLOCK_SIZE, BUILDING_BLOCK_SIZE, virtID, playerID, keybind);
-            // TODOO: vcasih (ko dodajas thrusterje se playerju reseta Q/E), ko dodas seat ni seat-a
+            // TODOO: ko dodas seat ni seat-a
             // TODOOO: zbuildani thrusterji majo kontrole ampak ne uploada na server nic
 
             if (fcID >= 0) {
@@ -137,7 +137,7 @@ int Game::process_buildShip_placeBlock(int id, double offX, double offY, double 
         Point *p = constructions[id].phpoints.at_index(i);
 
         int id = phisics.createNewPoint(offX + p->x, offY + p->y, 1);
-        phisics.points.at_id(id)->ownership = ownerID;
+        phisics.points.at_id(id)->ownership = -ownerID; // *TODO hmmm
         pids.push_back(id);
     }
     for (int i = 0; i < constructions[id].links.size(); ++i) {
@@ -150,12 +150,17 @@ int Game::process_buildShip_placeBlock(int id, double offX, double offY, double 
         phisics.rocketThrs.at_id(tmpid)->setFuelSource(thrsFuelContID);
         phisics.rocketThrs.at_id(tmpid)->controlls[0] = keybind;
         phisics.rocketThrs.at_id(tmpid)->controlls[1] = '\0';
-        phisics.rocketThrs.at_id(tmpid)->forPlayerID = ownerID;
+        phisics.rocketThrs.at_id(tmpid)->forPlayerID = -ownerID;
     }
     for (int i = 0; i < constructions[id].fuelConts.size(); ++i) {
         FuelContStr *p = constructions[id].fuelConts.at_index(i);
         int arr[4] = {*pids.at_index(p->idA), *pids.at_index(p->idB), *pids.at_index(p->idC), *pids.at_index(p->idD)};
-        ret = phisics.createNewFuelContainer(BUILDING_FUEL_CAPACITY, BUILDING_FUEL_RECHARGE, arr);
+        ret = phisics.createNewFuelContainer(BUILDING_FUEL_CAPACITY, BUILDING_FUEL_RECHARGE, arr, 1, 1, 150);
+    }
+    if (constructions[id].seatAt != -1) {
+        PlayerSeat tmpSeat;
+        tmpSeat.init(*pids.at_index(constructions[id].seatAt), this);
+        seats.push_back(tmpSeat);
     }
     return ret;
 }

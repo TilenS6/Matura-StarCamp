@@ -64,15 +64,18 @@ double FuelCont::take(double val, double *koef = nullptr) {
     if (virt) {
         double takePerCont = val / virtIDs.size();
         double k = 0;
+        double virt_Ns_perUnit = 0;
         for (int i = 0; i < virtIDs.size(); ++i) {
             double tmp = 0;
             fcp->at_id(*virtIDs.at_index(i))->take(takePerCont, &tmp);
+            virt_Ns_perUnit += fcp->at_id(*virtIDs.at_index(i))->Ns_perUnit;
             k += tmp;
         }
         k /= virtIDs.size();
+        virt_Ns_perUnit /= virtIDs.size();
         if (koef != nullptr) *koef = k;
 
-        return Ns_perUnit * val * k;
+        return virt_Ns_perUnit * val * k;
     }
 
     // ce ni virt:

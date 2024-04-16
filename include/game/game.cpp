@@ -1,5 +1,5 @@
-#pragma once
 #include "game/game.h"
+#pragma once
 string srvrName = "127.0.0.1";
 
 uint16_t charToScancode(char c) {
@@ -16,13 +16,16 @@ uint16_t charToScancode(char c) {
 
     return SDL_SCANCODE_UNKNOWN;
 }
-/*
+
 void testF() {
     cout << "sm v f.\n";
 }
-*/
 
 Game::Game(GameRenderer *_grend, string srvr, string username, string password, bool launchAsServer) {
+    void (*testP)();
+    testP = testF;
+    testP();
+
     grend = _grend;
     serverRole = launchAsServer;
 
@@ -56,7 +59,7 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
     shipbuilder.init(2, 0, this);
 
     InteractiveButton buildBtn;
-    buildBtn.init({-1., 0.}, "Build", &grend->cam, std::bind(&ShipBuilder::build, &shipbuilder));
+    buildBtn.init({-1., 0.}, "Build", &grend->cam, onpress_build);
     intButtons.push_back(buildBtn);
 
     // -------------- TEST --------------
@@ -190,8 +193,25 @@ void Game::update() {
 
     // kb hijacking --
     for (int i = 0; i < intButtons.size(); ++i) {
-        if (intButtons.at_index(i)->update(playerMedian, dt, &kb)) {
-            cout << i << " pressed\n";
+        switch (intButtons.at_index(i)->update(playerMedian, dt, &kb)) {
+        case onpress_notpressed:
+            break;
+
+        case onpress_build:
+            shipbuilder.build();
+            break;
+        case onpress_sit:
+            // TODO
+            // send_sitdown(intButtons.at_index(i)->moreData);
+            break;
+        default:
+            cout << "button: unknown operation!\n";
+        }
+    }
+    for (int i = 0; i < seats.size(); ++i) {
+        bool pr = seats.at_index(i)->update(dt);
+        if (pr) {
+            send_sitdown(seats.get_id_at_index(i));
         }
     }
 
@@ -349,6 +369,9 @@ void Game::render() {
     }
     for (int i = 0; i < intButtons.size(); ++i) {
         intButtons.at_index(i)->render(&grend->cam);
+    }
+    for (int i = 0; i < seats.size(); ++i) {
+        seats.at_index(i)->render();
     }
     // -- interactive items
 

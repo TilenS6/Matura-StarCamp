@@ -228,14 +228,13 @@ void PhPoint::applyChanges(double dt) {
 }
 
 void PhPoint::updateVirtual(PhWorld *world) {
-    if (!virt) return;
+    if (!virt || virtAvgPoints.size() == 0) return;
     // samo za virtual
     pos = {0, 0};
     for (int i = 0; i < virtAvgPoints.size(); ++i)
         pos += world->points.at_id(*virtAvgPoints.at_index(i))->getPos();
 
     pos /= virtAvgPoints.size();
-    return;
 }
 
 void PhPoint::render(Camera *cam) {

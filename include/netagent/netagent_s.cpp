@@ -2,6 +2,7 @@
 
 void NetServer::init()
 {
+    ClientSockets.set_rollingID(10);
     WSADATA wsaData;
     int iResult;
 
