@@ -153,7 +153,9 @@ int mainmenu_game(GameRenderer *gr) {
     inputUsername.destroy();
     inputPassword.destroy();
 
+#ifdef CONSOLE_LOGGING_STAGES
     cout << ret << endl;
+#endif
     if (ret == 0)
         return gameAction_play; // Play
     if (ret == 1)

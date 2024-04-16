@@ -61,11 +61,8 @@ void Game::process_buildShip(RecievedData *rec, int playerID) {
             if (id == none) continue;
             // dobi ID novo kreiranga fuel containerja (ali -1 ce ga ni naredu)
             int fcID = process_buildShip_placeBlock(id, offX + x * BUILDING_BLOCK_SIZE, offY + y * BUILDING_BLOCK_SIZE, BUILDING_BLOCK_SIZE, virtID, playerID, keybind);
-            // TODOO: ko dodas seat ni seat-a
-            // TODOOO: zbuildani thrusterji majo kontrole ampak ne uploada na server nic
 
             if (fcID >= 0) {
-                cout << "dodajam fc v virt: " << fcID << endl;
                 phisics.fuelConts.at_id(virtID)->virtIDs.push_back(fcID);
             }
         }

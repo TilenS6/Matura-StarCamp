@@ -81,7 +81,9 @@ T *FastCont<T, id_data_type>::at_id(id_data_type searchForID) {
             return &((p + i)->data);
         }
     }
+#ifdef CONSOLE_LOGGING_ID_NOT_FOUND
     cout << "E: FastCont::at_id\tno ID found!\n";
+#endif
     return nullptr;
 }
 
@@ -163,6 +165,11 @@ FastCont<T, id_data_type>::~FastCont() {
 
 template <class T, class id_data_type>
 void FastCont<T, id_data_type>::force_import(id_data_type id, T _a) {
+    T *ex = at_id(id);
+    if (ex != nullptr) {
+        *ex = _a;
+        return;
+    }
     if (alloc_size == 0) {
         alloc_size = 1;
         p = (FastContElement<T, id_data_type> *)malloc(sizeof(FastContElement<T, id_data_type>));

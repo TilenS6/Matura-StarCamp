@@ -60,7 +60,6 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
             // if point is lifted from obstacle (with some sticking force, to prevent "lifting" a point from a vertical obstacle with no input)
             if (Fs < -.1) { // TODO to zafrkava pa dela tezave na obst
                 // *touchingList.at(i) = false;
-                // cout << "removed " << i << endl;
                 return;
             }
 
@@ -111,7 +110,6 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
             double As = cosLineDir * vel.y - sinLineDir * vel.x;
             if (As < 0) return; // if it is moving from wrong direction, in same way as normal (normal collision face/side of obstacle)
 
-            // cout << "new at " << i << endl;
             foundCollision = true;
             *touchingList->at_index(i) = true;
 
@@ -140,7 +138,6 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
 
     if (!foundCollision && *touchingList->at_index(i)) {
         *touchingList->at_index(i) = false;
-        // cout << "removed " << i << ": slided of\n";
     }
 }
 

@@ -78,7 +78,9 @@ void NetServer::init()
         // Failed to put the socket into non-blocking mode
         return;
     }
+#ifdef CONSOLE_LOGGING_NETWORKING
     std::cout << "ListenSocket in non-blocking mode\n";
+#endif
 
     // TCP_NODELAY
     /*
@@ -135,7 +137,9 @@ int NetServer::acceptNewClient()
         // Failed to put the socket into non-blocking mode
         return -1;
     }
+#ifdef CONSOLE_LOGGING_NETWORKING
     std::cout << "socket in non-blocking mode\n";
+#endif
 
     // TCP_NODELAY
     DWORD tr = TRUE;

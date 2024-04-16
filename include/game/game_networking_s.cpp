@@ -1,15 +1,8 @@
 #include "game/game.h"
 using namespace std;
-std::ostream &bold_on(std::ostream &os) {
-    return os << "\e[1m";
-}
-
-std::ostream &bold_off(std::ostream &os) {
-    return os << "\e[0m";
-}
 
 void Game::networkManagerS(Game *g) {
-    cout << bold_on << "Server ran..." << bold_off << endl;
+    cout << "--------------- Server ran ---------------" << endl;
     while (g->running) {
         if (!g->networkingActive || g->client.getConnectionStatus() != 0) {
             Sleep(1000);
@@ -28,7 +21,9 @@ void Game::networkManagerS(Game *g) {
             } while (res == recieveData_NO_NEW_DATA && t.getTime() < 1);
 
             if (res == recieveData_NO_NEW_DATA) {
+#ifdef CONSOLE_LOGGING_NETWORKING
                 cout << "client timed-out on providing login information! (1 sec)\n";
+#endif
             } else {
                 RecievedData *rec = g->server.getLastData(id);
                 if (rec->len == 1 && rec->data[0] == 0) { // ping
@@ -40,11 +35,15 @@ void Game::networkManagerS(Game *g) {
 
                 int loginId = g->resolve_loginInfo(rec);
                 if (loginId == -1) { // no username/password exists
+#ifdef CONSOLE_LOGGING_NETWORKING
                     cout << "This username/password don't exist!\n";
+#endif
                     g->server.closeConnection(id);
                     // TODO back to client
                 } else if (g->clientIds.at_id(loginId) != nullptr) {
+#ifdef CONSOLE_LOGGING_NETWORKING
                     cout << "This user is already on the server!\n";
+#endif
                     g->server.closeConnection(id);
                     // TODO -||-
                 } else {
@@ -217,7 +216,9 @@ int Game::resolve_loginInfo(RecievedData *rec) {
         password += c;
     }
 
+#ifdef CONSOLE_LOGGING_NETWORKING
     cout << "usr=" << username << ", pas=" << password << endl;
+#endif
 
     for (int i = 0; i < login.size(); ++i) {
         LoginEntry *usr = login.at_index(i);
@@ -276,9 +277,12 @@ void Game::handle_playerLeft(int playerID) {
         }
     }
 
+    delete_player(playerID);
+}
+
+void Game::delete_player(int playerID) {
     for (int i = 0; i < phisics.points.size(); ++i) {
         int id = phisics.points.get_id_at_index(i);
-        PhPoint *p = phisics.points.at_index(i);
         if (phisics.points.at_index(i)->ownership == playerID) {
             removedPoints.push_back(id);
             phisics.removePointById(id, &removedPoints); // zbrise tega, pise se v tale list kar se pobrise
@@ -294,7 +298,9 @@ void Game::handle_newPlayer(int playerID) {
 
 // poslje vse
 void Game::send_init(int network_clientId, int playerID) {
+#ifdef CONSOLE_LOGGING_INIT
     cout << "init: clientId=" << network_clientId << ", forPlayerId=" << playerID << endl;
+#endif
     char buff[MAX_BUF_LEN];
     // header
     buff[0] = NETSTD_HEADER_DATA;
@@ -323,7 +329,9 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     uint32_t len = phisics.points.size();
     writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "points len = " << len << endl;
+#endif
     for (int i = 0; i < len; ++i) {
         int tmpid = phisics.points.get_id_at_index(i);
         writeBuff(buff, offset, tmpid);
@@ -371,7 +379,9 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.lineObst.size();
     writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "lineObst len = " << len << endl;
+#endif
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.lineObst.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -392,7 +402,9 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.links.size();
     writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "links len = " << len << endl;
+#endif
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.links.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -422,7 +434,9 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.muscles.size();
     writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "muscles len = " << len << endl;
+#endif
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.muscles.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -454,7 +468,9 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.linkObst.size();
     writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "linkObst len = " << len << endl;
+#endif
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.linkObst.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -474,7 +490,9 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.rocketThrs.size();
     writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "rocketThr len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         int tmp = phisics.rocketThrs.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -522,7 +540,9 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.fuelConts.size();
     writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "fuelCont len = " << len << endl;
+#endif
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.fuelConts.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -567,7 +587,9 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = phisics.textures.size();
     writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "textures len = " << len << endl;
+#endif
     for (int i = 0; i < len; ++i) {
         int tmp = phisics.textures.get_id_at_index(i);
         writeBuff(buff, offset, tmp);
@@ -613,7 +635,9 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = droppedItems.size();
     writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "dropped items len = " << len << endl;
+#endif
     for (int i = 0; i < len; ++i) {
         DroppedItem tmp = *droppedItems.at_index(i);
         writeBuff(buff, offset, tmp);
@@ -625,7 +649,9 @@ void Game::send_init(int network_clientId, int playerID) {
     */
     len = seats.size();
     writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "seats len = " << len << endl;
+#endif
     for (int i = 0; i < len; ++i) {
         int tmp = seats.at_index(i)->PID;
         writeBuff(buff, offset, tmp);
@@ -774,8 +800,6 @@ void Game::process_updatePlayerControls(RecievedData *rec) {
         readBuff(rec->data, offset, st);
 
         phisics.rocketThrs.at_id(thrId)->setState(st);
-
-        // cout << thrId << ", " << st << endl;
     }
 }
 
@@ -818,20 +842,29 @@ void Game::process_drop(RecievedData *rec) {
 
 void Game::process_sitdown(RecievedData *rec, int clientId) {
     uint32_t offset = 2;
-    int seatID;
+    int seatID; // !TODO useless
     readBuff(rec->data, offset, seatID);
 
-    for (int i = 0; i < phisics.points.size(); ++i) {
-        if (phisics.points.at_index(i)->ownership == clientId)
-            phisics.removePointById(phisics.points.get_id_at_index(i));
-    }
+    delete_player(clientId);
 
-    send_init(clientId, -seatID);
+    send_init(clientId, -clientId);
 }
 
 void Game::process_standup(RecievedData *rec, int clientId) {
-    Point pos = {};
-    gen.newPlayerAt(pos, clientId);
+    Point pos = {0, 0};
+    int pid = -1;
+    for (int i = 0; i < seats.size(); ++i) {
+        int tmpPid = seats.at_index(i)->PID;
+        if (phisics.points.at_id(tmpPid)->ownership == -clientId) {
+            pid = tmpPid;
+            break;
+        }
+    }
+    if (pid != -1) {
+        pos = phisics.points.at_id(pid)->getPos();
+        pos.x += 1;
+    }
 
+    gen.newPlayerAt(pos, clientId);
     send_init(clientId, clientId);
 }

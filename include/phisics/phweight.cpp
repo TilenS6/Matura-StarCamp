@@ -12,6 +12,5 @@ void PhWeight::changeWeight(double kg) {
     if (p != -1) {
         w->points.at_id(p)->addedMass = kg;
         // addedMass = kg;
-        // cout <<  w->points.at_id(p)->mass  << endl;
     }
 }

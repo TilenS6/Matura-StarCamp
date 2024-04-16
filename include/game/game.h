@@ -1,6 +1,12 @@
 #pragma once
 #define GAME_EXISTS
 // #define CONSOLE_LOGGING
+// #define CONSOLE_LOGGING_INIT
+// #define CONSOLE_LOGGING_PICKUP
+// #define CONSOLE_LOGGING_NETWORKING
+// #define CONSOLE_LOGGING_STAGES
+// #define CONSOLE_LOGGING_DT_CAPPED
+// #define CONSOLE_LOGGING_ID_NOT_FOUND
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -166,10 +172,13 @@ class Game {
     FastCont<InteractiveButton> intButtons;
     FastCont<PlayerSeat> seats;
 
+    bool sitted;
+
     string quitInfo;
 
     void renderHUD();
     int process_buildShip_placeBlock(int, double, double, double, int, int, char);
+    void delete_player(int);
 
 public:
     Game(GameRenderer *, string, string, string, bool);

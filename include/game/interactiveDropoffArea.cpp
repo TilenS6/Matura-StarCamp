@@ -15,7 +15,6 @@ InteractiveDropoffArea::InteractiveDropoffArea() {
     keybindTex = nullptr;
 }
 void InteractiveDropoffArea::setRect(double x, double y, double w, double h) {
-    cout << "r: " << x << ", " << y << ":\t" << w << "," << h << endl;
     rect.a = { x, y };
     rect.dimensions = { w, h };
 }

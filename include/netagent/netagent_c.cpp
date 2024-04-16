@@ -65,7 +65,9 @@ int NetClient::init(std::string server) {
     freeaddrinfo(result);
 
     if (ConnectSocket == INVALID_SOCKET) {
+#ifdef CONSOLE_LOGGING_NETWORKING
         std::cout << "Unable to connect to server!\n";
+#endif
         WSACleanup();
         err = getConnectionStatus_ERR;
         return -1;
@@ -79,7 +81,9 @@ int NetClient::init(std::string server) {
         // Failed to put the socket into non-blocking mode
         return -1;
     }
+#ifdef CONSOLE_LOGGING_NETWORKING
     std::cout << "ConnectSocket in non-blocking mode\n";
+#endif
 
     // TCP_NODELAY
     /*
@@ -112,7 +116,7 @@ int NetClient::sendData(const char *data, int len) {
         return -1;
     }
 
-#ifdef CONSOLE_LOGGING
+#ifdef CONSOLE_LOGGING_NETWORKING
     std::cout << "Bytes Sent: " << iResult << std::endl;
 #endif
     return 0;
@@ -130,11 +134,15 @@ int NetClient::recieveData() {
     }
 
     if (iResult == 0) {
+#ifdef CONSOLE_LOGGING_NETWORKING
         std::cout << "Connection closed\n";
+#endif
         err = getConnectionStatus_ERR;
         return recieveData_ERR;
     }
+#ifdef CONSOLE_LOGGING_NETWORKING
     std::cout << "recv failed with error: " << WSAGetLastError() << std::endl;
+#endif
     err = getConnectionStatus_ERR;
     return recieveData_ERR;
 }

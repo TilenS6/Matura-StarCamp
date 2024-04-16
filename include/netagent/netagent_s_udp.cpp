@@ -109,7 +109,9 @@ int NetServerUDP::recieveData(bool *newClient)
         inet_ntoa(si_other.sin_addr);
         ntohs(si_other.sin_port);
 
+#ifdef CONSOLE_LOGGING_NETWORKING
         cout << "new data from " << si_other.sin_addr.S_un.S_addr << ":" << si_other.sin_port << endl;
+#endif
         return recieveData_OK; // success
     }
 
@@ -117,7 +119,9 @@ int NetServerUDP::recieveData(bool *newClient)
     //     return recieveData_CONN_CLOSED_BY_CLIENT_ERR;
 
     // other errors
+#ifdef CONSOLE_LOGGING_NETWORKING
     std::cout << "NetServerUDP::recieveData (recv) failed with error: " << WSAGetLastError() << std::endl;
+#endif
     return recieveData_ERR;
 }
 

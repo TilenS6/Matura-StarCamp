@@ -9,7 +9,9 @@ void ShipBuilder::init(double dx, double dy, Game *_gp) {
     }
 }
 void ShipBuilder::build() {
+#ifdef CONSOLE_LOGGING_STAGES
     cout << "buildam\n";
+#endif
     BuildingBlockData gridIDs[SHIPBUILDER_GRID_H][SHIPBUILDER_GRID_W];
 
     for (int y = 0; y < SHIPBUILDER_GRID_H; ++y) {

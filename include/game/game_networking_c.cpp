@@ -23,7 +23,7 @@ void Game::request_updateAllFromServer() {
 }
 
 void Game::networkManagerC(Game *g) {
-    cout << "Client ran...\n";
+    cout << "--------------- Client ran ---------------" << endl;
     g->netRequestTimer.interval();
     while (g->running) {
         if (!g->networkingActive) {
@@ -214,7 +214,9 @@ packet:
 // prepise vse
 void Game::process_init() {
     int bufflen = client.recvbuflen;
+#ifdef CONSOLE_LOGGING_INIT
     cout << "BUFFLEN = " << bufflen << endl;
+#endif
     char buff[bufflen];
     memcpy(&buff, client.recvbuf, bufflen);
 
@@ -255,7 +257,9 @@ void Game::process_init() {
     */
     uint32_t len;
     readBuff_c(buff, offset, bufflen, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "points len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         double x;
@@ -299,7 +303,6 @@ void Game::process_init() {
                 readBuff_c(buff, offset, bufflen, tmpid);
                 phisics.points.at_id(id)->virtAvgPoints.push_back(tmpid);
             }
-            cout << endl;
         }
 
         readBuff_c(buff, offset, bufflen, velocity_x);
@@ -313,7 +316,9 @@ void Game::process_init() {
         int PhWorld::createNewLineObst(double x1, double y1, double x2, double y2, int coll_group = 0) {
     */
     readBuff_c(buff, offset, bufflen, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "lineObst len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         double x1;
@@ -339,7 +344,9 @@ void Game::process_init() {
         int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
     */
     readBuff_c(buff, offset, bufflen, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "links len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int idA;
@@ -369,7 +376,9 @@ void Game::process_init() {
         int PhWorld::createNewMuscleBetween(int idA, int idB, double spring_koef = 100, double damp_koef = 10, double muscle_range = .5, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
     */
     readBuff_c(buff, offset, bufflen, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "muscles len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int idA;
@@ -401,7 +410,9 @@ void Game::process_init() {
         int PhWorld::createNewLinkObst(int linkId, int collG = 0) {
     */
     readBuff_c(buff, offset, bufflen, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "lineObst len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int linkId;
@@ -423,7 +434,9 @@ void Game::process_init() {
             * + char[8] controlls
     */
     readBuff_c(buff, offset, bufflen, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "rocketThr len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         int attached;
@@ -457,7 +470,9 @@ void Game::process_init() {
         for (int j = 0; j < 8; ++j) {
             char tmp;
             readBuff_c(buff, offset, bufflen, tmp);
+#ifdef CONSOLE_LOGGING_INIT
             cout << "thr " << i << ": " << j << "=" << (int)tmp << endl;
+#endif
             phisics.rocketThrs.at_id(id)->controlls[j] = tmp;
         }
     }
@@ -473,17 +488,17 @@ void Game::process_init() {
             int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit=50000) {
     */
     readBuff_c(buff, offset, bufflen, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "fuelCont len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         int id;
         bool virt;
         readBuff_c(buff, offset, bufflen, id);
         readBuff_c(buff, offset, bufflen, virt);
-        // cout << id << ". virt? " << virt << endl;
 
         if (virt) {
             phisics.createNewFuelContainer(0, 0, 0, 0, 0, 0, id); // ker je capacity na 0 je virtual
-            // phisics.fuelConts.at_id(id)->initVirtual(&phisics.fuelConts);
 
             uint32_t virtLen;
             readBuff_c(buff, offset, bufflen, virtLen);
@@ -492,7 +507,6 @@ void Game::process_init() {
                 readBuff_c(buff, offset, bufflen, tmpVirtId);
                 phisics.fuelConts.at_id(id)->virtIDs.push_back(tmpVirtId);
             }
-            // cout << "virt init-an\n";
             continue;
         }
 
@@ -528,7 +542,9 @@ void Game::process_init() {
         (double) normA_x, normA_y, normB...
     */
     readBuff_c(buff, offset, bufflen, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "textures len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         PhTexture tmpText;
 
@@ -550,7 +566,9 @@ void Game::process_init() {
                 path += c;
             }
         } while (c != '\0');
+#ifdef CONSOLE_LOGGING_INIT
         cout << path << endl;
+#endif
 
         tx->setTexture(&grend->cam, path);
 
@@ -571,7 +589,9 @@ void Game::process_init() {
             readBuff_c(buff, offset, bufflen, normC.y);
 
             tx->push_indicie(idA, idB, idC, normA, normB, normC);
+#ifdef CONSOLE_LOGGING_INIT
             cout << idA << "," << idB << "," << idC << ": " << normA.x << "," << normA.y << ";" << normB.x << "," << normB.y << ";" << normC.x << "," << normC.y << "," << endl;
+#endif
         }
     }
 
@@ -580,7 +600,9 @@ void Game::process_init() {
         (struct DroppedItem) item
     */
     readBuff_c(buff, offset, bufflen, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "dropped items len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         DroppedItem item;
         readBuff_c(buff, offset, bufflen, item);
@@ -592,7 +614,9 @@ void Game::process_init() {
         (int) atPID
     */
     readBuff_c(buff, offset, bufflen, len);
+#ifdef CONSOLE_LOGGING_INIT
     cout << "seats len = " << len << endl;
+#endif
     for (uint32_t i = 0; i < len; ++i) {
         int PID;
         readBuff_c(buff, offset, bufflen, PID);
@@ -719,7 +743,6 @@ void Game::send_updatePlayerControls() { // TO---DO to se lahko izvaja v posebne
         writeBuff(buff, offset, tmp);
         double st = *thrSendBuffer.at_index(i);
         writeBuff(buff, offset, st);
-        // cout << tmp << ", " << st << endl;
     }
 
     client.sendData(buff, offset);
@@ -796,7 +819,9 @@ void Game::process_pickup() {
 
     // sending back remains (if any)
     if (it.entr.count > 0) {
+#ifdef CONSOLE_LOGGING_PICKUP
         cout << "posiljam nazaj\n";
+#endif
         send_drop(it);
     }
 

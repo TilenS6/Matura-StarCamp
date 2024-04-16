@@ -52,7 +52,6 @@ void FuelCont::update(double dt) {
     currentFuel += recharge * dt;
     if (currentFuel > capacity)
         currentFuel = capacity;
-    // cout << currentFuel << endl;
 
     double kg_per_node = (empty_kg + kg_perUnit * currentFuel) / 4;
     for (int i = 0; i < 4; ++i) {

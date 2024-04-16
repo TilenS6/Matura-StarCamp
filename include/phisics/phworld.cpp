@@ -14,7 +14,7 @@ PhWorld::PhWorld() {
     fuelConts.set_memory_leak_safety(false);
 }
 void PhWorld::resetWorld() {
-#ifdef CONSOLE_LOGGING
+#ifdef CONSOLE_LOGGING_STAGES
     cout << "RESETAM WORLD!!!\n";
 #endif
     gravity_accel = 9.81;
@@ -105,6 +105,7 @@ void PhWorld::removePointById(int id, FastCont<int> *removedPointsList = nullptr
         }
     }
     for (int i = 0; i < fuelConts.size(); ++i) {
+        if (fuelConts.at_index(i)->virt) continue;
         for (int j = 0; j < 4; ++j) {
             if (id == fuelConts.at_index(i)->pointIDs[j]) {
                 fuelConts.remove_index(i);
@@ -250,14 +251,12 @@ void PhWorld::update(double dt) {
     }
 
     for (int i = 0; i < links.size(); ++i) {
-        // cout << "upd: " << i << endl;
         if (links.at_index(i)->update(dt)) { // requested self delete
 #ifdef CONSOLE_LOGGING
             cout << "strgam link\n";
 #endif
 
             int a = links.at_index(i)->idPointA, b = links.at_index(i)->idPointB;
-            // cout << "gledam za pointe " << a << " in " << b << endl;
             links.remove_index(i);
             --i;
 

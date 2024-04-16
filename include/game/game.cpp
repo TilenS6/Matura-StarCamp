@@ -17,15 +17,13 @@ uint16_t charToScancode(char c) {
     return SDL_SCANCODE_UNKNOWN;
 }
 
+/*
 void testF() {
     cout << "sm v f.\n";
 }
+*/
 
 Game::Game(GameRenderer *_grend, string srvr, string username, string password, bool launchAsServer) {
-    void (*testP)();
-    testP = testF;
-    testP();
-
     grend = _grend;
     serverRole = launchAsServer;
 
@@ -62,6 +60,8 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
     buildBtn.init({-1., 0.}, "Build", &grend->cam, onpress_build);
     intButtons.push_back(buildBtn);
 
+    sitted = false;
+
     // -------------- TEST --------------
     /*
     InteractiveDropoffArea tmp;
@@ -93,7 +93,9 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
         networkThr = thread(networkManagerC, this);
         // send_init();
     }
+#ifdef CONSOLE_LOGGING_STAGES
     cout << "init completed\n";
+#endif
     networkingActive = true;
 }
 
@@ -147,7 +149,10 @@ void Game::update() {
                     Point p = {m.x / grend->cam.scale + grend->cam.x, (grend->cam.h - m.y) / grend->cam.scale + grend->cam.y};
                     int sel = client_inventory.selected;
                     if (client_inventory.inv[sel].ID == none) break;
-                    cout << "drop: " << dropInventoryItem(sel, client_inventory.inv[sel].count, p) << endl;
+                    int ret = dropInventoryItem(sel, client_inventory.inv[sel].count, p);
+#ifdef CONSOLE_LOGGING_STAGES
+                    cout << "drop: " << ret <<endl;
+#endif
                 }
                 break;
 
@@ -208,10 +213,22 @@ void Game::update() {
             cout << "button: unknown operation!\n";
         }
     }
-    for (int i = 0; i < seats.size(); ++i) {
-        bool pr = seats.at_index(i)->update(dt);
-        if (pr) {
-            send_sitdown(seats.get_id_at_index(i));
+    if (sitted) {
+        for (int i = 0; i < seats.size(); ++i)
+            seats.at_index(i)->update(dt);
+        
+        if (kb.pressedNow(SDL_SCANCODE_F)) {
+            send_standup();
+            sitted = false;
+        }
+    } else {
+        for (int i = 0; i < seats.size(); ++i) {
+            bool pr = seats.at_index(i)->update(dt);
+            if (pr) {
+                send_sitdown(seats.get_id_at_index(i));
+                sitted = true;
+                break;
+            }
         }
     }
 
@@ -252,7 +269,9 @@ void Game::update() {
 
     double dtPerStep = dt / PHISICS_SUBSTEPS;
     if (dtPerStep > MAX_DT) {
+#ifdef CONSOLE_LOGGING_DT_CAPPED
         cout << "dt capped\n";
+#endif
         dtPerStep = MAX_DT;
     }
     // clear send buffer
@@ -276,7 +295,6 @@ void Game::update() {
 
                     if (kb.get((SDL_Scancode)charToScancode(c))) {
                         st = 1;
-                        // cout << "PRTISNU " << c << endl;
                         break;
                     }
                 }
@@ -285,9 +303,6 @@ void Game::update() {
                     phisics.rocketThrs.at_index(i)->setState(st);
                 }
             }
-
-            if (thrSendBuffer.size() > 0)
-                send_updatePlayerControls();
         }
         // -------- END CLIENT
 
@@ -296,6 +311,9 @@ void Game::update() {
         for (int i = 0; i < particleSs.size(); ++i)
             particleSs.at_index(i)->update(dt);
     } // end: substeping
+
+    if (thrSendBuffer.size() > 0)
+        send_updatePlayerControls();
 
     if (!serverRole) {
         followCamera(dt);
