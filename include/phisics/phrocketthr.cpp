@@ -27,8 +27,10 @@ void PhRocketThr::setState(double koef) {
     if (fuelContId == -1) {
         cout << "W: @ phRocketThr.cpp: setState (fuel source not set)\n";
     }
-    if (koef > 1) koef = 1;
-    else if (koef < 0) koef = 0;
+    if (koef > 1)
+        koef = 1;
+    else if (koef < 0)
+        koef = 0;
     power = koef;
 }
 void PhRocketThr::update(double dt) {
@@ -52,7 +54,7 @@ void PhRocketThr::update(double dt) {
     double koef;
     double currentThrust = (w->fuelConts.at_id(fuelContId)->take(fuelConsumption * dt * power, &koef) * fuelForceMulti) / dt;
 
-    p1->force += {cos(dir) *currentThrust, sin(dir) *currentThrust};
+    p1->force += {cos(dir) * currentThrust, sin(dir) * currentThrust};
 
     if (psActive) {
         ps.moveSpawner(attached, dir + PI);
@@ -80,7 +82,7 @@ void PhRocketThr::render(Camera *cam) {
         rect.a = attached;
         rect.a.x -= .05;
         rect.a.y += .05;
-        rect.dimensions = { .1, .1 };
+        rect.dimensions = {.1, .1};
         rect.render(cam);
 
         Line whereThr;
@@ -97,7 +99,7 @@ void PhRocketThr::render(Camera *cam) {
 }
 
 void PhRocketThr::initPs(double size, double speed, double dir, double vel_mult_per_second, double rem_life_seconds, unsigned char red, unsigned char grn, unsigned char blu) {
-    ps.create({ 0, 0 }, size, speed, dir, vel_mult_per_second, rem_life_seconds, red, grn, blu);
+    ps.create({0, 0}, size, speed, dir, vel_mult_per_second, rem_life_seconds, red, grn, blu);
     ps.setSpawnInterval(0.05);
     ps.spawning = true;
     psActive = true;

@@ -414,6 +414,7 @@ void Game::render() {
     }
 
     // test ---
+    /*
     Point p = {0, 0};
     SDL_SetRenderDrawColor(grend->cam.r, 255, 0, 0, 255); // r b g a
     p.render(&grend->cam);
@@ -423,6 +424,7 @@ void Game::render() {
     rec.a = {0, 0};
     rec.dimensions = {1, 1};
     rec.render(&grend->cam);
+    */
     // --- test
 
     renderHUD();
