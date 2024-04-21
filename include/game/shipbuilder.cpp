@@ -18,6 +18,7 @@ void ShipBuilder::build() {
         for (int x = 0; x < SHIPBUILDER_GRID_W; ++x) {
             gridIDs[y][x].ID = areaGrid[y][x].containing.entr.ID;
             gridIDs[y][x].keybind = areaGrid[y][x].thrusterKeybind;
+            gridIDs[y][x].rotDeg = areaGrid[y][x].rotation;
             areaGrid[y][x].containing.entr.count--;
             if (areaGrid[y][x].containing.entr.count <= 0) {
                 areaGrid[y][x].containing.entr.count = 0;

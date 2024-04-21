@@ -842,27 +842,28 @@ void Game::process_drop(RecievedData *rec) {
 
 void Game::process_sitdown(RecievedData *rec, int clientId) {
     uint32_t offset = 2;
-    int seatID; // !TODO useless
+    int seatID;
     readBuff(rec->data, offset, seatID);
+    PlayerSeat *s = seats.at_id(seatID);
+    if (s == nullptr) return;
 
+    int shipID = phisics.points.at_id(s->PID)->ownership;
+
+    s->sittingClientID = clientId;
     delete_player(clientId);
 
-    send_init(clientId, -clientId);
+    send_init(clientId, shipID);
 }
 
 void Game::process_standup(RecievedData *rec, int clientId) {
     Point pos = {0, 0};
-    int pid = -1;
     for (int i = 0; i < seats.size(); ++i) {
-        int tmpPid = seats.at_index(i)->PID;
-        if (phisics.points.at_id(tmpPid)->ownership == -clientId) {
-            pid = tmpPid;
+        if (seats.at_index(i)->sittingClientID == clientId) {
+            seats.at_index(i)->sittingClientID = 0;
+            pos = phisics.points.at_id(seats.at_index(i)->PID)->getPos();
+            pos.x += 1;
             break;
         }
-    }
-    if (pid != -1) {
-        pos = phisics.points.at_id(pid)->getPos();
-        pos.x += 1;
     }
 
     gen.newPlayerAt(pos, clientId);

@@ -24,7 +24,7 @@ int Game::dropInventoryItem(int what, int howMuch, Point where) {
 
     DroppedItem tmp;
     tmp.entr.ID = client_inventory.inv[what].ID;
-    tmp.entr.count = client_inventory.inv[what].count;
+    tmp.entr.count = howMuch;
     tmp.pos = where;
     uint32_t tmpid = droppedItems.push_back(tmp);
 

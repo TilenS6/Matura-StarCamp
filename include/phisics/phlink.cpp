@@ -1,6 +1,6 @@
 #include "phisics/phisics.h"
 
-PhLink::PhLink(FastCont<PhPoint>* ps, int idA, int idB, double spring_koef = 50, double damp_koef = 1, double original_len = 0) {
+PhLink::PhLink(FastCont<PhPoint> *ps, int idA, int idB, double spring_koef = 50, double damp_koef = 1, double original_len = 0) {
     points = ps;
     idPointA = idA;
     idPointB = idB;
@@ -30,7 +30,7 @@ void PhLink::makeUnbreakable() {
 }
 
 bool PhLink::update(double dt) { // returns: true on request to be deleted
-    PhPoint* pointA = points->at_id(idPointA), * pointB = points->at_id(idPointB);
+    PhPoint *pointA = points->at_id(idPointA), *pointB = points->at_id(idPointB);
     if (pointA == nullptr || pointB == nullptr) {
         cout << "Err: (link) nism najdu pointov z id " << idPointA << " ali " << idPointB << "!\n";
         return false;
@@ -49,12 +49,16 @@ bool PhLink::update(double dt) { // returns: true on request to be deleted
 
     if (hasMaxComp) {
         double val;
-        if (F >= 0) val = F / maxCompression;
-        else val = F / maxStretch;
+        if (F >= 0)
+            val = F / maxCompression;
+        else
+            val = F / maxStretch;
 
         double k = val * dt * breakingAverage_smoothingKoef;
-        if (k > 1) k = 1;
-        else if (k < -1) k = -1;
+        if (k > 1)
+            k = 1;
+        else if (k < -1)
+            k = -1;
 
         breakingAverage = val * k + breakingAverage * (1. - k);
 
@@ -71,22 +75,28 @@ bool PhLink::update(double dt) { // returns: true on request to be deleted
     lastDist = distPow2;
     return false;
 }
-void PhLink::render(Camera* cam) {
+void PhLink::render(Camera *cam) {
     if (hasMaxComp) {
         double clipped = breakingAverage;
         if (clipped > 1) clipped = 1;
-        if (currentForce > 0) SDL_SetRenderDrawColor(cam->r, 25 + (clipped) * 220, 25, 25, 255);
-        else SDL_SetRenderDrawColor(cam->r, 25, 25, 25 + (clipped) * 220, 255);
+        if (currentForce > 0)
+            SDL_SetRenderDrawColor(cam->r, 25 + (clipped) * 220, 25, 25, 255);
+        else
+            SDL_SetRenderDrawColor(cam->r, 25, 25, 25 + (clipped) * 220, 255);
     }
-    PhPoint* pointA = points->at_id(idPointA), * pointB = points->at_id(idPointB);
+    PhPoint *pointA = points->at_id(idPointA), *pointB = points->at_id(idPointB);
+    if (pointA == nullptr || pointB == nullptr) {
+        cout << "Err: (link::render) nism najdu pointov z id " << idPointA << " ali " << idPointB << "!\n";
+        return;
+    }
 
     Line l;
-    l.a = { (pointA->pos.x - cam->x) * cam->scale, cam->h - ((pointA->pos.y - cam->y) * cam->scale) };
-    l.b = { (pointB->pos.x - cam->x) * cam->scale, cam->h - ((pointB->pos.y - cam->y) * cam->scale) };
+    l.a = {(pointA->pos.x - cam->x) * cam->scale, cam->h - ((pointA->pos.y - cam->y) * cam->scale)};
+    l.b = {(pointB->pos.x - cam->x) * cam->scale, cam->h - ((pointB->pos.y - cam->y) * cam->scale)};
 
     Rectng rec;
-    rec.a = { 0, 0 };
-    rec.dimensions = { (double)cam->w, (double)cam->h };
+    rec.a = {0, 0};
+    rec.dimensions = {(double)cam->w, (double)cam->h};
     if (!collisionLineRectangle(l, rec)) return;
 
     SDL_RenderDrawLine(cam->r, l.a.x, l.a.y, l.b.x, l.b.y);

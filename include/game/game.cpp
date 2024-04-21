@@ -149,11 +149,16 @@ void Game::update() {
                     Point p = {m.x / grend->cam.scale + grend->cam.x, (grend->cam.h - m.y) / grend->cam.scale + grend->cam.y};
                     int sel = client_inventory.selected;
                     if (client_inventory.inv[sel].ID == none) break;
-                    int ret = dropInventoryItem(sel, client_inventory.inv[sel].count, p);
+                    int dropAmount = 1; //client_inventory.inv[sel].count
+                    int ret = dropInventoryItem(sel, dropAmount, p);
 #ifdef CONSOLE_LOGGING_STAGES
                     cout << "drop: " << ret <<endl;
 #endif
                 }
+                break;
+
+            case SDL_SCANCODE_RCTRL:
+                request_initialFromServer();
                 break;
 
             default:

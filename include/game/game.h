@@ -29,11 +29,11 @@
 #define PHISICS_SUBSTEPS 5
 #define NETW_REQ_INTERVAL 0.05
 #define MAX_DT 0.005
-#define CAMERA_STIFFNESS .3 // s kksno vrednostjo ostane stara vrednost pozicije kamere po 1s
+#define CAMERA_STIFFNESS .1 // s kksno vrednostjo ostane stara vrednost pozicije kamere po 1s
 
 #define BUILDING_BLOCK_SIZE 1.
-#define BUILDING_BLOCK_SPRING 2000
-#define BUILDING_BLOCK_DAMP 3
+#define BUILDING_BLOCK_SPRING 5000
+#define BUILDING_BLOCK_DAMP 5
 #define BUILDING_BLOCK_MERGEDISTANCE .01
 #define BUILDING_FUEL_CAPACITY 20
 #define BUILDING_FUEL_RECHARGE 1
@@ -106,13 +106,16 @@ public:
 struct BuildingBlockData {
     int ID;
     char keybind;
+    int rotDeg;
 };
 
-class PlayerSeat {
+class PlayerSeat { // button on PhPoint
     InteractiveButton btn;
     Point lastPos;
     int PID = -1;
     Game *g;
+
+    int sittingClientID; // server use
 
 public:
     void init(int, Game *);
@@ -177,7 +180,8 @@ class Game {
     string quitInfo;
 
     void renderHUD();
-    int process_buildShip_placeBlock(int, double, double, double, int, int, char);
+    int buildingShipID = 0;
+    int process_buildShip_placeBlock(int, double, double, int, double, int, int, char);
     void delete_player(int);
 
 public:

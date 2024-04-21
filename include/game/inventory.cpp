@@ -5,7 +5,7 @@ Inventory::Inventory() {
     lastSelected = selected;
 
     for (int i = 0; i < INVENTORY_SIZE; ++i) {
-        inv[i] = { i, 1 }; //! todo tmp (tale i)
+        inv[i] = {i, 20}; //! todo tmp (tale i)
     }
 
     t.interval();
@@ -13,7 +13,7 @@ Inventory::Inventory() {
     font = TTF_OpenFont("fonts/nasalization-free/nasalization-rg.ttf", 24);
 }
 
-void Inventory::loadTextures(Camera* cam) {
+void Inventory::loadTextures(Camera *cam) {
     for (int i = 0; i < none; ++i) {
         if (inventory_textures[i] != NULL) SDL_DestroyTexture(text);
 
@@ -34,13 +34,13 @@ void Inventory::loadTextures(Camera* cam) {
         if (numbers[i] != NULL) SDL_DestroyTexture(text);
 
         string txt = to_string(i);
-        SDL_Surface* textSurface = TTF_RenderText_Blended(font, txt.c_str(), SDL_Color({ 255, 255, 255 })); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
+        SDL_Surface *textSurface = TTF_RenderText_Blended(font, txt.c_str(), SDL_Color({255, 255, 255})); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
         numbers[i] = SDL_CreateTextureFromSurface(cam->r, textSurface);
         SDL_FreeSurface(textSurface);
     }
 }
 
-void Inventory::render(Camera* cam) {
+void Inventory::render(Camera *cam) {
     if (inventory_textures[0] == NULL) loadTextures(cam);
     if (lastSelected != selected) {
         lastSelected = selected;
@@ -51,13 +51,13 @@ void Inventory::render(Camera* cam) {
 
             string txt = inventoryMeta[inv[selected].ID].name;
 
-            SDL_Surface* textSurface = TTF_RenderText_Blended(font, txt.c_str(), SDL_Color({ 255, 255, 255 })); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
+            SDL_Surface *textSurface = TTF_RenderText_Blended(font, txt.c_str(), SDL_Color({255, 255, 255})); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
             text = SDL_CreateTextureFromSurface(cam->r, textSurface);
             SDL_FreeSurface(textSurface);
         }
     }
 
-    SDL_Rect rect = { 0, cam->h - 50, 50, 50 };
+    SDL_Rect rect = {0, cam->h - 50, 50, 50};
 
     for (int i = 0; i < INVENTORY_SIZE; ++i) {
         if (inv[i].count <= 0) inv[i].ID = none;
@@ -87,7 +87,7 @@ void Inventory::render(Camera* cam) {
             SDL_SetRenderDrawColor(cam->r, INVENTORY_TEXTURE_BORDER_COLOUR, 255);
 
         for (int j = 0; j < INVENTORY_TEXTURE_BORDER; ++j) {
-            SDL_Rect tmpRect = { rect.x - j, rect.y - j, rect.w + 2 * j, rect.h + 2 * j };
+            SDL_Rect tmpRect = {rect.x - j, rect.y - j, rect.w + 2 * j, rect.h + 2 * j};
             SDL_RenderDrawRect(cam->r, &tmpRect);
         }
     }
@@ -110,7 +110,7 @@ void Inventory::render(Camera* cam) {
     }
 }
 
-void DroppedItem::render(Camera* cam) {
+void DroppedItem::render(Camera *cam) {
     if (entr.ID < 0 || entr.ID >= none) return;
     Point p = pos.getRenderPos(cam);
     if (p.x < 0 || p.y < 0 || p.x > cam->w || p.y > cam->h) return;
