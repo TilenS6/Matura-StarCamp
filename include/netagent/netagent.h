@@ -17,8 +17,7 @@
 
 class NetClient;
 
-class NetClient
-{
+class NetClient {
     SOCKET ConnectSocket;
     int err;
 
@@ -38,21 +37,18 @@ public:
     int recieveData();
 };
 
-enum recieveData_ret
-{
+enum recieveData_ret {
     recieveData_SUCCESS = 0,
     recieveData_CONNECTION_CLOSED = -1
 };
 
-enum getConnectionStatus_ret
-{
+enum getConnectionStatus_ret {
     getConnectionStatus_GOOD = 0,
     getConnectionStatus_NO_HOST = -1,
     getConnectionStatus_ERR = -2,
 };
 
-enum recieveData_err
-{
+enum recieveData_err {
     recieveData_OK = 0,
     recieveData_NO_NEW_DATA = -1,
     recieveData_CONN_CLOSED_BY_CLIENT_ERR = -2,
@@ -65,18 +61,15 @@ enum recieveData_err
 struct ClientConnection;
 class NetServer;
 
-struct RecievedData
-{
+struct RecievedData {
     char data[MAX_BUF_LEN];
     int len = MAX_BUF_LEN;
 };
-struct ClientConnection
-{
+struct ClientConnection {
     SOCKET socket = INVALID_SOCKET;
     RecievedData recieved;
 };
-class NetServer
-{
+class NetServer {
     SOCKET ListenSocket = INVALID_SOCKET;
     FastCont<ClientConnection> ClientSockets;
 
@@ -92,16 +85,13 @@ public:
     void closeConnection(int);
 };
 
-
 // TODO unused, ne dela se, zgruntej kako client-server ID bo delu, nism se testiru nic src=https://www.binarytides.com/udp-socket-programming-in-winsock/
-struct ClientData
-{
+struct ClientData {
     RecievedData recieved;
     string ip;
     int port;
 };
-class NetServerUDP
-{
+class NetServerUDP {
     FastCont<ClientData> clientData;
     SOCKET ListenSocket = INVALID_SOCKET;
 
