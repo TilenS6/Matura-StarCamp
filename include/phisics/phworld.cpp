@@ -44,7 +44,7 @@ void PhWorld::resetWorld() {
 
 int PhWorld::createNewPoint(double x, double y, double mass, int collisionGroup = 0, double static_koef = 1., double kinetic_koef = .7, int forceId = -1) {
     PhPoint tmp(x, y, mass, collisionGroup, static_koef, kinetic_koef);
-    tmp.touchingList.set_memory_leak_safety(false);
+    // tmp.touchingList.set_memory_leak_safety(false);
     tmp.collisionGroups.set_memory_leak_safety(false);
 
     if (forceId == -1)
@@ -54,7 +54,7 @@ int PhWorld::createNewPoint(double x, double y, double mass, int collisionGroup 
 }
 int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7, int forceId = -1) {
     PhPoint tmp(x, y, mass, collisionGroup, static_koef, kinetic_koef);
-    tmp.touchingList.set_memory_leak_safety(false);
+    // tmp.touchingList.set_memory_leak_safety(false);
     tmp.collisionGroups.set_memory_leak_safety(false);
 
     if (forceId == -1)
@@ -208,15 +208,15 @@ int PhWorld::createNewWeightOn(int for_point_id, int forceId = -1) {
     return forceId;
 }
 
-/// @brief 
+/// @brief
 /// @param _capacity ce je na 0 nardi FuelContainer VIRTUAL
-/// @param recharge_per_second 
-/// @param pointIdsForWeights 
-/// @param empty_kg 
-/// @param kg_perFuelUnit 
-/// @param Ns_perFuelUnit 
-/// @param forceId 
-/// @return 
+/// @param recharge_per_second
+/// @param pointIdsForWeights
+/// @param empty_kg
+/// @param kg_perFuelUnit
+/// @param Ns_perFuelUnit
+/// @param forceId
+/// @return
 int PhWorld::createNewFuelContainer(double _capacity, double recharge_per_second, int pointIdsForWeights[4], double empty_kg = 1, double kg_perFuelUnit = 1, double Ns_perFuelUnit = 50000, int forceId = -1) {
     FuelCont tmp;
     if (forceId != -1) {
@@ -312,8 +312,9 @@ void PhWorld::update(double dt) {
                 removePointById(b);
         }
     }
-    for (int i = 0; i < points.size(); ++i)
+    for (int i = 0; i < points.size(); ++i) {
         points.at_index(i)->resolveCollisions(dt, &lineObst, &links, &linkObst, &points);
+    }
 
     // Everything is planed, apply those changes
 
@@ -328,38 +329,52 @@ void PhWorld::update(double dt) {
 }
 
 void PhWorld::render(Camera *cam) {
+#ifdef RENDER_TEXTURES
+    for (int i = 0; i < textures.size(); ++i) {
+        textures.at_index(i)->render(cam, this);
+    }
+#endif
+#ifdef RENDER_ROCKETTHRS
     SDL_SetRenderDrawColor(cam->r, 200, 50, 50, 255);
     for (int i = 0; i < rocketThrs.size(); ++i) {
         rocketThrs.at_index(i)->render(cam);
     }
-
+#endif
+#ifdef RENDER_LINKS
     SDL_SetRenderDrawColor(cam->r, 100, 100, 100, 255);
     for (int i = 0; i < links.size(); ++i) {
         links.at_index(i)->render(cam);
     }
-
+#endif
+#ifdef RENDER_MUSCLES
     SDL_SetRenderDrawColor(cam->r, 200, 100, 100, 255);
     for (int i = 0; i < muscles.size(); ++i) {
         muscles.at_index(i)->render(cam);
     }
-
+#endif
+#ifdef RENDER_LINEOBST
     SDL_SetRenderDrawColor(cam->r, 255, 255, 255, 255);
     for (int i = 0; i < lineObst.size(); ++i) {
         lineObst.at_index(i)->render(cam);
     }
+#endif
+#ifdef RENDER_POINTS
     for (int i = 0; i < points.size(); ++i) {
         points.at_index(i)->render(cam);
     }
+#endif
+
+#ifdef RENDER_LINKOBST
+    SDL_SetRenderDrawColor(cam->r, 255, 255, 255, 255);
     for (int i = 0; i < linkObst.size(); ++i) {
         linkObst.at_index(i)->render(cam);
     }
-
-    for (int i = 0; i < textures.size(); ++i) {
-        textures.at_index(i)->render(cam, this);
-    }
+#endif
+#ifdef RENDER_FUELCONTS
     for (int i = 0; i < fuelConts.size(); ++i) {
         fuelConts.at_index(i)->render(cam);
     }
+#endif
 }
 
 bool PhWorld::removeLinkByIds(int idA, int idB) {

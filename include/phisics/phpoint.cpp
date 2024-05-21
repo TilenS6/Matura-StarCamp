@@ -48,7 +48,7 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
     if (*touchingList->at_index(i)) { // se je prej ze dotikal
         Circle nowCircle;
         nowCircle.a = pos;
-        nowCircle.setRadius(max(.01, distancePow2(movement.a, movement.b)));
+        nowCircle.setRadius(PHISICS_COLLISIONS_CHECK_CIRCLE_RADIUS);
         if (collisionLineCircle(obstacle, nowCircle, &closest, &dot)) {
             Point obstVelAtColl = {obstVel.a.x * (1 - dot) + obstVel.b.x * dot, obstVel.a.y * (1 - dot) + obstVel.b.y * dot};
 
@@ -58,7 +58,7 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
             double Fs = cosLineDir * force.y - sinLineDir * force.x;
 
             // if point is lifted from obstacle (with some sticking force, to prevent "lifting" a point from a vertical obstacle with no input)
-            if (Fs < -.1) { // TODO to zafrkava pa dela tezave na obst
+            if (Fs < -PHISICS_COLLISIONS_REQUIRED_LIFT_FORCE) {
                 // *touchingList.at(i) = false;
                 return;
             }
@@ -69,7 +69,7 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
 
             // friction force
             double Ff = 0;
-            if (abs(Ad) > .02) { // if it is moving and is to use kinetic fritction
+            if (abs(Ad) > PHISICS_COLLISIONS_KINETIC_FRICTION_ACCEL_THR) { // if it is moving and is to use kinetic fritction
                 Ff = Fs * KoF_kinetic;
                 if (Ad > 0)
                     Ff *= -1; // point to oposite direction of velocity
@@ -156,15 +156,17 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
         while (obst->size() < touchingList.size()) {
             touchingList.pop_back();
         }
-        for (int i = 0; i < touchingList.size(); ++i)
+        for (int i = 0; i < touchingList.size(); ++i) {
             *touchingList.at_index(i) = false; // TODO to je mal tko tko, ne glih tanajboljs
+        }
     }
     if (linkObst->size() < touchingLinksList.size()) {
         while (obst->size() < touchingLinksList.size()) {
             touchingLinksList.pop_back();
         }
-        for (int i = 0; i < touchingLinksList.size(); ++i)
+        for (int i = 0; i < touchingLinksList.size(); ++i) {
             *touchingLinksList.at_index(i) = false;
+        }
     }
 
     Point nextPos = pos + (vel + (force / (mass + addedMass)) * dt) * dt;
@@ -197,16 +199,20 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
 
         PhPoint *a = (points->at_id(links->at_id(linkObst->at_index(i)->linkId)->idPointA));
         PhPoint *b = (points->at_id(links->at_id(linkObst->at_index(i)->linkId)->idPointB));
-        if (a == nullptr || b == nullptr) cout << "!E: ne dobim ID pointa, phisics > resolveCollision\n";
+        if (a == nullptr || b == nullptr) cout << "!E: ne dobim ID pointa, PhPoint.resolveCollision\n";
         Line obstacle = {a->pos, b->pos};
         Line obstVel = {a->vel, b->vel};
 
         // TODO to ne dela neki najbols... ampak je ok...
-        Point avgMovement = ((obstVel.a + obstVel.b) / 2) * dt * dt;
-        Line movementToObst = {movement.a - avgMovement * 5, movement.b};
+        Point maxObstVel = obstVel.a;
+        if (maxObstVel.x < obstVel.b.x) maxObstVel.x = obstVel.b.x;
+        if (maxObstVel.y < obstVel.b.y) maxObstVel.y = obstVel.b.y;
+
+        Point avgMovement = maxObstVel * dt;
+        Line movementToObst = {movement.a + avgMovement * 2, movement.b}; //? tale *2, je experimental, ni po pravilih
 
         Line result = {0, 0};
-        calculateCollisions(&touchingLinksList, i, movementToObst, obstacle, obstVel, dt, &result); // zakaj vcasih kr skoci cez zid, you may ask... movement je samo prediction, ne pa to kam res gre, zato se lahko malo spremeni in je pol... grozno
+        calculateCollisions(&touchingLinksList, i, movementToObst, obstacle, obstVel, dt, &result); //? zakaj vcasih kr skoci cez zid, you may ask... movement je samo prediction, ne pa to kam res gre, zato se lahko malo spremeni in je pol... grozno
 
         // 3. Newtonov zakon
         a->force -= result.a;

@@ -16,6 +16,21 @@ using namespace std;
 #define SMALL_VAL (double)1e-6
 #define MAX_CONTROLL_LEN 8
 
+#define PHISICS_COLLISIONS_REQUIRED_LIFT_FORCE .01
+#define PHISICS_COLLISIONS_KINETIC_FRICTION_ACCEL_THR .02
+#define PHISICS_COLLISIONS_CHECK_CIRCLE_RADIUS .03
+
+
+#define RENDER_TEXTURES
+#define RENDER_ROCKETTHRS
+// #define RENDER_LINKS
+// #define RENDER_MUSCLES
+#define RENDER_LINKOBST
+// #define RENDER_LINEOBST
+// #define RENDER_POINTS
+#define RENDER_FUELCONTS
+
+
 Camera *debCam = nullptr;
 
 class PhLineObst;

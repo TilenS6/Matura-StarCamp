@@ -1,7 +1,7 @@
 #include "shapes/shapes.h"
 
 // LINE/LINE
-bool collisionLineLine(Line l1, Line l2, Point *intersection = nullptr) {
+bool collisionLineLine(Line l1, Line l2, Point *intersection = nullptr, double *ua = nullptr, double *ub = nullptr) {
     if (l1 == l2)
         return true;
 

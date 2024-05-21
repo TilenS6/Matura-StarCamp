@@ -35,7 +35,6 @@ void Star::generate(Camera *cam, int _w, int _h, int realW, Point3 at, int rd = 
 
     SDL_SetRenderDrawColor(cam->r, rd, gr, bl, 255);
     SDL_FilledCircle(cam->r, centerX, centerY, centerX);
-    // TODO testirej
 
     // -------- nazaj render target
     SDL_SetRenderTarget(cam->r, orgTarget);

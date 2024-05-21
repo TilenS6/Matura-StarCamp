@@ -24,6 +24,7 @@
 #include "interactive.h"
 #include "shipbuilder.h"
 
+// za general zadeve
 #define WIDTH 1920 / 2
 #define HEIGHT 1080 / 2
 #define PHISICS_SUBSTEPS 5
@@ -31,12 +32,28 @@
 #define MAX_DT 0.005
 #define CAMERA_STIFFNESS .1 // s kksno vrednostjo ostane stara vrednost pozicije kamere po 1s
 
+// za building area
 #define BUILDING_BLOCK_SIZE 1.
-#define BUILDING_BLOCK_SPRING 5000
-#define BUILDING_BLOCK_DAMP 5
+#define BUILDING_BLOCK_SPRING 500
+#define BUILDING_BLOCK_DAMP 50
 #define BUILDING_BLOCK_MERGEDISTANCE .01
 #define BUILDING_FUEL_CAPACITY 20
 #define BUILDING_FUEL_RECHARGE 1
+
+// za generator asteroidov
+#define GENERATION_ASTEROID_POINT_C 4
+#define GENERATION_ASTEROID_POINT_C_RND 0 // +- value
+#define GENERATION_ASTEROID_POINT_MASS 1
+#define GENERATION_ASTEROID_POINT_NOISE 1 // +-
+#define GENERATION_ASTEROID_SIZE 4
+#define GENERATION_ASTEROID_SIZE_RND 1
+#define GENERATION_ASTEROID_SPRING_KOEF 100
+#define GENERATION_ASTEROID_DAMP_KOEF 1
+
+#define switchValues(a, b) \
+    { decltype(a) tmp = a;     \
+    a = b;                 \
+    b = tmp; }
 
 #define writeBuff(buff, offset, a)        \
     memcpy(&buff[offset], &a, sizeof(a)); \
@@ -53,6 +70,10 @@
     } else {                                 \
         readBuff(buff, offset, a);           \
     };
+
+#define generateNewNoise(point, value)               \
+    point.x = ((rand() % 201) - 100) * 0.01 * value; \
+    point.y = ((rand() % 201) - 100) * 0.01 * value;
 
 using namespace std;
 // class Player;
@@ -73,6 +94,8 @@ public:
     int PlanetCount;
     void planets(unsigned long, int);
     void stars(int);
+    void asteroids(int, double);
+    void asteroids2(int, double, Point);
 };
 
 class GameRenderer {
@@ -262,3 +285,11 @@ public:
 #include "interactiveDropoffArea.cpp"
 #include "interactiveButton.cpp"
 #include "playerseat.cpp"
+
+// TODO errors 4p testing:
+/*
+vsem neki ne dela
+unknown header data
+ni tekstur
+skos updejta neki => prevec ful steka
+*/
