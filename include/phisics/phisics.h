@@ -8,6 +8,9 @@
 
 #include "particles/particles.h" // ParticleS
 
+#include "game/inventory.h" // DroppedItem
+#include "game/game.h"
+
 using namespace std;
 
 #define PI 3.14159265358979323
@@ -20,7 +23,6 @@ using namespace std;
 #define PHISICS_COLLISIONS_KINETIC_FRICTION_ACCEL_THR .02
 #define PHISICS_COLLISIONS_CHECK_CIRCLE_RADIUS .03
 
-
 #define RENDER_TEXTURES
 #define RENDER_ROCKETTHRS
 // #define RENDER_LINKS
@@ -29,7 +31,7 @@ using namespace std;
 // #define RENDER_LINEOBST
 // #define RENDER_POINTS
 #define RENDER_FUELCONTS
-
+#define RENDER_PROJECTILES
 
 Camera *debCam = nullptr;
 
@@ -41,6 +43,10 @@ class PhWeight;
 class PhWorld;
 
 class FuelCont;
+class Projectile;
+
+// external
+// class Game;
 
 bool helpers = false;
 
@@ -55,7 +61,7 @@ public:
 };
 
 class PhPoint {
-    Point pos; // x: -levo +desno  ;  y: -DOL +GOR
+    Point pos, lastPos; // x: -levo +desno  ;  y: -DOL +GOR
     FastCont<bool> touchingList;
     FastCont<bool> touchingLinksList;
     double KoF_static;
@@ -75,19 +81,20 @@ public:
     void setVirtual(bool);
     void move(double, double);
 
-    void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLink> *, FastCont<PhLinkObst> *, FastCont<PhPoint> *);
+    void resolveCollisions(double, FastCont<PhLineObst> *, FastCont<PhLink> *, FastCont<PhLinkObst> *, FastCont<PhPoint> *, int *);
     void applyChanges(double);
     void updateVirtual(PhWorld *);
 
     void render(Camera *);
 
     Point getPos() { return pos; }
+    Point getLastPos() { return lastPos; }
     Point getRenderPos(Camera *);
 
     friend class PhWorld;
     friend class PhLink;
 
-#ifdef GAME_EXISTS
+#ifdef GAME_EXISTS_FRIEND
     friend class Game;
 #endif
 };
@@ -108,20 +115,30 @@ protected:
     double breakingAverage = 0; // breakingAverage = (val*.2)+(breakingAverage_old*.8)  --> s tem preprecim da bi se dolocen PhLink "uncil" ce je momentalno prezivel vecjo moc (1=prezivlja maxCompr. / maxStr.)
     double breakingAverage_smoothingKoef = 10;
 
+    // loot
+    double life;
+    double shielding;
+    bool takeDamage(double);
+
 public:
     int idPointA, idPointB;
     double currentForce;
+
+    InventoryEntry loot;
 
     PhLink(FastCont<PhPoint> *, int, int, double, double, double);
     void setMaxComp(double, double);
     void makeUnbreakable();
     bool update(double);
     void render(Camera *);
+    void setShield(double);
+    double getLife() { return life; }
 
     friend class PhLinkObst;
     friend class PhWorld;
+    friend class Projectile;
 
-#ifdef GAME_EXISTS
+#ifdef GAME_EXISTS_FRIEND
     friend class Game;
 #endif
 };
@@ -140,7 +157,7 @@ public:
 
     friend class PhWorld;
 
-#ifdef GAME_EXISTS
+#ifdef GAME_EXISTS_FRIEND
     friend class Game;
 #endif
 };
@@ -155,7 +172,7 @@ public:
     PhLinkObst(FastCont<PhLink> *);
     void render(Camera *);
 
-#ifdef GAME_EXISTS
+#ifdef GAME_EXISTS_FRIEND
     friend class Game;
 #endif
 };
@@ -191,7 +208,7 @@ public:
     void initPs(double, double, double, double, double, unsigned char, unsigned char, unsigned char);
 
     friend class PhWorld;
-#ifdef GAME_EXISTS
+#ifdef GAME_EXISTS_FRIEND
     friend class Game;
 #endif
 };
@@ -208,7 +225,7 @@ public:
 
     friend class PhWorld;
 
-#ifdef GAME_EXISTS
+#ifdef GAME_EXISTS_FRIEND
     friend class Game;
 #endif
 };
@@ -243,7 +260,7 @@ public:
     double take(double, double *);
 
     friend class PhWorld;
-#ifdef GAME_EXISTS
+#ifdef GAME_EXISTS_FRIEND
     friend class Game;
 #endif
 };
@@ -266,7 +283,7 @@ public:
     void render(Camera *, PhWorld *);
 
     friend class PhWorld;
-#ifdef GAME_EXISTS
+#ifdef GAME_EXISTS_FRIEND
     friend class Game;
 #endif
 };
@@ -301,6 +318,7 @@ public:
 
     void removePointById(int, FastCont<int> *);
     bool removeLinkByIds(int, int);     // ret: TRUE on succesfull deletion
+    bool removeLinkById(int);          // ret: TRUE on succesfull deletion
     bool removeMuscleByIds(int, int);   // ret: TRUE on succesfull deletion
     bool removeLineObstById(int);       // ret: TRUE on succesfull deletion
     bool removeLinkObstByIds(int, int); // ret: TRUE on succesfull deletion
@@ -310,7 +328,7 @@ public:
     void translateEverything(Point);
 
     void applyGravity();
-    void update(double);
+    void update(double, FastCont<int> *, FastCont<int> *);
 
     void render(Camera *);
 

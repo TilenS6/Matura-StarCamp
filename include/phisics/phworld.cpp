@@ -119,23 +119,29 @@ void PhWorld::removePointById(int id, FastCont<int> *removedPointsList = nullptr
         for (int j = 0; j < tx->indiciesTrises.size(); ++j) {
             PhTextureTris *tx2 = tx->indiciesTrises.at_index(j);
             if (tx2->idA == id || tx2->idB == id || tx2->idC == id) {
-                textures.remove_index(i);
-                --i;
-                break;
+                tx->indiciesTrises.remove_index(j);
+                --j;
             }
+        }
+        if (tx->indiciesTrises.size() == 0) {
+            textures.remove_index(i);
+            --i;
         }
     }
     for (int i = 0; i < points.size(); ++i) {
         if (points.at_index(i)->virt) {
             for (int j = 0; j < points.at_index(i)->virtAvgPoints.size(); ++j) {
                 if (*points.at_index(i)->virtAvgPoints.at_index(j) == id) {
-
-                    if (removedPointsList != nullptr)
-                        removedPointsList->push_back(points.get_id_at_index(i));
-
-                    removePointById(points.get_id_at_index(i));
-                    i--;
+                    points.at_index(i)->virtAvgPoints.remove_index(j);
+                    j--;
                 }
+            }
+            if (points.at_index(i)->virtAvgPoints.size() == 0) {
+                if (removedPointsList != nullptr)
+                    removedPointsList->push_back(points.get_id_at_index(i));
+
+                points.remove_index(i);
+                i--;
             }
         }
     }
@@ -242,7 +248,7 @@ void PhWorld::applyGravity() {
     }
 }
 
-void PhWorld::update(double dt) {
+void PhWorld::update(double dt, FastCont<int> *removedPointsList, FastCont<int> *removedLinksList) {
     for (int i = 0; i < fuelConts.size(); ++i) {
         fuelConts.at_index(i)->update(dt);
     }
@@ -253,32 +259,46 @@ void PhWorld::update(double dt) {
     for (int i = 0; i < links.size(); ++i) {
         if (links.at_index(i)->update(dt)) { // requested self delete
 #ifdef CONSOLE_LOGGING
-            cout << "strgam link\n";
+            cout << "link self delete\n";
 #endif
 
             int a = links.at_index(i)->idPointA, b = links.at_index(i)->idPointB;
-            links.remove_index(i);
+
+            int lid = links.get_id_at_index(i);
+            for (int j = 0; j < linkObst.size(); ++j) {
+                if (linkObst.at_index(j)->linkId == lid) {
+                    linkObst.remove_index(j);
+                    --j;
+                }
+            }
+
+            removedLinksList->push_back(lid);
+            removeLinkById(lid);
             --i;
 
             bool deleteA = true, deleteB = true;
-            for (int i = 0; (i < links.size()) && (deleteA || deleteB); ++i) {
-                if (deleteA && (a == links.at_index(i)->idPointA || a == links.at_index(i)->idPointB))
+            for (int j = 0; (j < links.size()) && (deleteA || deleteB); ++j) {
+                if (deleteA && (a == links.at_index(j)->idPointA || a == links.at_index(j)->idPointB))
                     deleteA = false;
 
-                if (deleteB && (b == links.at_index(i)->idPointA || b == links.at_index(i)->idPointB))
+                if (deleteB && (b == links.at_index(j)->idPointA || b == links.at_index(j)->idPointB))
                     deleteB = false;
             }
-            for (int i = 0; i < muscles.size(); ++i) {
-                if (deleteA && (a == muscles.at_index(i)->idPointA || a == muscles.at_index(i)->idPointB))
+            for (int j = 0; (j < muscles.size()) && (deleteA || deleteB); ++j) {
+                if (deleteA && (a == muscles.at_index(j)->idPointA || a == muscles.at_index(j)->idPointB))
                     deleteA = false;
 
-                if (deleteB && (b == muscles.at_index(i)->idPointA || b == muscles.at_index(i)->idPointB))
+                if (deleteB && (b == muscles.at_index(j)->idPointA || b == muscles.at_index(j)->idPointB))
                     deleteB = false;
             }
-            if (deleteA)
+            if (deleteA) {
                 removePointById(a);
-            if (deleteB)
+                removedPointsList->push_back(a);
+            }
+            if (deleteB) {
                 removePointById(b);
+                removedPointsList->push_back(b);
+            }
         }
     }
 
@@ -392,6 +412,17 @@ bool PhWorld::removeLinkByIds(int idA, int idB) {
         }
     }
     return false;
+}
+bool PhWorld::removeLinkById(int id) {
+    if (links.at_id(id) == nullptr) return false;
+    for (int i = 0; i < linkObst.size(); ++i) {
+        if (linkObst.at_index(i)->linkId == id) {
+            linkObst.remove_index(i);
+            --i;
+        }
+    }
+    links.remove_id(id);
+    return true;
 }
 
 bool PhWorld::removeMuscleByIds(int idA, int idB) {

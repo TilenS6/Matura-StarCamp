@@ -121,6 +121,9 @@ void Game::networkManagerS(Game *g) {
                     case NETSTD_STANDUP:
                         g->process_standup(rec, id);
                         break;
+                    case NETSTD_PROJECTILE:
+                        g->process_newProjectile(rec, id);
+                        break;
                     default:
                         cout << "HEADER_DATA: unknown data\n";
                         break;
@@ -176,11 +179,41 @@ void Game::networkManagerS(Game *g) {
             g->halt = false;
         }
 
-        for (int i = 0; i < g->clientIds.size(); ++i) {
-            g->send_removedPoints(*g->clientIds.at_index(i));
+        if (g->removedPoints.size() > 0 || g->removedLinks.size() > 0 || g->removedProjectiles.size() > 0) {
+            g->halt = true;
+            while (!g->halting)
+                asm("nop");
+            cout << "morm poslat DELETE\n";
+            for (int i = 0; i < g->clientIds.size(); ++i) {
+                int id = *g->clientIds.at_index(i);
+                g->send_removed(id);
+            }
+
+            g->removedPoints.clear(); // size = 0
+            g->removedPoints.reset(); // rolling id = 0
+            g->removedLinks.clear();
+            g->removedLinks.reset();
+            g->removedProjectiles.clear();
+            g->removedProjectiles.reset();
         }
-        g->removedPoints.clear(); // size = 0
-        g->removedPoints.reset(); // rolling id = 0
+        if (g->addedPoints.size() > 0 || g->addedLinks.size() > 0 || g->addedProjectiles.size() > 0) {
+            g->halt = true;
+            while (!g->halting)
+                asm("nop");
+            cout << "morm poslat ADDED\n";
+            for (int i = 0; i < g->clientIds.size(); ++i) {
+                int id = *g->clientIds.at_index(i);
+                g->send_added(id);
+            }
+
+            g->addedPoints.clear(); // size = 0
+            g->addedPoints.reset(); // rolling id = 0
+            g->addedLinks.clear();
+            g->addedLinks.reset();
+            g->addedProjectiles.clear();
+            g->addedProjectiles.reset();
+        }
+        g->halt = false;
     }
 }
 
@@ -229,9 +262,7 @@ int Game::resolve_loginInfo(RecievedData *rec) {
     return -1;
 }
 
-void Game::send_removedPoints(int clientID) {
-    if (removedPoints.size() == 0) return;
-
+void Game::send_removed(int clientID) {
     char buff[MAX_BUF_LEN];
     // header
     buff[0] = NETSTD_HEADER_DATA;
@@ -239,21 +270,178 @@ void Game::send_removedPoints(int clientID) {
     uint64_t offset = 2;
 
     // -------- BODY --------
-    // meta
     /*
-       uint32_t len
+        uint32_t len
+        int ids[]
     */
+    // points
     uint32_t len = removedPoints.size();
     writeBuff(buff, offset, len);
-
-    // ids
-    /*
-        int id
-    */
     for (uint32_t i = 0; i < len; ++i) {
         int id = *removedPoints.at_index(i);
         writeBuff(buff, offset, id);
     }
+
+    // links
+    len = removedLinks.size();
+    writeBuff(buff, offset, len);
+    for (uint32_t i = 0; i < len; ++i) {
+        int id = *removedLinks.at_index(i);
+        writeBuff(buff, offset, id);
+    }
+
+    // projectiles
+    len = removedProjectiles.size();
+    writeBuff(buff, offset, len);
+    for (uint32_t i = 0; i < len; ++i) {
+        int id = *removedProjectiles.at_index(i);
+        cout << "*" << id << "*\n";
+        writeBuff(buff, offset, id);
+    }
+
+    server.sendData(clientID, buff, offset);
+}
+void Game::send_added(int clientID) { // TODO nared se za generator tocke pa linke (za building da ne bo rabu INIT-at vsakic)
+
+#ifdef CONSOLE_LOGGING_NEW
+    cout << "-------- ADDING new elements\n" << endl;
+#endif
+
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_ADD;
+    uint64_t offset = 2;
+
+    // -------- BODY --------
+    // points
+    /*
+        int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7) {
+        * + bool virt (if virt: uint16_t len, id1, id2,...)
+        * + double velocity_x, double velocity_y
+    */
+    uint32_t len = addedPoints.size();
+    writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_NEW
+    cout << "points len = " << len << endl;
+#endif
+    for (int i = 0; i < len; ++i) {
+        int id = *addedPoints.at_index(i);
+        PhPoint *p = phisics.points.at_id(id);
+
+        writeBuff(buff, offset, id);
+
+        Point tmp = p->getPos();
+        writeBuff(buff, offset, tmp.x);
+        writeBuff(buff, offset, tmp.y);
+
+        double tmp2 = p->mass;
+        writeBuff(buff, offset, tmp2);
+
+        uint32_t jn = p->collisionGroups.size();
+        writeBuff(buff, offset, jn);
+        for (int j = 0; j < jn; ++j) {
+            int tmp3 = *p->collisionGroups.at_index(j);
+            writeBuff(buff, offset, tmp3);
+        }
+
+        tmp2 = p->KoF_static;
+        writeBuff(buff, offset, tmp2);
+        tmp2 = p->KoF_kinetic;
+        writeBuff(buff, offset, tmp2);
+
+        bool tmp3 = p->virt;
+        writeBuff(buff, offset, tmp3);
+
+        if (tmp3) {
+            uint16_t len = p->virtAvgPoints.size();
+            writeBuff(buff, offset, len);
+            for (uint16_t j = 0; j < len; ++j) {
+                int tmpid = *p->virtAvgPoints.at_index(j);
+                writeBuff(buff, offset, tmpid);
+            }
+        }
+
+        tmp2 = p->vel.x;
+        writeBuff(buff, offset, tmp2);
+        tmp2 = p->vel.y;
+        writeBuff(buff, offset, tmp2);
+    }
+
+    // links
+    /*
+        int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
+        * + life
+        * + shielding
+        * + loot
+    */
+    len = addedLinks.size();
+    writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
+    cout << "links len = " << len << endl;
+#endif
+    for (int i = 0; i < len; ++i) {
+        int id = *addedLinks.at_index(i);
+        PhLink *p = phisics.links.at_id(id);
+
+        writeBuff(buff, offset, id);
+
+        int tmp = p->idPointA;
+        writeBuff(buff, offset, tmp);
+        tmp = p->idPointB;
+        writeBuff(buff, offset, tmp);
+
+        double tmp2 = p->springKoef;
+        writeBuff(buff, offset, tmp2);
+        tmp2 = p->dampKoef;
+        writeBuff(buff, offset, tmp2);
+
+        tmp2 = p->maxCompression;
+        writeBuff(buff, offset, tmp2);
+        tmp2 = p->maxStretch;
+        writeBuff(buff, offset, tmp2);
+
+        tmp2 = p->orgLenPow2; // !!! POW2 !!!
+        writeBuff(buff, offset, tmp2);
+
+        tmp2 = p->life;
+        writeBuff(buff, offset, tmp2);
+        tmp2 = p->shielding;
+        writeBuff(buff, offset, tmp2);
+        InventoryEntry tmp3 = p->loot;
+        writeBuff(buff, offset, tmp3);
+    }
+
+    // projectiles
+    /*
+        int ID
+        double x, y, sx, sy, damage
+        int owner
+    */
+    len = addedProjectiles.size();
+    writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
+    cout << "projectiles len = " << len << endl;
+#endif
+    for (int i = 0; i < len; ++i) {
+        int id = *addedProjectiles.at_index(i);
+        Projectile *p = projectiles.at_id(id);
+        
+        writeBuff(buff, offset, id);
+
+        Point pnt = p->p.getPos();
+        writeBuff(buff, offset, pnt.x);
+        writeBuff(buff, offset, pnt.y);
+        Point vel = p->p.vel;
+        writeBuff(buff, offset, vel.x);
+        writeBuff(buff, offset, vel.y);
+
+        writeBuff(buff, offset, p->_damage);
+        writeBuff(buff, offset, p->ownerID);
+    }
+
+
+    // -------- SEND AWAY
 
     server.sendData(clientID, buff, offset);
 }
@@ -311,11 +499,13 @@ void Game::send_init(int network_clientId, int playerID) {
 
     // meta
     /*
+        int yourPlayerID
         double gravity_accel;
         double vel_mult_second;
         * unsigned long randSeed (for planet generation)
         * int planetCount (for planet generation)
     */
+    writeBuff(buff, offset, playerID);
     writeBuff(buff, offset, phisics.gravity_accel);
     writeBuff(buff, offset, phisics.vel_mult_second);
     writeBuff(buff, offset, gen.PlanetGenSeed);
@@ -399,6 +589,9 @@ void Game::send_init(int network_clientId, int playerID) {
     // links
     /*
         int PhWorld::createNewLinkBetween(int idA, int idB, double spring_koef = 50, double damp_koef = 1, double maxCompression = 0, double maxStretch = 0, double originalLength = 0) {
+        * + life
+        * + shielding
+        * + loot
     */
     len = phisics.links.size();
     writeBuff(buff, offset, len);
@@ -426,6 +619,13 @@ void Game::send_init(int network_clientId, int playerID) {
 
         tmp2 = phisics.links.at_index(i)->orgLenPow2; // !!! POW2 !!!
         writeBuff(buff, offset, tmp2);
+
+        tmp2 = phisics.links.at_index(i)->life;
+        writeBuff(buff, offset, tmp2);
+        tmp2 = phisics.links.at_index(i)->shielding;
+        writeBuff(buff, offset, tmp2);
+        InventoryEntry tmp3 = phisics.links.at_index(i)->loot;
+        writeBuff(buff, offset, tmp3);
     }
 
     // muscles
@@ -657,6 +857,34 @@ void Game::send_init(int network_clientId, int playerID) {
         writeBuff(buff, offset, tmp);
     }
 
+    // projectiles
+    /*
+        int ID
+        double x, y, sx, sy, damage
+        int owner
+    */
+    len = projectiles.size();
+    writeBuff(buff, offset, len);
+#ifdef CONSOLE_LOGGING_INIT
+    cout << "projectiles len = " << len << endl;
+#endif
+    for (int i = 0; i < len; ++i) {
+        int id = projectiles.get_id_at_index(i);
+        writeBuff(buff, offset, id);
+
+        Point pnt = projectiles.at_index(i)->p.getPos();
+        writeBuff(buff, offset, pnt.x);
+        writeBuff(buff, offset, pnt.y);
+        Point vel = projectiles.at_index(i)->p.vel;
+        writeBuff(buff, offset, vel.x);
+        writeBuff(buff, offset, vel.y);
+
+        writeBuff(buff, offset, projectiles.at_index(i)->_damage);
+        writeBuff(buff, offset, projectiles.at_index(i)->ownerID);
+    }
+
+    // -------- SENDING AWAY
+
     if (offset >= MAX_BUF_LEN) {
         cout << "Data buffer overflowed, not sending anything\n";
         // TODO kaj ce OF
@@ -681,9 +909,8 @@ void Game::send_init(int network_clientId, int playerID) {
 update (na vsake __ sek):
     FastCont<PhPoint> points; (pos, vel)
     FastCont<PhRocketThr> rocketThrs; (power)
-    FastCont<PhWeight> weights; (added weight?)
     FastCont<FuelCont> fuelConts; (currentFuel)
-
+    FastCont<Projectile> projectiles; (pos, vel)
 
 
 FastCont<__>:
@@ -761,6 +988,26 @@ void Game::send_update_all(int clientId) {
         writeBuff(buff, offset, currentFuel);
     }
 
+    // projectiles
+    /*
+        int id
+        double pos_x, pos_y
+        double vel_x, vel_y
+    */
+    len = projectiles.size();
+    writeBuff(buff, offset, len);
+    for (uint32_t i = 0; i < len; ++i) {
+        int id = projectiles.get_id_at_index(i);
+        writeBuff(buff, offset, id);
+
+        Point tmp = projectiles.at_index(i)->p.pos;
+        writeBuff(buff, offset, tmp.x);
+        writeBuff(buff, offset, tmp.y);
+        tmp = projectiles.at_index(i)->p.vel;
+        writeBuff(buff, offset, tmp.x);
+        writeBuff(buff, offset, tmp.y);
+    }
+
     if (offset >= MAX_BUF_LEN) {
         cout << "Data buffer overflowed, not sending anything\n";
         // TODO kaj ce OF
@@ -828,6 +1075,28 @@ void Game::send_pickup(int clientId, DroppedItem it) {
     }
 }
 
+void Game::send_loot(int clientId, InventoryEntry entr) {
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_LOOT;
+    uint64_t offset = 2;
+
+    writeBuff(buff, offset, entr);
+
+    cout << "posiljam loot " << clientId << endl;
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        server.sendData(clientId, buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- all updated data sent as server (length: " << offset << ")\n";
+#endif
+    }
+}
+
 void Game::process_drop(RecievedData *rec) {
     uint32_t offset = 2;
 
@@ -868,4 +1137,24 @@ void Game::process_standup(RecievedData *rec, int clientId) {
 
     gen.newPlayerAt(pos, clientId);
     send_init(clientId, clientId);
+}
+
+/*
+double x, y, sx, sy, damage
+int owner
+*/
+void Game::process_newProjectile(RecievedData *rec, int clientId) {
+    uint32_t offset = 2;
+    double x, y, sx, sy, damage;
+    int owner;
+
+    readBuff(rec->data, offset, x);
+    readBuff(rec->data, offset, y);
+    readBuff(rec->data, offset, sx);
+    readBuff(rec->data, offset, sy);
+    readBuff(rec->data, offset, damage);
+    readBuff(rec->data, offset, owner);
+
+    int id = projectiles.push_back(*new Projectile(x, y, sx, sy, damage, owner));
+    addedProjectiles.push_back(id);
 }

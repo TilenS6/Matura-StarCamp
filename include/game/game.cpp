@@ -24,6 +24,7 @@ void testF() {
 */
 
 Game::Game(GameRenderer *_grend, string srvr, string username, string password, bool launchAsServer) {
+    // global_game = this;
     grend = _grend;
     serverRole = launchAsServer;
 
@@ -154,10 +155,10 @@ void Game::update() {
                     Point p = {m.x / grend->cam.scale + grend->cam.x, (grend->cam.h - m.y) / grend->cam.scale + grend->cam.y};
                     int sel = client_inventory.selected;
                     if (client_inventory.inv[sel].ID == none) break;
-                    int dropAmount = 1; //client_inventory.inv[sel].count
+                    int dropAmount = 1; // client_inventory.inv[sel].count
                     int ret = dropInventoryItem(sel, dropAmount, p);
 #ifdef CONSOLE_LOGGING_STAGES
-                    cout << "drop: " << ret <<endl;
+                    cout << "drop: " << ret << endl;
 #endif
                 }
                 break;
@@ -226,7 +227,7 @@ void Game::update() {
     if (sitted) {
         for (int i = 0; i < seats.size(); ++i)
             seats.at_index(i)->update(dt);
-        
+
         if (kb.pressedNow(SDL_SCANCODE_F)) {
             send_standup();
             sitted = false;
@@ -288,6 +289,13 @@ void Game::update() {
     thrSendBuffer.clear();
     thrSendBuffer.reset();
 
+    if (kb.pressedNow(SDL_SCANCODE_X)) {
+        // cout << myPlayerID << endl;
+        // Projectile tmp(0, 0, -1, 0, 0.55, myPlayerID);
+        // projectiles.push_back(*new Projectile(0, 1, -1, 0, 0.55, myPlayerID));
+        send_newProjectile(0, 1, -1, 0, 0.55, myPlayerID);
+    }
+
     for (int i = 0; i < PHISICS_SUBSTEPS; ++i) {
         phisics.applyGravity();
 
@@ -316,7 +324,21 @@ void Game::update() {
         }
         // -------- END CLIENT
 
-        phisics.update(dtPerStep);
+        for (int i = 0; i < projectiles.size(); ++i) {
+            int removedLink = -1;
+            bool selfDel = projectiles.at_index(i)->update(dt, this, &removedLink);
+            if (selfDel) {
+                if (removedLink != -1) {
+                    removedLinks.push_back(removedLink);
+                }
+                int pid = projectiles.get_id_at_index(i);
+                removedProjectiles.push_back(pid);
+                projectiles.remove_index(i);
+                --i;
+            }
+        }
+
+        phisics.update(dtPerStep, &removedPoints, &removedLinks);
 
         for (int i = 0; i < particleSs.size(); ++i)
             particleSs.at_index(i)->update(dt);
@@ -389,6 +411,12 @@ void Game::render() {
     }
 
     phisics.render(&grend->cam);
+
+    // interactive projectile --
+    for (int i = 0; i < projectiles.size(); ++i) {
+        projectiles.at_index(i)->render(&grend->cam);
+    }
+    // -- interactive projectile
 
     // interactive items --
     shipbuilder.render(&grend->cam);

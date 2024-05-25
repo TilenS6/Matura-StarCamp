@@ -1,5 +1,7 @@
 #pragma once
-#define GAME_EXISTS
+
+#define GAME_EXISTS_FRIEND
+
 // #define CONSOLE_LOGGING
 // #define CONSOLE_LOGGING_INIT
 // #define CONSOLE_LOGGING_PICKUP
@@ -50,10 +52,12 @@
 #define GENERATION_ASTEROID_SPRING_KOEF 100
 #define GENERATION_ASTEROID_DAMP_KOEF 1
 
-#define switchValues(a, b) \
-    { decltype(a) tmp = a;     \
-    a = b;                 \
-    b = tmp; }
+#define switchValues(a, b)   \
+    {                        \
+        decltype(a) tmp = a; \
+        a = b;               \
+        b = tmp;             \
+    }
 
 #define writeBuff(buff, offset, a)        \
     memcpy(&buff[offset], &a, sizeof(a)); \
@@ -63,13 +67,26 @@
     memcpy(&a, buff + offset, sizeof(a)); \
     offset += sizeof(a);
 
-#define readBuff_c(buff, offset, bufflen, a) \
-    if (offset + sizeof(a) > bufflen) {      \
-        request_initialFromServer();         \
-        return;                              \
-    } else {                                 \
-        readBuff(buff, offset, a);           \
+
+#ifdef CONSOLE_LOGGING_INIT
+#define readBuff_c(buff, offset, bufflen, a)                \
+    if (offset + sizeof(a) > bufflen) {                     \
+        cout << "buffer too short, requesting new INIT!\n"; \
+        request_initialFromServer();                        \
+        return;                                             \
+    } else {                                                \
+        readBuff(buff, offset, a);                          \
     };
+
+#else
+#define readBuff_c(buff, offset, bufflen, a)                \
+    if (offset + sizeof(a) > bufflen) {                     \
+        request_initialFromServer();                        \
+        return;                                             \
+    } else {                                                \
+        readBuff(buff, offset, a);                          \
+    };
+#endif
 
 #define generateNewNoise(point, value)               \
     point.x = ((rand() % 201) - 100) * 0.01 * value; \
@@ -149,6 +166,19 @@ public:
     friend class Game;
 };
 
+class Projectile {
+    PhPoint p;
+    double _damage;
+    int ownerID;
+
+public:
+    Projectile(double, double, double, double, double, int);
+    bool update(double, Game *, int *);
+    void render(Camera *);
+
+    friend class Game;
+};
+
 // -------- GAME CLASS --------
 struct LoginEntry {
     string username, password;
@@ -174,6 +204,7 @@ class Game {
     Point playerMedian;
 
     // ---- network ----
+    int myPlayerID;
     NetClient client;
     NetServer server;
     FastCont<int> clientIds; // everyone in server [loginID] => [clientConnectionID]
@@ -183,7 +214,9 @@ class Game {
     bool serverRole;
     bool halt = false, halting = false;
     FastCont<double> thrSendBuffer;
-    FastCont<int> removedPoints;
+    FastCont<int> addedPoints, removedPoints;
+    FastCont<int> addedLinks, removedLinks;
+    FastCont<int> addedProjectiles, removedProjectiles;
 
     // ---- visual ----
     FastCont<ParticleS> particleSs;
@@ -192,11 +225,13 @@ class Game {
     FastCont<Star> stars;
 
     // ---- gameplay ----
-    Circle gameArea;
+    Circle gameArea; // TODO not used yet
     FastCont<DroppedItem> droppedItems;
     FastCont<InteractiveDropoffArea> dropoffAreas;
     FastCont<InteractiveButton> intButtons;
     FastCont<PlayerSeat> seats;
+
+    FastCont<Projectile> projectiles;
 
     bool sitted;
 
@@ -236,8 +271,10 @@ public:
     void process_updatePlayerControls(RecievedData *);
 
     void send_bye();
-    void send_removedPoints(int); // removed points logged in removedPoints
-    void process_deletePoints();
+    void send_removed(int); // removed logged in removed_____ containers
+    void send_added(int); // added logged in added_____ containers
+    void process_delete();
+    void process_add();
 
     void handle_newPlayer(int);
     void handle_playerLeft(int);
@@ -248,8 +285,11 @@ public:
     void send_pickup(int, DroppedItem); // server use
     void process_pickup();              // client use
 
+    void send_loot(int, InventoryEntry); // server use
+    void process_loot();                 // client use
+
     void send_drop(DroppedItem);       // client use
-    void process_drop(RecievedData *); // server user
+    void process_drop(RecievedData *); // server use
 
     void send_buildShip(BuildingBlockData *, double, double, int, int); // array, offX, offY, w, h
     void process_buildShip(RecievedData *, int);
@@ -258,6 +298,9 @@ public:
     void process_sitdown(RecievedData *, int);
     void send_standup();
     void process_standup(RecievedData *, int);
+
+    void send_newProjectile(double, double, double, double, double, int); // client use
+    void process_newProjectile(RecievedData *, int);                      // server use
 
     // -- inventory (v inventory.cpp)
     int dropInventoryItem(int, int, Point);
@@ -272,8 +315,14 @@ public:
     friend class Generator;
     friend class ShipBuilder;
     friend class PlayerSeat;
+    friend class Projectile; // rabi serverRole
 };
 
+// Game *global_game = nullptr;
+
+#define GAME_EXISTS
+
+#include "phisics/phisics.h"
 #include "generator.cpp"
 #include "shipbuilder.cpp"
 #include "game_networking_c.cpp"
@@ -285,6 +334,7 @@ public:
 #include "interactiveDropoffArea.cpp"
 #include "interactiveButton.cpp"
 #include "playerseat.cpp"
+#include "projectile.cpp"
 
 // TODO errors 4p testing:
 /*

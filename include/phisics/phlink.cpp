@@ -17,6 +17,12 @@ PhLink::PhLink(FastCont<PhPoint> *ps, int idA, int idB, double spring_koef = 50,
     dampKoef = damp_koef;
 
     hasMaxComp = false;
+
+    loot.ID = none;
+    loot.count = 0;
+
+    life = 1;
+    shielding = 0;
 }
 
 void PhLink::setMaxComp(double maxCompr, double maxStr) {
@@ -30,6 +36,8 @@ void PhLink::makeUnbreakable() {
 }
 
 bool PhLink::update(double dt) { // returns: true on request to be deleted
+    if (life <= SMALL_VAL) return true;
+
     PhPoint *pointA = points->at_id(idPointA), *pointB = points->at_id(idPointB);
     if (pointA == nullptr || pointB == nullptr) {
         cout << "Err: (link) nism najdu pointov z id " << idPointA << " ali " << idPointB << "!\n";
@@ -100,4 +108,13 @@ void PhLink::render(Camera *cam) {
     if (!collisionLineRectangle(l, rec)) return;
 
     SDL_RenderDrawLine(cam->r, l.a.x, l.a.y, l.b.x, l.b.y);
+}
+void PhLink::setShield(double sh) {
+    if (sh >= 0 && sh <= 1) shielding = sh;
+}
+
+bool PhLink::takeDamage(double damage) {
+    double feltDamage = damage * (1 - shielding);
+    life -= feltDamage;
+    return life <= SMALL_VAL;
 }

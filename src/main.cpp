@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 
         // PLAY
         SDL_ShowCursor(SDL_ENABLE);
-        bool launchServer = ret == gameAction_launchServer;
+        bool launchServer = (ret == gameAction_launchServer);
         Game game(&gr, server, username, password, launchServer);
         while (game.looping()) {
             game.update();

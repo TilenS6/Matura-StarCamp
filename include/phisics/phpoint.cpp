@@ -141,33 +141,34 @@ void PhPoint::calculateCollisions(FastCont<bool> *touchingList, int i, Line move
     }
 }
 
-void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<PhLink> *links, FastCont<PhLinkObst> *linkObst, FastCont<PhPoint> *points) {
+void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<PhLink> *links, FastCont<PhLinkObst> *linkObst, FastCont<PhPoint> *points, int *touchedLinkID = nullptr) {
     if (virt) {
         return;
     }
     while (obst->size() > touchingList.size()) {
         touchingList.push_back(false);
     }
+    if (obst->size() < touchingList.size()) {
+        do {
+            touchingList.pop_back();
+        } while (obst->size() < touchingList.size());
+        for (int i = 0; i < touchingList.size(); ++i) {
+            *touchingList.at_index(i) = false;
+        }
+    }
+
     while (linkObst->size() > touchingLinksList.size()) {
         touchingLinksList.push_back(false);
     }
-
-    if (obst->size() < touchingList.size()) {
-        while (obst->size() < touchingList.size()) {
-            touchingList.pop_back();
-        }
-        for (int i = 0; i < touchingList.size(); ++i) {
-            *touchingList.at_index(i) = false; // TODO to je mal tko tko, ne glih tanajboljs
-        }
-    }
     if (linkObst->size() < touchingLinksList.size()) {
-        while (obst->size() < touchingLinksList.size()) {
+        do {
             touchingLinksList.pop_back();
-        }
+        } while (linkObst->size() < touchingLinksList.size());
         for (int i = 0; i < touchingLinksList.size(); ++i) {
             *touchingLinksList.at_index(i) = false;
         }
     }
+    // TODO to je mal tko tko, ne glih tanajboljs (vse gor)
 
     Point nextPos = pos + (vel + (force / (mass + addedMass)) * dt) * dt;
     Line movement = {pos, nextPos};
@@ -217,6 +218,9 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
         // 3. Newtonov zakon
         a->force -= result.a;
         b->force -= result.b;
+        if (touchedLinkID != nullptr && !(result.a.x == 0 && result.a.y == 0 && result.b.x == 0 && result.b.y == 0)) {
+            *touchedLinkID = linkObst->at_index(i)->linkId;
+        }
     }
 
     vel += (force / (mass + addedMass)) * dt;
@@ -226,6 +230,7 @@ void PhPoint::resolveCollisions(double dt, FastCont<PhLineObst> *obst, FastCont<
 void PhPoint::applyChanges(double dt) {
     if (virt) return;
     // samo za NE virtual
+    lastPos = pos;
     pos += vel * dt;
     currentSpeed = vel;
 }

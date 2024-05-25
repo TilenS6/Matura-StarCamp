@@ -629,36 +629,6 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
                     oriID tmp = *ori.at_index(k);
                     *ori.at_index(k) = *ori.at_index(k + 1);
                     *ori.at_index(k + 1) = tmp;
-                    //TODOO klele mešam sam nagibe ne pa tut IDje direkt (nared struct mby)
-                    /*
-                    -
---------------- Server ran ---------------
-0:      -9.12, 0.25
-1:      -5.89, 5.73
-2:      -6.39, 1.16
-3:      -6.05, 2.22
-trises: 2
-MED: -7.505, 2.99
-0       -1.615, -2.74   -2.1034
-1       1.615, 2.74     1.0382
-2       1.115, -1.83    -1.02357
-3       1.455, -0.77    -0.486741
-ori:
-0----1
-3----0
-2----3
-1----2
-Conn
-0::3-1
-1::2-0
-0, 1
-3, 0
-2, 3
-1, 2
-quit reason:
-NetServer shutdown completed
-Press any key to continue . . .
-                    */
 
 
                     // int tmp2 = *edgePoints.at_index(k);
@@ -717,7 +687,12 @@ Press any key to continue . . .
         for (int j = 0; j < borderConn.size(); ++j) {
             int lid = g->phisics.createNewLinkBetween(*PIDs.at_index(borderConn.at_index(j)->a), *PIDs.at_index(borderConn.at_index(j)->b), GENERATION_ASTEROID_SPRING_KOEF, GENERATION_ASTEROID_DAMP_KOEF);
             g->phisics.createNewLinkObst(lid);
+            InventoryEntry loot;
+            loot.count = 1;
+            loot.ID = ore_rock;
+            g->phisics.links.at_id(lid)->loot = loot;
             cout << *PIDs.at_index(borderConn.at_index(j)->a) << ", " << *PIDs.at_index(borderConn.at_index(j)->b) << endl;
+
         }
 
         // -------- texture
