@@ -25,7 +25,7 @@ using namespace std;
 
 #define RENDER_TEXTURES
 #define RENDER_ROCKETTHRS
-// #define RENDER_LINKS
+#define RENDER_LINKS
 // #define RENDER_MUSCLES
 #define RENDER_LINKOBST
 // #define RENDER_LINEOBST

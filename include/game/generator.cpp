@@ -416,13 +416,25 @@ struct threeIDs {
 
 void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
     double rpow2 = radius * radius;
+    FastCont<Point> allPos;
     for (int i = 0; i < count; ++i) {
         Point at;
+    chose_again:
         do {
             at.x = (rand() % (int)(radius * 2 * 100)) * 0.01 - radius;
             at.y = (rand() % (int)(radius * 2 * 100)) * 0.01 - radius;
             at += origin;
         } while (distancePow2(origin, at) > rpow2);
+
+        bool ok = true;
+        for (int j = 0; j < allPos.size(); ++j) {
+            if (distancePow2(at, *allPos.at_index(j)) <= GENERATION_ASTEROID_SPAWN_DIST * GENERATION_ASTEROID_SPAWN_DIST) {
+                ok = false;
+                break;
+            }
+        }
+        if (!ok) goto chose_again;
+        allPos.push_back(at);
 
         int rnd = (rand() % (GENERATION_ASTEROID_POINT_C_RND * 2 + 1)) - GENERATION_ASTEROID_POINT_C_RND;
         int pointC = GENERATION_ASTEROID_POINT_C + rnd;
@@ -440,7 +452,9 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
             } while (distancePow2(at, pat) > size * size);
 
             int id = P.push_back(pat);
+#ifdef CONSOLE_LOGGING_GENERATOR
             cout << id << ":\t" << pat.x << ", " << pat.y << endl;
+#endif
             for (int k = j - 1; k >= 0; --k) {
                 Conn.push_back({j, k});
             }
@@ -521,6 +535,12 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
                     Conn.push_back(possibleNew);
             }
         }
+#ifdef CONSOLE_LOGGING_GENERATOR
+        cout << "conn: " << Conn.size() << endl;
+        for (int j = 0; j < Conn.size(); ++j) {
+            cout << j << ": " << Conn.at_index(j)->a << ", " << Conn.at_index(j)->b << endl;
+        }
+#endif
 
         // isci trikotnike
         FastCont<threeIDs> trises;
@@ -540,14 +560,32 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
                     if (tmp.at_id(c.b) == nullptr) tmp.force_import(c.b, 0);
 
                     if (tmp.size() == 3) {
-                        threeIDs thr = {(int)tmp.get_id_at_index(0), (int)tmp.get_id_at_index(1), (int)tmp.get_id_at_index(2)};
-                        // cout << "new tri.: " << thr.a << ", " << thr.b << ", " << thr.c << "\t" << j << "," << k << "," << m << endl;
-                        trises.push_back(thr);
+                        int idA = tmp.get_id_at_index(0);
+                        int idB = tmp.get_id_at_index(1);
+                        int idC = tmp.get_id_at_index(2);
+                        bool pit = false; // point in triangle
+                        for (int o = 0; o < P.size(); ++o) {
+                            int pid = P.get_id_at_index(o);
+                            if (pid == idA || pid == idB || pid == idC) continue;
+                            if (collisionPointInTriangle(*P.at_index(o), *P.at_id(idA), *P.at_id(idB), *P.at_id(idC))) {
+                                pit = true;
+                                break;
+                            }
+                        }
+                        if (!pit) {
+                            threeIDs thr = {idA, idB, idC};
+                            trises.push_back(thr);
+                        }
                     }
                 }
             }
         }
+#ifdef CONSOLE_LOGGING_GENERATOR
         cout << "trises: " << trises.size() << endl;
+        for (int j = 0; j < trises.size(); ++j) {
+            cout << j << ": " << trises.at_index(j)->a << ", " << trises.at_index(j)->b << ", " << trises.at_index(j)->c << endl;
+        }
+#endif
 
         FastCont<char, twoIDs> edges;
         for (int j = 0; j < trises.size(); ++j) {
@@ -577,12 +615,24 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
                 edges.remove_id(c);
             }
         }
+#ifdef CONSOLE_LOGGING_GENERATOR
+        cout << "edges: " << edges.size() << endl;
+        for (int j = 0; j < edges.size(); ++j) {
+            cout << j << ": " << edges.get_id_at_index(j).a << ", " << edges.get_id_at_index(j).b << endl;
+        }
+#endif
 
         FastCont<int> edgePoints;
         for (int j = 0; j < edges.size(); ++j) {
             if (edgePoints.find_and_return_index(edges.get_id_at_index(j).a) == -1) edgePoints.push_back(edges.get_id_at_index(j).a);
             if (edgePoints.find_and_return_index(edges.get_id_at_index(j).b) == -1) edgePoints.push_back(edges.get_id_at_index(j).b);
         }
+#ifdef CONSOLE_LOGGING_GENERATOR
+        cout << "edgePoints: " << edgePoints.size() << endl;
+        for (int j = 0; j < edgePoints.size(); ++j) {
+            cout << j << ": " << *edgePoints.at_index(j) << endl;
+        }
+#endif
 
         // racunanje mediane
         //! to rabm kasnej dol (za teksturo), ne brisat
@@ -599,8 +649,9 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
 
         median = (min + max) / 2;
 
+#ifdef CONSOLE_LOGGING_GENERATOR
         cout << "MED: " << median.x << ", " << median.y << endl;
-
+#endif
         struct oriID {
             double ori;
             int ID;
@@ -608,12 +659,10 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
 
         FastCont<oriID> ori;
         for (int j = 0; j < edgePoints.size(); ++j) {
-            double dx = P.at_index(edgePoints.get_id_at_index(j))->x - median.x;
-            double dy = P.at_index(edgePoints.get_id_at_index(j))->y - median.y;
+            double dx = P.at_id(*edgePoints.at_index(j))->x - median.x;
+            double dy = P.at_id(*edgePoints.at_index(j))->y - median.y;
 
             double val = atan2(dy, dx);
-            cout << j << "\t" << dx << ", " << dy << "\t" << val << endl;
-
 
             ori.push_back({val, j});
         }
@@ -630,7 +679,6 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
                     *ori.at_index(k) = *ori.at_index(k + 1);
                     *ori.at_index(k + 1) = tmp;
 
-
                     // int tmp2 = *edgePoints.at_index(k);
                     // *edgePoints.at_index(k) = *edgePoints.at_index(k + 1);
                     // *edgePoints.at_index(k + 1) = tmp2;
@@ -643,13 +691,18 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
                 break;
         }
 
-        cout << "ori:\n";
+#ifdef CONSOLE_LOGGING_GENERATOR
+        cout << "ori: " << edgePoints.size() << endl;
+        for (int j = 0; j < ori.size(); ++j) {
+            cout << j << ": " << ori.at_index(j)->ID << " => " << ori.at_index(j)->ori << endl;
+        }
+#endif
         // povezovanje "ori" v linke
         FastCont<twoIDs> borderConn;
         for (int j = 0; j < ori.size(); ++j) {
             int jj = j - 1;
             if (jj < 0) jj = ori.size() - 1;
-            twoIDs tmp = {ori.at_index(j)->ID, ori.at_index(jj)->ID};
+            twoIDs tmp = {*edgePoints.at_id(ori.at_index(j)->ID), *edgePoints.at_id(ori.at_index(jj)->ID)};
             borderConn.push_back(tmp);
 
             // brisanje v Conn, da ne bo podvojitev
@@ -660,13 +713,14 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
                     --k;
                 }
             }
-            cout << tmp.a << "----" << tmp.b << endl;
         }
 
-        cout << "Conn\n";
-        for (int j = 0; j < Conn.size(); ++j) {
-            cout << j << "::" << Conn.at_index(j)->a << "-" << Conn.at_index(j)->b << endl;
+#ifdef CONSOLE_LOGGING_GENERATOR
+        cout << "borderConn\n";
+        for (int j = 0; j < borderConn.size(); ++j) {
+            cout << j << ":: " << borderConn.at_index(j)->a << "-" << borderConn.at_index(j)->b << endl;
         }
+#endif
 
         FastCont<int> PIDs;
         for (int j = 0; j < P.size(); ++j) {
@@ -677,11 +731,6 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
         for (int j = 0; j < Conn.size(); ++j) {
             int lid = g->phisics.createNewLinkBetween(*PIDs.at_index(Conn.at_index(j)->a), *PIDs.at_index(Conn.at_index(j)->b), GENERATION_ASTEROID_SPRING_KOEF, GENERATION_ASTEROID_DAMP_KOEF);
             // g->phisics.createNewLinkObst(lid);
-
-            // TODO problem: linkObst dela se vedno sam na levi strani
-            // A.
-            // 1) Spawnej obst sam na zunanji strani asteroida (tiste stranice ko niso v 2eh trikotnikih)
-            // 2) Poprav orientacijo in nared obst
         }
 
         for (int j = 0; j < borderConn.size(); ++j) {
@@ -691,8 +740,6 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
             loot.count = 1;
             loot.ID = ore_rock;
             g->phisics.links.at_id(lid)->loot = loot;
-            cout << *PIDs.at_index(borderConn.at_index(j)->a) << ", " << *PIDs.at_index(borderConn.at_index(j)->b) << endl;
-
         }
 
         // -------- texture

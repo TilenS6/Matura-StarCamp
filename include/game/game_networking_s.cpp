@@ -5,7 +5,7 @@ void Game::networkManagerS(Game *g) {
     cout << "--------------- Server ran ---------------" << endl;
     while (g->running) {
         if (!g->networkingActive || g->client.getConnectionStatus() != 0) {
-            Sleep(1000);
+            Sleep(250);
             continue;
         }
 
@@ -48,14 +48,14 @@ void Game::networkManagerS(Game *g) {
                     // TODO -||-
                 } else {
                     g->halt = true;
+
                     g->clientIds.force_import(loginId, id);
+                    Point pos = login.at_id(loginId)->logoutPos;
                     cout << "Hello " << id << "!\n";
                     while (!g->halting)
                         asm("nop");
 
-                    Point pos = login.at_id(loginId)->logoutPos; // TODO
                     g->gen.newPlayerAt(pos, id);
-
                     g->send_init(id, id);
 
                     g->halt = false;
@@ -183,7 +183,6 @@ void Game::networkManagerS(Game *g) {
             g->halt = true;
             while (!g->halting)
                 asm("nop");
-            cout << "morm poslat DELETE\n";
             for (int i = 0; i < g->clientIds.size(); ++i) {
                 int id = *g->clientIds.at_index(i);
                 g->send_removed(id);
@@ -200,7 +199,6 @@ void Game::networkManagerS(Game *g) {
             g->halt = true;
             while (!g->halting)
                 asm("nop");
-            cout << "morm poslat ADDED\n";
             for (int i = 0; i < g->clientIds.size(); ++i) {
                 int id = *g->clientIds.at_index(i);
                 g->send_added(id);
@@ -304,7 +302,8 @@ void Game::send_removed(int clientID) {
 void Game::send_added(int clientID) { // TODO nared se za generator tocke pa linke (za building da ne bo rabu INIT-at vsakic)
 
 #ifdef CONSOLE_LOGGING_NEW
-    cout << "-------- ADDING new elements\n" << endl;
+    cout << "-------- ADDING new elements\n"
+         << endl;
 #endif
 
     char buff[MAX_BUF_LEN];
@@ -426,7 +425,7 @@ void Game::send_added(int clientID) { // TODO nared se za generator tocke pa lin
     for (int i = 0; i < len; ++i) {
         int id = *addedProjectiles.at_index(i);
         Projectile *p = projectiles.at_id(id);
-        
+
         writeBuff(buff, offset, id);
 
         Point pnt = p->p.getPos();
@@ -439,7 +438,6 @@ void Game::send_added(int clientID) { // TODO nared se za generator tocke pa lin
         writeBuff(buff, offset, p->_damage);
         writeBuff(buff, offset, p->ownerID);
     }
-
 
     // -------- SEND AWAY
 

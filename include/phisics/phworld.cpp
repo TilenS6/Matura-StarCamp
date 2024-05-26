@@ -361,7 +361,7 @@ void PhWorld::render(Camera *cam) {
     }
 #endif
 #ifdef RENDER_LINKS
-    SDL_SetRenderDrawColor(cam->r, 100, 100, 100, 255);
+    SDL_SetRenderDrawColor(cam->r, 100, 255, 100, 255);
     for (int i = 0; i < links.size(); ++i) {
         links.at_index(i)->render(cam);
     }

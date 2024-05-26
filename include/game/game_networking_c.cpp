@@ -59,7 +59,6 @@ void Game::networkManagerC(Game *g) {
                     g->process_update_all();
                     break;
                 case NETSTD_DELETE:
-                    cout << "morm deletat...";
                     g->process_delete();
                     break;
                 case NETSTD_PICKUP_ITEM:
@@ -147,7 +146,9 @@ void Game::send_loginInfo(string username, string password) {
 }
 
 void Game::process_delete() {
+#ifdef CONSOLE_LOGGING_DELETE
     cout << "dobu DELETE\n";
+#endif
     int bufflen = client.recvbuflen;
     char buff[bufflen];
     memcpy(&buff, client.recvbuf, bufflen);
@@ -161,7 +162,9 @@ void Game::process_delete() {
         int id;
         readBuff(buff, offset, id);
         phisics.removePointById(id);
+#ifdef CONSOLE_LOGGING_DELETE
         cout << "point removed: " << id << endl;
+#endif
     }
     // links
     readBuff_c(buff, offset, bufflen, len);
@@ -169,7 +172,9 @@ void Game::process_delete() {
         int id;
         readBuff(buff, offset, id);
         phisics.removeLinkById(id);
+#ifdef CONSOLE_LOGGING_DELETE
         cout << "link removed: " << id << endl;
+#endif
     }
     // projectiles
     readBuff_c(buff, offset, bufflen, len);
@@ -177,12 +182,16 @@ void Game::process_delete() {
         int id;
         readBuff(buff, offset, id);
         projectiles.remove_id(id);
+#ifdef CONSOLE_LOGGING_DELETE
         cout << "projectile removed: " << id << endl;
+#endif
     }
 }
 
 void Game::process_add() {
+#ifdef CONSOLE_LOGGING_ADD
     cout << "dobu ADD\n";
+#endif
     int bufflen = client.recvbuflen;
     char buff[bufflen];
     memcpy(&buff, client.recvbuf, bufflen);
@@ -247,7 +256,9 @@ void Game::process_add() {
 
         phisics.points.at_id(id)->vel = {velocity_x, velocity_y};
 
+#ifdef CONSOLE_LOGGING_ADD
         cout << "points added: " << id << endl;
+#endif
     }
     // links
     /*
@@ -288,7 +299,9 @@ void Game::process_add() {
         phisics.links.at_id(id)->shielding = shielding;
         phisics.links.at_id(id)->loot = loot;
 
+#ifdef CONSOLE_LOGGING_ADD
         cout << "link added: " << id << endl;
+#endif
     }
     // projectiles
     /*
@@ -312,7 +325,9 @@ void Game::process_add() {
 
         // Projectile tmp(0, 0, -1, 0, 0.1, myPlayerID);
         projectiles.force_import(id, *new Projectile(pos.x, pos.y, vel.x, vel.y, dmg, ownerID));
+#ifdef CONSOLE_LOGGING_ADD
         cout << "projectile added: " << id << endl;
+#endif
     }
 }
 

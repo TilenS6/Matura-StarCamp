@@ -92,7 +92,7 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
         server.init();
         networkThr = thread(networkManagerS, this);
         gen.planets(1234, 10); // seed, count
-        gen.asteroids2(1, 5, {-5, 0});
+        gen.asteroids2(3, 20, {-5, 0});
     } else {
         client.init(srvr);
         send_loginInfo(username, password);

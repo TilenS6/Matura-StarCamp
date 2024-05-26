@@ -3,11 +3,18 @@
 #define GAME_EXISTS_FRIEND
 
 // #define CONSOLE_LOGGING
-// #define CONSOLE_LOGGING_INIT
-// #define CONSOLE_LOGGING_PICKUP
+// --- NTWK
 // #define CONSOLE_LOGGING_NETWORKING
-// #define CONSOLE_LOGGING_STAGES
+// #define CONSOLE_LOGGING_INIT
+// #define CONSOLE_LOGGING_ADD
+// #define CONSOLE_LOGGING_DELETE
+// #define CONSOLE_LOGGING_PICKUP
+// --- PHYS
 // #define CONSOLE_LOGGING_DT_CAPPED
+// #define CONSOLE_LOGGING_STAGES
+// --- GAME
+// #define CONSOLE_LOGGING_GENERATOR
+// --- OTHR
 // #define CONSOLE_LOGGING_ID_NOT_FOUND
 
 #include <SDL2/SDL.h>
@@ -43,12 +50,13 @@
 #define BUILDING_FUEL_RECHARGE 1
 
 // za generator asteroidov
-#define GENERATION_ASTEROID_POINT_C 4
-#define GENERATION_ASTEROID_POINT_C_RND 0 // +- value
+#define GENERATION_ASTEROID_POINT_C 7
+#define GENERATION_ASTEROID_POINT_C_RND 3 // +- value
 #define GENERATION_ASTEROID_POINT_MASS 1
-#define GENERATION_ASTEROID_POINT_NOISE 1 // +-
+#define GENERATION_ASTEROID_POINT_NOISE .8 // +-
 #define GENERATION_ASTEROID_SIZE 4
-#define GENERATION_ASTEROID_SIZE_RND 1
+#define GENERATION_ASTEROID_SIZE_RND 2
+#define GENERATION_ASTEROID_SPAWN_DIST 8
 #define GENERATION_ASTEROID_SPRING_KOEF 100
 #define GENERATION_ASTEROID_DAMP_KOEF 1
 
@@ -67,7 +75,6 @@
     memcpy(&a, buff + offset, sizeof(a)); \
     offset += sizeof(a);
 
-
 #ifdef CONSOLE_LOGGING_INIT
 #define readBuff_c(buff, offset, bufflen, a)                \
     if (offset + sizeof(a) > bufflen) {                     \
@@ -79,12 +86,12 @@
     };
 
 #else
-#define readBuff_c(buff, offset, bufflen, a)                \
-    if (offset + sizeof(a) > bufflen) {                     \
-        request_initialFromServer();                        \
-        return;                                             \
-    } else {                                                \
-        readBuff(buff, offset, a);                          \
+#define readBuff_c(buff, offset, bufflen, a) \
+    if (offset + sizeof(a) > bufflen) {      \
+        request_initialFromServer();         \
+        return;                              \
+    } else {                                 \
+        readBuff(buff, offset, a);           \
     };
 #endif
 
@@ -272,7 +279,7 @@ public:
 
     void send_bye();
     void send_removed(int); // removed logged in removed_____ containers
-    void send_added(int); // added logged in added_____ containers
+    void send_added(int);   // added logged in added_____ containers
     void process_delete();
     void process_add();
 

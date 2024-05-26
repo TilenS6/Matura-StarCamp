@@ -98,3 +98,16 @@ bool collisionPointRectangle(Point p, class Rectng b) {
     return (p.x >= b.a.x && p.x <= b.a.x + b.dimensions.x &&
             p.y >= b.a.y && p.y <= b.a.y + b.dimensions.y);
 }
+
+bool collisionPointInTriangle(Point point, Point a, Point b, Point c) {
+    double as_x = point.x - a.x;
+    double as_y = point.y - a.y;
+
+    bool s_ab = ((b.x - a.x) * as_y - (b.y - a.y) * as_x) > 0;
+
+    if ((((c.x - a.x) * as_y - (c.y - a.y) * as_x) > 0) == s_ab)
+        return false;
+    if ((((c.x - b.x) * (point.y - b.y) - (c.y - b.y) * (point.x - b.x)) > 0) != s_ab)
+        return false;
+    return true;
+}
