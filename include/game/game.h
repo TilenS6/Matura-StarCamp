@@ -237,6 +237,7 @@ class Game {
     FastCont<InteractiveDropoffArea> dropoffAreas;
     FastCont<InteractiveButton> intButtons;
     FastCont<PlayerSeat> seats;
+    FastCont<OreProcessor> oreProcessors;
 
     FastCont<Projectile> projectiles;
 
@@ -340,6 +341,7 @@ public:
 #include "game.cpp"
 #include "interactiveDropoffArea.cpp"
 #include "interactiveButton.cpp"
+#include "interactiveProcessor.cpp"
 #include "playerseat.cpp"
 #include "projectile.cpp"
 

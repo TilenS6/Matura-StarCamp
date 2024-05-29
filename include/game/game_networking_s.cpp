@@ -299,7 +299,7 @@ void Game::send_removed(int clientID) {
 
     server.sendData(clientID, buff, offset);
 }
-void Game::send_added(int clientID) { // TODO nared se za generator tocke pa linke (za building da ne bo rabu INIT-at vsakic)
+void Game::send_added(int clientID) { // TODO nared se za generator tocke pa linke (za building da ne bo rabu INIT-at vsakic) + se isto za teksturo
 
 #ifdef CONSOLE_LOGGING_NEW
     cout << "-------- ADDING new elements\n"
@@ -1080,7 +1080,8 @@ void Game::send_loot(int clientId, InventoryEntry entr) {
     buff[1] = NETSTD_LOOT;
     uint64_t offset = 2;
 
-    writeBuff(buff, offset, entr);
+    writeBuff(buff, offset, entr.ID);
+    writeBuff(buff, offset, entr.count);
 
     cout << "posiljam loot " << clientId << endl;
 

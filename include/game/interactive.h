@@ -11,6 +11,7 @@ enum OnPress {
 };
 
 class InteractiveDropoffArea {
+protected:
     Rectng rect;
     DroppedItem containing;
     SDL_Texture *keybindTex;
@@ -49,11 +50,24 @@ class InteractiveButton {
 public:
     int moreData;
     InteractiveButton();
-    void init(Point, string, Camera *, int); //ShipBuilder *); //function<void()> // void (*fPointer)()
+    void init(Point, string, Camera *, int); // ShipBuilder *); //function<void()> // void (*fPointer)()
     int update(Point, double, Keyboard *);
     void render(Camera *);
-    
+
     friend class PlayerSeat;
+};
+
+
+class OreProcessor : public InteractiveDropoffArea {
+    Timer tim;
+    double _processDuration;
+
+public:
+    OreProcessor();
+    void setDuration(double);
+    double getDuration();
+    void update(FastCont<DroppedItem> *, Inventory *);
+    void render(Camera *);
 };
 
 // #include "interactiveDropoffArea.cpp"

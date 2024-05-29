@@ -61,6 +61,11 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
     buildBtn.init({-1., 0.}, "Build", &grend->cam, onpress_build);
     intButtons.push_back(buildBtn);
 
+    // -- ore processor
+    OreProcessor orepr;
+    orepr.setRect(2, -4, 1, 1);
+    oreProcessors.push_back(orepr);
+
     sitted = false;
 
     // -------------- TEST --------------
@@ -217,7 +222,6 @@ void Game::update() {
             shipbuilder.build();
             break;
         case onpress_sit:
-            // TODO
             // send_sitdown(intButtons.at_index(i)->moreData);
             break;
         default:
@@ -412,11 +416,11 @@ void Game::render() {
 
     phisics.render(&grend->cam);
 
-    // interactive projectile --
+    // projectiles
     for (int i = 0; i < projectiles.size(); ++i) {
         projectiles.at_index(i)->render(&grend->cam);
     }
-    // -- interactive projectile
+    //
 
     // interactive items --
     shipbuilder.render(&grend->cam);
@@ -425,6 +429,9 @@ void Game::render() {
     }
     for (int i = 0; i < intButtons.size(); ++i) {
         intButtons.at_index(i)->render(&grend->cam);
+    }
+    for (int i = 0; i < oreProcessors.size(); ++i) {
+        oreProcessors.at_index(i)->render(&grend->cam);
     }
     for (int i = 0; i < seats.size(); ++i) {
         seats.at_index(i)->render();
@@ -467,6 +474,16 @@ void Game::render() {
 
     renderHUD();
 
+    SDL_SetRenderDrawColor(grend->cam.r, 255, 255, 255, 255);
+    Rectng test;
+    test.a = {0, 0};
+    test.dimensions = {1, 1};
+    test.render(&grend->cam);
+
+    SDL_SetRenderDrawColor(grend->cam.r, 255, 0, 0, 255);
+    Point test2 = {0, 0};
+    test2.render(&grend->cam);
+
     grend->represent();
 }
 
@@ -475,6 +492,9 @@ void Game::renderHUD() {
 }
 
 void Game::updateInteractiveItems() {
+    for (int i = 0; i < oreProcessors.size(); ++i) {
+        oreProcessors.at_index(i)->update(&droppedItems, &client_inventory);
+    }
     for (int i = 0; i < dropoffAreas.size(); ++i) {
         dropoffAreas.at_index(i)->update(&droppedItems, &client_inventory);
     }

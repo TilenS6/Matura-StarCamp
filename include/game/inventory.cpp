@@ -69,7 +69,7 @@ void Inventory::render(Camera *cam) {
         SDL_SetRenderDrawColor(cam->r, 0, 0, 0, 100);
         SDL_RenderFillRect(cam->r, &rect);
 
-        if (inv[i].ID != none) {
+        if (inv[i].ID >= 0 && inv[i].ID < none) {
             SDL_RenderCopy(cam->r, inventory_textures[inv[i].ID], NULL, &rect);
 
             if (inv[i].count >= 0 && inv[i].count <= 255) {

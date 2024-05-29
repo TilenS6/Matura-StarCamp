@@ -1,8 +1,8 @@
 #include "game.h"
 
 InteractiveDropoffArea::InteractiveDropoffArea() {
-    rect.a = { 0, 0 };
-    rect.dimensions = { 0, 0 };
+    rect.a = {0, 0};
+    rect.dimensions = {0, 0};
 
     containing.entr.ID = none;
     containing.entr.count = 0;
@@ -15,10 +15,10 @@ InteractiveDropoffArea::InteractiveDropoffArea() {
     keybindTex = nullptr;
 }
 void InteractiveDropoffArea::setRect(double x, double y, double w, double h) {
-    rect.a = { x, y };
-    rect.dimensions = { w, h };
+    rect.a = {x, y};
+    rect.dimensions = {w, h};
 }
-bool InteractiveDropoffArea::update(FastCont<DroppedItem>* di, Inventory* inv = nullptr) {
+bool InteractiveDropoffArea::update(FastCont<DroppedItem> *di, Inventory *inv = nullptr) {
     for (int i = 0; i < di->size(); ++i) {
         if (collisionPointRectangle(di->at_index(i)->pos, rect)) {
             if (containing.entr.ID == none) {
@@ -41,7 +41,7 @@ bool InteractiveDropoffArea::update(FastCont<DroppedItem>* di, Inventory* inv = 
     }
     return false;
 }
-void InteractiveDropoffArea::updateHijack(Keyboard* kb, Mouse* m, Inventory* inv, Camera* cam) {
+void InteractiveDropoffArea::updateHijack(Keyboard *kb, Mouse *m, Inventory *inv, Camera *cam) {
     if (hijacked) {
         if (keybindCapturingActive) {
             char c = kb->getLastChar();
@@ -53,8 +53,8 @@ void InteractiveDropoffArea::updateHijack(Keyboard* kb, Mouse* m, Inventory* inv
 
                 string txt = "";
                 txt += c;
-                TTF_Font* font = TTF_OpenFont("fonts/nasalization-free/nasalization-rg.ttf", 24);
-                SDL_Surface* textSurface = TTF_RenderText_Blended(font, txt.c_str(), SDL_Color({ 255, 255, 255, 255 })); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
+                TTF_Font *font = TTF_OpenFont("fonts/nasalization-free/nasalization-rg.ttf", 24);
+                SDL_Surface *textSurface = TTF_RenderText_Blended(font, txt.c_str(), SDL_Color({255, 255, 255, 255})); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
                 keybindTex = SDL_CreateTextureFromSurface(cam->r, textSurface);
                 SDL_FreeSurface(textSurface);
 
@@ -95,7 +95,7 @@ void InteractiveDropoffArea::updateHijack(Keyboard* kb, Mouse* m, Inventory* inv
         }
     }
 }
-void InteractiveDropoffArea::pickupToInv(Inventory* inv) {
+void InteractiveDropoffArea::pickupToInv(Inventory *inv) {
     // najprej groupa po inv.
     for (int j = 0; j < INVENTORY_SIZE; ++j) {
         if (inv->inv[j].ID == containing.entr.ID) {
@@ -104,9 +104,12 @@ void InteractiveDropoffArea::pickupToInv(Inventory* inv) {
             if (inv->inv[j].count > stackSizes[inv->inv[j].ID]) {
                 containing.entr.count = inv->inv[j].count - stackSizes[inv->inv[j].ID];
                 inv->inv[j].count = stackSizes[inv->inv[j].ID];
+            } else {
+                containing.entr.count = 0;
             }
         }
         if (containing.entr.count <= 0) {
+            containing.entr.count = 0;
             containing.entr.ID = none;
             thrusterKeybind = '\0';
             break;
@@ -125,7 +128,7 @@ void InteractiveDropoffArea::pickupToInv(Inventory* inv) {
         }
     }
 }
-void InteractiveDropoffArea::render(Camera* cam) {
+void InteractiveDropoffArea::render(Camera *cam) { // TODOO dej mu teksturo
     SDL_FRect rendRect = rect.getRenderPosF(cam);
     if (containing.entr.ID != none) {
         SDL_FPoint center;

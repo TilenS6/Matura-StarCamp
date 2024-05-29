@@ -63,8 +63,10 @@ void Game::networkManagerC(Game *g) {
                     break;
                 case NETSTD_PICKUP_ITEM:
                     g->process_pickup();
+                    break;
                 case NETSTD_LOOT:
                     g->process_loot();
+                    break;
                 case NETSTD_ADD:
                     g->process_add();
                     break;
@@ -81,6 +83,7 @@ void Game::networkManagerC(Game *g) {
                     break;
                 case NETSTD_UPDATE_ALL:
                     g->send_update_all(-1);
+                    break;
                 default:
                     cout << "HEADER_REQUEST: unknown data\n";
                     break;
@@ -956,7 +959,7 @@ void Game::process_update_all() {
         Projectile *p = projectiles.at_id(id);
         if (p == nullptr) {
 #ifdef CONSOLE_LOGGING_INIT
-            cout << "Requesting new initial: missing PROJECTILE ID " << id << endl; // TODO ko se joinas drugic not projectile rollingID ni isti in mu to ni vsec
+            cout << "Requesting new initial: missing PROJECTILE ID " << id << endl;
 #endif
             request_initialFromServer();
             return;
@@ -1087,7 +1090,8 @@ void Game::process_loot() {
     uint32_t offset = 2;
 
     InventoryEntry entr;
-    readBuff(client.recvbuf, offset, entr);
+    readBuff(client.recvbuf, offset, entr.ID);
+    readBuff(client.recvbuf, offset, entr.count);
 
     cout << "got loot\n";
 

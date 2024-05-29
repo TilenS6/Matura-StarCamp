@@ -40,8 +40,9 @@ int stackSizes[none] = {
 struct TextureMeta {
     string path, name;
 };
+// icons in inventory
 TextureMeta inventoryMeta[none] = {
-    {"./media/icons/ores/Ore_10.png", "Rock"},        // ore_rock
+    {"./media/icons/ores/Ore_3.png", "Rock"},        // ore_rock
     {"./media/icons/ores/Ore_23.png", "Iron ore"},    // ore_iron
     {"./media/icons/ores/Ore_11.png", "Bronze ore"},  // ore_bronze
     {"./media/icons/ores/Ore_14.png", "Crystal ore"}, // ore_crystal
@@ -51,8 +52,9 @@ TextureMeta inventoryMeta[none] = {
     {"./media/icons/constructions/Metal chair frame LR.png", "Seat frame"},          // building_seat
     {"./media/icons/constructions/Metal fuel frame LR.png", "Fuel Frame"},           // building_fuelcont
 };
+// textures in world
 TextureMeta topdownMeta[none] = {
-    {"./media/icons/ores/Ore_10.png", "Rock"},        // ore_rock
+    {"./media/icons/ores/Ore_3.png", "Rock"},        // ore_rock
     {"./media/icons/ores/Ore_23.png", "Iron ore"},    // ore_iron
     {"./media/icons/ores/Ore_11.png", "Bronze ore"},  // ore_bronze
     {"./media/icons/ores/Ore_14.png", "Crystal ore"}, // ore_crystal
