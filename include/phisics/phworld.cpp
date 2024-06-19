@@ -42,20 +42,23 @@ void PhWorld::resetWorld() {
     textures.reset();
 }
 
-int PhWorld::createNewPoint(double x, double y, double mass, int collisionGroup = 0, double static_koef = 1., double kinetic_koef = .7, int forceId = -1) {
+int PhWorld::createNewPoint(double x, double y, double mass, int collisionGroup = 0, double static_koef = 1., double kinetic_koef = .7, int forceId = -1, int owner = -1) {
     PhPoint tmp(x, y, mass, collisionGroup, static_koef, kinetic_koef);
     // tmp.touchingList.set_memory_leak_safety(false);
     tmp.collisionGroups.set_memory_leak_safety(false);
+    tmp.ownership = owner;
+
 
     if (forceId == -1)
         return points.push_back(tmp);
     points.force_import(forceId, tmp);
     return forceId;
 }
-int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7, int forceId = -1) {
+int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7, int forceId = -1, int owner = -1) {
     PhPoint tmp(x, y, mass, collisionGroup, static_koef, kinetic_koef);
     // tmp.touchingList.set_memory_leak_safety(false);
     tmp.collisionGroups.set_memory_leak_safety(false);
+    tmp.ownership = owner;
 
     if (forceId == -1)
         return points.push_back(tmp);
@@ -361,7 +364,7 @@ void PhWorld::render(Camera *cam) {
     }
 #endif
 #ifdef RENDER_LINKS
-    SDL_SetRenderDrawColor(cam->r, 100, 255, 100, 255);
+    SDL_SetRenderDrawColor(cam->r, 100, 100, 100, 255);
     for (int i = 0; i < links.size(); ++i) {
         links.at_index(i)->render(cam);
     }

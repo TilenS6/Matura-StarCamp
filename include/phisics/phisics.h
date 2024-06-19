@@ -27,7 +27,7 @@ using namespace std;
 #define RENDER_ROCKETTHRS
 #define RENDER_LINKS
 // #define RENDER_MUSCLES
-#define RENDER_LINKOBST
+// #define RENDER_LINKOBST
 // #define RENDER_LINEOBST
 // #define RENDER_POINTS
 #define RENDER_FUELCONTS
@@ -306,8 +306,8 @@ public:
 
     void resetWorld();
 
-    int createNewPoint(double, double, double, int, double, double, int);
-    int createNewPoint(double, double, double, FastCont<int>, double, double, int);
+    int createNewPoint(double, double, double, int, double, double, int, int);
+    int createNewPoint(double, double, double, FastCont<int>, double, double, int, int);
     int createNewLinkBetween(int, int, double, double, double, double, double, int);
     int createNewMuscleBetween(int, int, double, double, double, double, double, double, int);
     int createNewLineObst(double, double, double, double, int, int);

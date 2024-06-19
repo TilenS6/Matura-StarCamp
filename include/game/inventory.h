@@ -10,7 +10,6 @@
 #define PICKUP_RANGE 1
 #define PICKUP_RANGE_POW2 PICKUP_RANGE *PICKUP_RANGE
 
-
 // to nej ostane v tem vrstnem redu!... je dependent na game_shipbuilder.cpp
 enum InventoryIDs {
     ore_rock = 0,
@@ -33,7 +32,7 @@ int stackSizes[none] = {
 
     20, // building_basic
     20, // building_rocketthr
-    5,  // building_seat
+    20,  // building_seat
     20, // building_fuelcont
 };
 
@@ -42,7 +41,7 @@ struct TextureMeta {
 };
 // icons in inventory
 TextureMeta inventoryMeta[none] = {
-    {"./media/icons/ores/Ore_3.png", "Rock"},        // ore_rock
+    {"./media/icons/ores/Ore_3.png", "Rock"},         // ore_rock
     {"./media/icons/ores/Ore_23.png", "Iron ore"},    // ore_iron
     {"./media/icons/ores/Ore_11.png", "Bronze ore"},  // ore_bronze
     {"./media/icons/ores/Ore_14.png", "Crystal ore"}, // ore_crystal
@@ -54,44 +53,47 @@ TextureMeta inventoryMeta[none] = {
 };
 // textures in world
 TextureMeta topdownMeta[none] = {
-    {"./media/icons/ores/Ore_3.png", "Rock"},        // ore_rock
+    {"./media/icons/ores/Ore_3.png", "Rock"},         // ore_rock
     {"./media/icons/ores/Ore_23.png", "Iron ore"},    // ore_iron
     {"./media/icons/ores/Ore_11.png", "Bronze ore"},  // ore_bronze
     {"./media/icons/ores/Ore_14.png", "Crystal ore"}, // ore_crystal
 
-    {"./media/textures/building_basic.png", "Basic frame"},               // building_basic
+    {"./media/textures/building_basic.png", "Basic frame"},        // building_basic
     {"./media/textures/building_rocketthr.png", "Thruster frame"}, // building_rocketthr
     {"./media/textures/building_seat.png", "Seat frame"},          // building_seat
-    {"./media/textures/building_fuelcont.png", "Fuel Frame"},           // building_fuelcont
+    {"./media/textures/building_fuelcont.png", "Fuel Frame"},      // building_fuelcont
 };
 
 struct InventoryEntry {
     int ID, count;
 };
-SDL_Texture* inventory_textures[none] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-SDL_Texture* topdown_textures[none] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+SDL_Texture *inventory_textures[none] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+SDL_Texture *topdown_textures[none] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 class Inventory {
     Timer t; // animations
     int lastSelected;
 
-    SDL_Texture* numbers[256];
-    SDL_Texture* text;
-    TTF_Font* font;
+    SDL_Texture *numbers[256];
+    SDL_Texture *text;
+    TTF_Font *font;
 
 public:
     InventoryEntry inv[INVENTORY_SIZE];
     int selected;
 
     Inventory();
-    void loadTextures(Camera*);
-    void render(Camera*);
+    void loadTextures(Camera *);
+    void render(Camera *);
+
+    int addItem(InventoryEntry);
+    int getAvailableByID(int);
 };
 
 class DroppedItem {
 public:
     Point pos;
     InventoryEntry entr;
-    void render(Camera*);
+    void render(Camera *);
 };
 
 #include "inventory.cpp"

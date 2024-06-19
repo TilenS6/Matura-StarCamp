@@ -27,7 +27,7 @@ void ShipBuilder::build() {
         }
     }
 
-    double dx = 0, dy = 0; // TODO temp
+    double dx = -4, dy = 2; // TODO temp
     g->send_buildShip(*gridIDs, dx, dy, SHIPBUILDER_GRID_W, SHIPBUILDER_GRID_H);
 }
 void ShipBuilder::render(Camera *cam) {

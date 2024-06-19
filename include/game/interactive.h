@@ -8,6 +8,7 @@ enum OnPress {
     onpress_notpressed,
     onpress_build,
     onpress_sit,
+    onpress_demo,
 };
 
 class InteractiveDropoffArea {

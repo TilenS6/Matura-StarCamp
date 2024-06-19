@@ -57,6 +57,7 @@ void Game::networkManagerS(Game *g) {
 
                     g->gen.newPlayerAt(pos, id);
                     g->send_init(id, id);
+                    g->send_inventorySave(id);
 
                     g->halt = false;
                 }
@@ -124,6 +125,9 @@ void Game::networkManagerS(Game *g) {
                     case NETSTD_PROJECTILE:
                         g->process_newProjectile(rec, id);
                         break;
+                    case NETSTD_INVENTORY:
+                        g->process_inventorySave(rec, id);
+                        break;
                     default:
                         cout << "HEADER_DATA: unknown data\n";
                         break;
@@ -145,6 +149,19 @@ void Game::networkManagerS(Game *g) {
                         cout << "- update all requested\n";
 #endif
                         g->send_update_all(id);
+                        break;
+
+                    case NETSTD_INVENTORY:
+#ifdef CONSOLE_LOGGING
+                        cout << "- inventory requested\n";
+#endif
+                        g->send_inventorySave(id);
+                        break;
+                    case NETSTD_INVENTORY_DEMO:
+#ifdef CONSOLE_LOGGING
+                        cout << "- inventory requested\n";
+#endif
+                        g->send_demoInv(id);
                         break;
 
                     case NETSTD_BYE:
@@ -293,7 +310,7 @@ void Game::send_removed(int clientID) {
     writeBuff(buff, offset, len);
     for (uint32_t i = 0; i < len; ++i) {
         int id = *removedProjectiles.at_index(i);
-        cout << "*" << id << "*\n";
+        // cout << "*" << id << "*\n";
         writeBuff(buff, offset, id);
     }
 
@@ -511,7 +528,7 @@ void Game::send_init(int network_clientId, int playerID) {
 
     // points
     /*
-        int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7) {
+        int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7, int ownership = -1) {
         * + bool virt (if virt: uint16_t len, id1, id2,...)
         * + double velocity_x, double velocity_y
     */
@@ -542,6 +559,9 @@ void Game::send_init(int network_clientId, int playerID) {
         writeBuff(buff, offset, tmp2);
         tmp2 = phisics.points.at_index(i)->KoF_kinetic;
         writeBuff(buff, offset, tmp2);
+
+        int tmp4 = phisics.points.at_index(i)->ownership;
+        writeBuff(buff, offset, tmp4);
 
         bool tmp3 = phisics.points.at_index(i)->virt;
         writeBuff(buff, offset, tmp3);
@@ -1083,7 +1103,7 @@ void Game::send_loot(int clientId, InventoryEntry entr) {
     writeBuff(buff, offset, entr.ID);
     writeBuff(buff, offset, entr.count);
 
-    cout << "posiljam loot " << clientId << endl;
+    // cout << "posiljam loot " << clientId << endl;
 
     if (offset >= MAX_BUF_LEN) {
         cout << "Data buffer overflowed, not sending anything\n";
@@ -1156,4 +1176,132 @@ void Game::process_newProjectile(RecievedData *rec, int clientId) {
 
     int id = projectiles.push_back(*new Projectile(x, y, sx, sy, damage, owner));
     addedProjectiles.push_back(id);
+}
+
+/*
+int ID1, count1
+int ID2, count2
+... INVENTORY_SIZE
+*/
+void Game::process_inventorySave(RecievedData *rec, int clientId) {
+    InventorySave tmp;
+    uint32_t offset = 2;
+
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        int ID, count;
+        readBuff(rec->data, offset, ID);
+        readBuff(rec->data, offset, count);
+        tmp.inv[i].ID = ID;
+        tmp.inv[i].count = count;
+    }
+
+    int id = -1;
+    for (int i = 0; i < clientIds.size(); ++i) {
+        if (*clientIds.at_index(i) == clientId) {
+            id = clientIds.get_id_at_index(i);
+            break;
+        }
+    }
+
+    if (id != -1)
+        inventorySave.force_import(id, tmp);
+
+    cout << "sejvam pod " << id << endl;
+}
+
+void Game::send_inventorySave(int clientId) {
+    cout << "posiljam inv.\n";
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_INVENTORY;
+    uint64_t offset = 2;
+
+    int id = -1;
+    for (int i = 0; i < clientIds.size(); ++i) {
+        if (*clientIds.at_index(i) == clientId) {
+            id = clientIds.get_id_at_index(i);
+            break;
+        }
+    }
+
+    if (id == -1) {
+        cout << "couldn't find playerID from clientID @ send_inventorySave\n";
+        return;
+    }
+    if (inventorySave.at_id(id) == nullptr) {
+        cout << "this playerID didn't save before @ send_inventorySave\n";
+        return;
+    }
+
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        int inv_id = inventorySave.at_id(id)->inv[i].ID;
+        int inv_count = inventorySave.at_id(id)->inv[i].count;
+        writeBuff(buff, offset, inv_id);
+        writeBuff(buff, offset, inv_count);
+        cout << inv_id << ": " << inv_count << "\n";
+    }
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        server.sendData(clientId, buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- all updated data sent as server (length: " << offset << ")\n";
+#endif
+    }
+}
+
+void Game::send_demoInv(int clientId) {
+    cout << "posiljam inv.\n";
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_INVENTORY;
+    uint64_t offset = 2;
+    int id, count;
+
+    id = ore_rock;
+    count = 20;
+    writeBuff(buff, offset, id);
+    writeBuff(buff, offset, count);
+    id = ore_iron;
+    count = 20;
+    writeBuff(buff, offset, id);
+    writeBuff(buff, offset, count);
+
+    id = building_basic;
+    count = 10;
+    writeBuff(buff, offset, id);
+    writeBuff(buff, offset, count);
+    id = building_fuelcont;
+    count = 10;
+    writeBuff(buff, offset, id);
+    writeBuff(buff, offset, count);
+    id = building_rocketthr;
+    count = 10;
+    writeBuff(buff, offset, id);
+    writeBuff(buff, offset, count);
+    id = building_seat;
+    count = 10;
+    writeBuff(buff, offset, id);
+    writeBuff(buff, offset, count);
+
+    id = none;
+    count = 0;
+    for (int i = 6; i < INVENTORY_SIZE; ++i) {
+        writeBuff(buff, offset, id);
+        writeBuff(buff, offset, count);
+    }
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        server.sendData(clientId, buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- all updated data sent as server (length: " << offset << ")\n";
+#endif
+    }
 }

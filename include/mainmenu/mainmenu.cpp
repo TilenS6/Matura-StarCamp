@@ -143,7 +143,7 @@ int mainmenu_game(GameRenderer *gr) {
     inputPassword.h = 30;
     inputPassword.linkText(gr->cam.r, &password, true);
 
-    int ret = menu.chose(gr->cam.r, opt, n, title, qeMenu, qeN, 0,                                                                    // static options
+    int ret = menu.chose(gr->cam.r, &gr->cam.w, &gr->cam.h, opt, n, title, qeMenu, qeN, 0,                                            // static options
                          &rect, &txt, &txtStatus, &btn, &btnStartServer, &txtUsername, &txtPassword, &inputUsername, &inputPassword); // added features
 
     txt.destroy();
@@ -242,7 +242,7 @@ int mainmenu_settings(GameRenderer *gr) {
 
     // thread thr = thread(checkConnection, &txtStatus);
 
-    int ret = menu.chose(gr->cam.r, opt, n, title, qeMenu, qeN, 1,                                                                                  // static options
+    int ret = menu.chose(gr->cam.r, &gr->cam.w, &gr->cam.h, opt, n, title, qeMenu, qeN, 1,                                                          // static options
                          &rect, &txt, &txtStatus, &btn, &txtIp, &inputIp, &btnAddUser, &txtUsername, &txtPassword, &inputUsername, &inputPassword); // added features
 
     txt.destroy();
@@ -292,8 +292,8 @@ int mainmenu_info(GameRenderer *gr) {
     txt4.changeText(gr->cam.r, "Written entirely in C/C++, using only esential libraries", 20);
     txt4.move(70, 5.2 * 50 * 1.3);
 
-    int ret = menu.chose(gr->cam.r, opt, n, title, qeMenu, qeN, 2, // static options
-                         &txt1, &txt2, &txt3, &txt4);              // added features
+    int ret = menu.chose(gr->cam.r, &gr->cam.w, &gr->cam.h, opt, n, title, qeMenu, qeN, 2, // static options
+                         &txt1, &txt2, &txt3, &txt4);                                      // added features
 
     txt1.destroy();
     txt2.destroy();

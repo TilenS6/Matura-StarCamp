@@ -3,9 +3,20 @@
 Inventory::Inventory() {
     selected = 0;
     lastSelected = selected;
-
+/*
+    // !TMP --
+    int i = 0;
+    inv[i++] = {ore_rock, 20};
+    inv[i++] = {ore_iron, 20};
+    inv[i++] = {building_basic, 10};
+    inv[i++] = {building_fuelcont, 10};
+    inv[i++] = {building_rocketthr, 10};
+    inv[i++] = {building_seat, 10};
+    // !-- TMP
+    */
     for (int i = 0; i < INVENTORY_SIZE; ++i) {
-        inv[i] = {i, 20}; //! todo tmp (tale i)
+        //// TMP
+        inv[i] = {none, 0};
     }
 
     t.interval();
@@ -66,7 +77,7 @@ void Inventory::render(Camera *cam) {
         x += (INVENTORY_TEXTURE_SIZE + 2 * INVENTORY_TEXTURE_BORDER) * i;
         rect.x = x;
 
-        SDL_SetRenderDrawColor(cam->r, 0, 0, 0, 100);
+        SDL_SetRenderDrawColor(cam->r, 0, 0, 0, 200);
         SDL_RenderFillRect(cam->r, &rect);
 
         if (inv[i].ID >= 0 && inv[i].ID < none) {
@@ -123,4 +134,48 @@ void DroppedItem::render(Camera *cam) {
     rect.y = p.y - rect.h / 2;
 
     SDL_RenderCopy(cam->r, inventory_textures[entr.ID], NULL, &rect);
+}
+
+int Inventory::addItem(InventoryEntry entr) {
+    for (int j = 0; j < INVENTORY_SIZE; ++j) {
+        if (inv[j].ID == entr.ID) {
+            inv[j].count += entr.count;
+
+            if (inv[j].count > stackSizes[inv[j].ID]) {
+                entr.count = inv[j].count - stackSizes[inv[j].ID];
+                inv[j].count = stackSizes[inv[j].ID];
+            } else {
+                entr.count = 0;
+            }
+        }
+        if (entr.count <= 0) {
+            return 0;
+        }
+    }
+    // pol dodaja v ker drug prazn slot
+    if (entr.count > 0) {
+        for (int j = 0; j < INVENTORY_SIZE; ++j) {
+            if (inv[j].ID == none) {
+                inv[j] = entr;
+
+                if (inv[j].count > stackSizes[inv[j].ID]) {
+                    entr.count = inv[j].count - stackSizes[inv[j].ID];
+                    inv[j].count = stackSizes[inv[j].ID];
+                } else {
+                    return 0;
+                }
+            }
+        }
+    }
+    return entr.count;
+}
+
+int Inventory::getAvailableByID(int id) {
+    int available = 0;
+    for (int k = 0; k < INVENTORY_SIZE; ++k) {
+        if (inv[k].ID == id && inv[k].count > 0) {
+            available += inv[k].count;
+        }
+    }
+    return available;
 }

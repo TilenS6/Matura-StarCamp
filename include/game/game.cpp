@@ -3,7 +3,7 @@
 string srvrName = "127.0.0.1";
 
 uint16_t charToScancode(char c) {
-    if (c > 'Z')
+    if (c >= 'a')
         c -= 'a' - 'A';
 
     if (c >= 'A' && c <= 'Z') {
@@ -38,7 +38,7 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
     quitInfo = "";
 
     gameArea.a = {0, 0};
-    gameArea.setRadius(20);
+    gameArea.setRadius(200);
 
     if (serverRole)
         grend->cam.scale = 8; //  __ px = 1m
@@ -52,21 +52,28 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
 
     gen.init(this);
 
-    gen.stars(100);
+    gen.stars(300);
 
     // -- ship builder
+#ifndef PRESENTATION_MODE
     shipbuilder.init(2, 0, this);
 
     InteractiveButton buildBtn;
-    buildBtn.init({-1., 0.}, "Build", &grend->cam, onpress_build);
-    intButtons.push_back(buildBtn);
+    int btnID = intButtons.push_back(buildBtn);
+    intButtons.at_id(btnID)->init({-1., 0.}, "Build", &grend->cam, onpress_build);
+
+    btnID = intButtons.push_back(buildBtn);
+    intButtons.at_id(btnID)->init({4., -4.}, "Demo", &grend->cam, onpress_demo);
 
     // -- ore processor
     OreProcessor orepr;
     orepr.setRect(2, -4, 1, 1);
     oreProcessors.push_back(orepr);
+#endif
 
     sitted = false;
+
+    playermenu.init(grend->cam.r, &m);
 
     // -------------- TEST --------------
     /*
@@ -80,7 +87,13 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
     tmp2.init({-1., 0.}, "Test", &grend->cam, testF);
     intButtons.push_back(tmp2);
     */
-    // -------------- TEST --------------
+
+#ifndef PRESENTATION_MODE
+    EnemyTurret tmp;
+    int tmpid = enemyTurrets.push_back(tmp);
+    enemyTurrets.at_id(tmpid)->init({-20, 10}, 5);
+#endif
+    // -------------- /TEST --------------
 
     // -------- net --------
 
@@ -96,8 +109,10 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
 
         server.init();
         networkThr = thread(networkManagerS, this);
-        gen.planets(1234, 10); // seed, count
-        gen.asteroids2(3, 20, {-5, 0});
+        gen.planets(1234, 20); // seed, count
+#ifndef PRESENTATION_MODE
+        gen.asteroids2(5, gameArea.getRadius() / 4, {0, 0});
+#endif
     } else {
         client.init(srvr);
         send_loginInfo(username, password);
@@ -111,7 +126,7 @@ Game::Game(GameRenderer *_grend, string srvr, string username, string password, 
 }
 
 Game::~Game() {
-    halting = true;
+    // halting = true;
     running = false;
     if (networkThr.joinable())
         networkThr.join();
@@ -138,6 +153,7 @@ void Game::update() {
         kb.update(event);
         switch (event.type) {
         case SDL_QUIT:
+            send_myInventory();
             running = false;
             break;
 
@@ -153,9 +169,14 @@ void Game::update() {
         }
             switch (event.key.keysym.scancode) {
             case SDL_SCANCODE_ESCAPE:
+                if (playermenu.getState()) {
+                    playermenu.display(false);
+                    break;
+                }
+                send_myInventory();
                 running = false;
                 break;
-            case SDL_SCANCODE_B:
+            case SDL_SCANCODE_B: // drop from selected inventory slot
                 if (!serverRole) {
                     Point p = {m.x / grend->cam.scale + grend->cam.x, (grend->cam.h - m.y) / grend->cam.scale + grend->cam.y};
                     int sel = client_inventory.selected;
@@ -168,10 +189,13 @@ void Game::update() {
                 }
                 break;
 
-            case SDL_SCANCODE_RCTRL:
+            case SDL_SCANCODE_RCTRL: // request physics data refresh
                 request_initialFromServer();
                 break;
 
+            case SDL_SCANCODE_TAB: // toggle player menu
+                playermenu.toggle();
+                break;
             default:
                 break;
             }
@@ -193,6 +217,13 @@ void Game::update() {
                 if (client_inventory.selected >= INVENTORY_SIZE) client_inventory.selected = INVENTORY_SIZE - 1;
             }
             break;
+        case SDL_WINDOWEVENT:
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                // cout << "resizan na " << event.window.data1 << ", " << event.window.data2 << endl;
+                grend->cam.w = event.window.data1;
+                grend->cam.h = event.window.data2;
+            }
+            break;
         default:
             break;
         }
@@ -206,13 +237,13 @@ void Game::update() {
         cout << "R click at (world) " << m.x / grend->cam.scale + grend->cam.x << ", " << (grend->cam.h - m.y) / grend->cam.scale + grend->cam.y << endl;
     }
 
-    // -- kb hijacking
+    // kb hijacking --
     for (int i = 0; i < dropoffAreas.size(); ++i) {
         dropoffAreas.at_index(i)->updateHijack(&kb, &m, &client_inventory, &grend->cam);
     }
     shipbuilder.updateHijack(&kb, &m, &client_inventory, &grend->cam);
 
-    // kb hijacking --
+    // -- kb hijacking
     for (int i = 0; i < intButtons.size(); ++i) {
         switch (intButtons.at_index(i)->update(playerMedian, dt, &kb)) {
         case onpress_notpressed:
@@ -223,6 +254,10 @@ void Game::update() {
             break;
         case onpress_sit:
             // send_sitdown(intButtons.at_index(i)->moreData);
+            break;
+        case onpress_demo:
+            request_demoInv();
+
             break;
         default:
             cout << "button: unknown operation!\n";
@@ -293,17 +328,38 @@ void Game::update() {
     thrSendBuffer.clear();
     thrSendBuffer.reset();
 
-    if (kb.pressedNow(SDL_SCANCODE_X)) {
-        // cout << myPlayerID << endl;
-        // Projectile tmp(0, 0, -1, 0, 0.55, myPlayerID);
-        // projectiles.push_back(*new Projectile(0, 1, -1, 0, 0.55, myPlayerID));
-        send_newProjectile(0, 1, -1, 0, 0.55, myPlayerID);
+    // update player rotation:
+    for (int i = 0; i < phisics.points.size(); ++i) {
+        if (phisics.points.at_index(i)->ownership == myPlayerID && phisics.points.at_index(i)->virtAvgPoints.size() == 2) {
+            playerHeadPos = phisics.points.at_index(i)->getPos();
+            double dx = playerHeadPos.x - playerMedian.x;
+            double dy = playerHeadPos.y - playerMedian.y;
+            playerRotation = atan2(dy, dx);
+            break;
+        }
+    }
+
+    shotTimer += dt;
+    if (shotTimer >= SHOTCOOLDOWN * 1.1) shotTimer = SHOTCOOLDOWN;
+    if (!sitted && kb.get(SDL_SCANCODE_X) && shotTimer >= SHOTCOOLDOWN) {
+        shotTimer -= SHOTCOOLDOWN;
+
+        double shotOffset = .2;
+        double shotSpeed = 5;
+        double damage = .55;
+
+        double s = sin(playerRotation), c = cos(playerRotation);
+        double x = playerHeadPos.x + shotOffset * c;
+        double y = playerHeadPos.y + shotOffset * s;
+        double sx = shotSpeed * c;
+        double sy = shotSpeed * s;
+        send_newProjectile(x, y, sx, sy, damage, myPlayerID);
     }
 
     for (int i = 0; i < PHISICS_SUBSTEPS; ++i) {
         phisics.applyGravity();
 
-        // -------- CLIENT
+        // CLIENT --
         if (!serverRole) {
             for (int i = 0; i < phisics.rocketThrs.size(); ++i) {
                 if (phisics.rocketThrs.at_index(i)->controlls[0] == '\0')
@@ -326,11 +382,11 @@ void Game::update() {
                 }
             }
         }
-        // -------- END CLIENT
+        // -- CLIENT
 
         for (int i = 0; i < projectiles.size(); ++i) {
             int removedLink = -1;
-            bool selfDel = projectiles.at_index(i)->update(dt, this, &removedLink);
+            bool selfDel = projectiles.at_index(i)->update(dtPerStep, this, &removedLink);
             if (selfDel) {
                 if (removedLink != -1) {
                     removedLinks.push_back(removedLink);
@@ -342,11 +398,17 @@ void Game::update() {
             }
         }
 
+        for (int i = 0; i < enemyTurrets.size(); ++i) {
+            enemyTurrets.at_index(i)->update(dtPerStep, this);
+        }
+
         phisics.update(dtPerStep, &removedPoints, &removedLinks);
 
         for (int i = 0; i < particleSs.size(); ++i)
-            particleSs.at_index(i)->update(dt);
+            particleSs.at_index(i)->update(dtPerStep);
     } // end: substeping
+
+    playermenu.update(this, dt);
 
     if (thrSendBuffer.size() > 0)
         send_updatePlayerControls();
@@ -416,12 +478,6 @@ void Game::render() {
 
     phisics.render(&grend->cam);
 
-    // projectiles
-    for (int i = 0; i < projectiles.size(); ++i) {
-        projectiles.at_index(i)->render(&grend->cam);
-    }
-    //
-
     // interactive items --
     shipbuilder.render(&grend->cam);
     for (int i = 0; i < dropoffAreas.size(); ++i) {
@@ -440,8 +496,16 @@ void Game::render() {
 
     renderDroppedItems(&grend->cam);
 
-    // if (serverRole)
-    //    player.render(&cam);
+    // projectiles
+    for (int i = 0; i < projectiles.size(); ++i) {
+        projectiles.at_index(i)->render(&grend->cam);
+    }
+    // turrets
+#ifndef PRESENTATION_MODE
+    for (int i = 0; i < enemyTurrets.size(); ++i) {
+        enemyTurrets.at_index(i)->render(&grend->cam);
+    }
+#endif
 
     for (int i = 0; i < particleSs.size(); ++i)
         particleSs.at_index(i)->render(&grend->cam);
@@ -472,22 +536,15 @@ void Game::render() {
     */
     // --- test
 
+#ifndef PRESENTATION_MODE
     renderHUD();
-
-    SDL_SetRenderDrawColor(grend->cam.r, 255, 255, 255, 255);
-    Rectng test;
-    test.a = {0, 0};
-    test.dimensions = {1, 1};
-    test.render(&grend->cam);
-
-    SDL_SetRenderDrawColor(grend->cam.r, 255, 0, 0, 255);
-    Point test2 = {0, 0};
-    test2.render(&grend->cam);
+#endif
 
     grend->represent();
 }
 
 void Game::renderHUD() {
+    playermenu.render(&grend->cam);
     client_inventory.render(&grend->cam);
 }
 

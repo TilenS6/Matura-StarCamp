@@ -191,3 +191,7 @@ void Button::renderStyle1(SDL_Renderer* r) {
 
     SDL_RenderCopy(r, text, NULL, &textRect);
 }
+
+void Button::resetAnimation() {
+    t.interval();
+}

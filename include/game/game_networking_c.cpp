@@ -70,6 +70,9 @@ void Game::networkManagerC(Game *g) {
                 case NETSTD_ADD:
                     g->process_add();
                     break;
+                case NETSTD_INVENTORY:
+                    g->process_myInventory();
+                    break;
                 default:
                     cout << "HEADER_DATA: unknown data\n";
                     break;
@@ -429,7 +432,7 @@ void Game::process_init() {
 
     // points
     /*
-        int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7) {
+        int PhWorld::createNewPoint(double x, double y, double mass, FastCont<int> collisionGroup, double static_koef = 1., double kinetic_koef = .7, int ownership = -1) {
         * + bool virt (if virt: uint16_t len, id1, id2,...)
         * + double velocity_x, double velocity_y
     */
@@ -447,6 +450,7 @@ void Game::process_init() {
         collisionGroup.set_memory_leak_safety(false);
         double static_koef;
         double kinetic_koef;
+        int ownership;
         bool virt;
         double velocity_x;
         double velocity_y;
@@ -468,9 +472,10 @@ void Game::process_init() {
 
         readBuff_c(buff, offset, bufflen, static_koef);
         readBuff_c(buff, offset, bufflen, kinetic_koef);
+        readBuff_c(buff, offset, bufflen, ownership);
         readBuff_c(buff, offset, bufflen, virt);
 
-        phisics.createNewPoint(x, y, mass, collisionGroup, static_koef, kinetic_koef, id);
+        phisics.createNewPoint(x, y, mass, collisionGroup, static_koef, kinetic_koef, id, ownership);
         phisics.points.at_id(id)->setVirtual(virt);
 
         if (virt) {
@@ -1021,7 +1026,7 @@ void Game::send_drop(DroppedItem it) {
     } else {
         client.sendData(buff, offset);
 #ifdef CONSOLE_LOGGING
-        cout << "- all updated data sent as server (length: " << offset << ")\n";
+        cout << "- drop sent to server (length: " << offset << ")\n";
 #endif
     }
 }
@@ -1046,32 +1051,11 @@ void Game::process_pickup() {
     }
     if (index != -1) droppedItems.remove_index(index);
 
-    // najprej groupa po inv.
-    for (int i = 0; i < INVENTORY_SIZE; ++i) {
-        if (client_inventory.inv[i].ID == it.entr.ID) {
-            client_inventory.inv[i].count += it.entr.count;
-            it.entr.count = 0;
-
-            if (client_inventory.inv[i].count > stackSizes[client_inventory.inv[i].ID]) {
-                it.entr.count = client_inventory.inv[i].count - stackSizes[client_inventory.inv[i].ID];
-                client_inventory.inv[i].count = stackSizes[client_inventory.inv[i].ID];
-            }
-        }
-        if (it.entr.count <= 0) break;
-    }
-    // pol dodaja v ker drug prazn slot
-    if (it.entr.count > 0) {
-        for (int i = 0; i < INVENTORY_SIZE; ++i) {
-            if (client_inventory.inv[i].ID == none) {
-                client_inventory.inv[i] = it.entr;
-                it.entr.count = 0;
-                break;
-            }
-        }
-    }
+    int rem = client_inventory.addItem(it.entr);
 
     // sending back remains (if any)
-    if (it.entr.count > 0) {
+    if (rem > 0) {
+        it.entr.count = rem;
 #ifdef CONSOLE_LOGGING_PICKUP
         cout << "posiljam nazaj\n";
 #endif
@@ -1093,36 +1077,14 @@ void Game::process_loot() {
     readBuff(client.recvbuf, offset, entr.ID);
     readBuff(client.recvbuf, offset, entr.count);
 
-    cout << "got loot\n";
+    cout << "got loot: " << entr.ID << "(" << entr.count << ")\n";
 
     // ---- processing
-
-    // najprej groupa po inv.
-    for (int i = 0; i < INVENTORY_SIZE; ++i) {
-        if (client_inventory.inv[i].ID == entr.ID) {
-            client_inventory.inv[i].count += entr.count;
-            entr.count = 0;
-
-            if (client_inventory.inv[i].count > stackSizes[client_inventory.inv[i].ID]) {
-                entr.count = client_inventory.inv[i].count - stackSizes[client_inventory.inv[i].ID];
-                client_inventory.inv[i].count = stackSizes[client_inventory.inv[i].ID];
-            }
-        }
-        if (entr.count <= 0) break;
-    }
-    // pol dodaja v ker drug prazn slot
-    if (entr.count > 0) {
-        for (int i = 0; i < INVENTORY_SIZE; ++i) {
-            if (client_inventory.inv[i].ID == none) {
-                client_inventory.inv[i] = entr;
-                entr.count = 0;
-                break;
-            }
-        }
-    }
+    int rem = client_inventory.addItem(entr);
 
     // sending back remains (if any)
-    if (entr.count > 0) {
+    if (rem > 0) {
+        entr.count = rem;
 #ifdef CONSOLE_LOGGING_PICKUP
         cout << "posiljam nazaj\n";
 #endif
@@ -1156,7 +1118,7 @@ void Game::send_sitdown(int seatID) {
     } else {
         client.sendData(buff, offset);
 #ifdef CONSOLE_LOGGING
-        cout << "- all updated data sent as server (length: " << offset << ")\n";
+        cout << "- sitdown sent to server (length: " << offset << ")\n";
 #endif
     }
 }
@@ -1174,7 +1136,7 @@ void Game::send_standup() {
     } else {
         client.sendData(buff, offset);
 #ifdef CONSOLE_LOGGING
-        cout << "- all updated data sent as server (length: " << offset << ")\n";
+        cout << "- standup sent to server (length: " << offset << ")\n";
 #endif
     }
 }
@@ -1204,7 +1166,82 @@ void Game::send_newProjectile(double x, double y, double sx, double sy, double d
     } else {
         client.sendData(buff, offset);
 #ifdef CONSOLE_LOGGING
-        cout << "- all updated data sent as server (length: " << offset << ")\n";
+        cout << "- sending new projectile to server (length: " << offset << ")\n";
+#endif
+    }
+}
+
+/*
+int ID1, count1
+int ID2, count2
+... INVENTORY_SIZE
+*/
+void Game::send_myInventory() {
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_DATA;
+    buff[1] = NETSTD_INVENTORY;
+    uint64_t offset = 2;
+
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        writeBuff(buff, offset, client_inventory.inv[i].ID);
+        writeBuff(buff, offset, client_inventory.inv[i].count);
+    }
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        client.sendData(buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- sending my inventory to server (length: " << offset << ")\n";
+#endif
+    }
+}
+void Game::request_myInventory() {
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_REQUEST;
+    buff[1] = NETSTD_INVENTORY;
+    uint64_t offset = 2;
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        client.sendData(buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- requesting my inventory from server (length: " << offset << ")\n";
+#endif
+    }
+}
+void Game::process_myInventory() {
+    uint32_t offset = 2;
+
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        int ID, count;
+        readBuff(client.recvbuf, offset, ID);
+        readBuff(client.recvbuf, offset, count);
+
+        client_inventory.inv[i].ID = ID;
+        client_inventory.inv[i].count = count;
+    }
+}
+
+void Game::request_demoInv() {
+    char buff[MAX_BUF_LEN];
+    // header
+    buff[0] = NETSTD_HEADER_REQUEST;
+    buff[1] = NETSTD_INVENTORY_DEMO;
+    uint64_t offset = 2;
+
+    if (offset >= MAX_BUF_LEN) {
+        cout << "Data buffer overflowed, not sending anything\n";
+        // TODO kaj ce OF
+    } else {
+        client.sendData(buff, offset);
+#ifdef CONSOLE_LOGGING
+        cout << "- requesting my inventory from server (length: " << offset << ")\n";
 #endif
     }
 }

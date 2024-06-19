@@ -71,7 +71,6 @@ string BUI::stringInput(string prompt) {
                     cout << "resizan na " << event.window.data1 << ", " << event.window.data2 << endl;
                 }
                 break;
-                break;
             default:
                 break;
             }

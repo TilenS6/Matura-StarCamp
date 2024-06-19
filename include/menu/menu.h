@@ -36,6 +36,7 @@ public:
     bool hover(Mouse*);
     bool alsoClicked() { return clicked; };
     void render(SDL_Renderer*);
+    void resetAnimation();
 };
 
 class Text {
@@ -57,6 +58,7 @@ public:
     void linkText(string*);
     void move(int, int);
     void render(SDL_Renderer*);
+    void resetAnimation();
 };
 
 class MenuRect {
@@ -111,17 +113,17 @@ class Menu {
 
 public:
     template <typename... Args>
-    int chose(SDL_Renderer*, string[], uint8_t, string, string[], uint8_t, uint8_t, Args...);
+    int chose(SDL_Renderer*, int *, int *, string[], uint8_t, string, string[], uint8_t, uint8_t, Args...);
 
-    void handleAditionalArgs();
+    void handleAdditionalArgs();
     template <typename... Args>
-    void handleAditionalArgs(Button*, Args...);
+    void handleAdditionalArgs(Button*, Args...);
     template <typename... Args>
-    void handleAditionalArgs(MenuRect*, Args...);
+    void handleAdditionalArgs(MenuRect*, Args...);
     template <typename... Args>
-    void handleAditionalArgs(Text*, Args...);
+    void handleAdditionalArgs(Text*, Args...);
     template <typename... Args>
-    void handleAditionalArgs(Input*, Args...);
+    void handleAdditionalArgs(Input*, Args...);
 };
 
 #include "menu/button.cpp"

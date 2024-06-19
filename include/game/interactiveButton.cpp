@@ -1,5 +1,5 @@
 #include "game.h"
-#ifdef GAME_EXISTS
+
 InteractiveButton::InteractiveButton() {
     animationK = 0.;
     pos = { 0., 0. };
@@ -94,4 +94,3 @@ void InteractiveButton::render(Camera* cam) {
     SDL_RenderDrawRectF(cam->r, &rect);
     SDL_RenderCopyF(cam->r, textT, NULL, &rect);
 }
-#endif

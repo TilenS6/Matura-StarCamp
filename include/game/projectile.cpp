@@ -4,9 +4,14 @@ Projectile::Projectile(double x, double y, double sx, double sy, double damage, 
     p.vel = {sx, sy};
     _damage = damage;
     ownerID = owner;
+    lifeTime = 5;
 }
 
 bool Projectile::update(double dt, Game *g, int *removedLink) {
+    lifeTime -= dt;
+    if (lifeTime <= 0)
+        return true;
+
     p.applyChanges(dt);
     if (!g->serverRole) return false;
 
@@ -27,7 +32,7 @@ bool Projectile::update(double dt, Game *g, int *removedLink) {
     if (touchedLinkID != -1) {
         PhLink *tlink = g->phisics.links.at_id(touchedLinkID);
         bool defeated = tlink->takeDamage(_damage);
-        cout << tlink->life << " - def: " << defeated << endl;
+        // cout << tlink->life << " - def: " << defeated << endl;
 
         if (defeated) {
             *removedLink = touchedLinkID;

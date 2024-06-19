@@ -32,10 +32,18 @@
 #include "inventory.h"
 #include "interactive.h"
 #include "shipbuilder.h"
+#include "gameui.h"
+#include "enemyturret.h"
+
+// za pojavitve
+// #define PRESENTATION_MODE
+
+// gameplay
+#define SHOTCOOLDOWN .1
 
 // za general zadeve
-#define WIDTH 1920 / 2
-#define HEIGHT 1080 / 2
+int WIDTH = 1920 / 2;
+int HEIGHT = 1080 / 2;
 #define PHISICS_SUBSTEPS 5
 #define NETW_REQ_INTERVAL 0.05
 #define MAX_DT 0.005
@@ -175,6 +183,7 @@ public:
 
 class Projectile {
     PhPoint p;
+    double lifeTime;
     double _damage;
     int ownerID;
 
@@ -192,8 +201,14 @@ struct LoginEntry {
     Point logoutPos;
 };
 
+struct InventorySave {
+    InventoryEntry inv[INVENTORY_SIZE];
+};
+
 FastCont<LoginEntry> login;
+FastCont<InventorySave> inventorySave;
 class Game {
+public:
     GameRenderer *grend;
     SDL_Window *wind;
 
@@ -208,7 +223,9 @@ class Game {
 
     // ---- client ----
     Inventory client_inventory;
-    Point playerMedian;
+    Point playerMedian, playerHeadPos;
+    double playerRotation;
+    double shotTimer;
 
     // ---- network ----
     int myPlayerID;
@@ -238,15 +255,17 @@ class Game {
     FastCont<InteractiveButton> intButtons;
     FastCont<PlayerSeat> seats;
     FastCont<OreProcessor> oreProcessors;
+    FastCont<EnemyTurret> enemyTurrets;
 
     FastCont<Projectile> projectiles;
 
+    PlayerMenu playermenu;
     bool sitted;
 
     string quitInfo;
 
     void renderHUD();
-    int buildingShipID = 0;
+    int buildingShipID = -10;
     int process_buildShip_placeBlock(int, double, double, int, double, int, int, char);
     void delete_player(int);
 
@@ -310,6 +329,15 @@ public:
     void send_newProjectile(double, double, double, double, double, int); // client use
     void process_newProjectile(RecievedData *, int);                      // server use
 
+    void send_myInventory();                         // client use
+    void request_myInventory();                      // client use
+    void process_myInventory();                      // client use
+    void process_inventorySave(RecievedData *, int); // server use
+    void send_inventorySave(int);                    // server use
+
+    void request_demoInv(); // client use
+    void send_demoInv(int); // server use
+
     // -- inventory (v inventory.cpp)
     int dropInventoryItem(int, int, Point);
     void updatePlayersPickupFromFloor();
@@ -324,11 +352,14 @@ public:
     friend class ShipBuilder;
     friend class PlayerSeat;
     friend class Projectile; // rabi serverRole
+    friend class PlayerMenu; // rabi mouse,inventory
 };
 
 // Game *global_game = nullptr;
 
 #define GAME_EXISTS
+
+PlayerMenu pm;
 
 #include "phisics/phisics.h"
 #include "generator.cpp"
@@ -344,6 +375,8 @@ public:
 #include "interactiveProcessor.cpp"
 #include "playerseat.cpp"
 #include "projectile.cpp"
+#include "gameui.cpp"
+#include "enemyturret.cpp"
 
 // TODO errors 4p testing:
 /*

@@ -146,7 +146,7 @@ int Game::process_buildShip_placeBlock(int id, double offX, double offY, int rot
         double y = ((p->x - .5) * sinrot) + .5 + ((p->y - .5) * cosrot) + .5;
 
         int id = phisics.createNewPoint(offX + x, offY + y, 1);
-        phisics.points.at_id(id)->ownership = -seatID; // *TODO hmmm
+        phisics.points.at_id(id)->ownership = seatID; // *TODO hmmm
         pids.push_back(id);
     }
     for (int i = 0; i < constructions[id].links.size(); ++i) {
@@ -159,7 +159,7 @@ int Game::process_buildShip_placeBlock(int id, double offX, double offY, int rot
         phisics.rocketThrs.at_id(tmpid)->setFuelSource(thrsFuelContID);
         phisics.rocketThrs.at_id(tmpid)->controlls[0] = keybind;
         phisics.rocketThrs.at_id(tmpid)->controlls[1] = '\0';
-        phisics.rocketThrs.at_id(tmpid)->forPlayerID = -seatID;
+        phisics.rocketThrs.at_id(tmpid)->forPlayerID = seatID;
     }
     for (int i = 0; i < constructions[id].fuelConts.size(); ++i) {
         FuelContStr *p = constructions[id].fuelConts.at_index(i);

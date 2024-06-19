@@ -96,39 +96,14 @@ void InteractiveDropoffArea::updateHijack(Keyboard *kb, Mouse *m, Inventory *inv
     }
 }
 void InteractiveDropoffArea::pickupToInv(Inventory *inv) {
-    // najprej groupa po inv.
-    for (int j = 0; j < INVENTORY_SIZE; ++j) {
-        if (inv->inv[j].ID == containing.entr.ID) {
-            inv->inv[j].count += containing.entr.count;
-
-            if (inv->inv[j].count > stackSizes[inv->inv[j].ID]) {
-                containing.entr.count = inv->inv[j].count - stackSizes[inv->inv[j].ID];
-                inv->inv[j].count = stackSizes[inv->inv[j].ID];
-            } else {
-                containing.entr.count = 0;
-            }
-        }
-        if (containing.entr.count <= 0) {
-            containing.entr.count = 0;
-            containing.entr.ID = none;
-            thrusterKeybind = '\0';
-            break;
-        }
-    }
-    // pol dodaja v ker drug prazn slot
-    if (containing.entr.count > 0) {
-        for (int j = 0; j < INVENTORY_SIZE; ++j) {
-            if (inv->inv[j].ID == none) {
-                inv->inv[j] = containing.entr;
-                containing.entr.count = 0;
-                containing.entr.ID = none;
-                thrusterKeybind = '\0';
-                break;
-            }
-        }
+    int refusedN = inv->addItem(containing.entr);
+    containing.entr.count = refusedN;
+    if (refusedN == 0) {
+        containing.entr.ID = none;
+        thrusterKeybind = '\0';
     }
 }
-void InteractiveDropoffArea::render(Camera *cam) { // TODOO dej mu teksturo
+void InteractiveDropoffArea::render(Camera *cam) { // TODO dej mu teksturo
     SDL_FRect rendRect = rect.getRenderPosF(cam);
     if (containing.entr.ID != none) {
         SDL_FPoint center;

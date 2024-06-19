@@ -80,6 +80,13 @@ void Generator::newPlayerAt(Point transform, int forPlayerID) {
     }
     g->phisics.points.at_id(centerId)->ownership = forPlayerID;
 
+    // nastavimo celo (virtualna tocka -> povprecje 2-3)
+    int celoId = g->phisics.createNewPoint(0, 0, 0, -1, 0, 0);
+    g->phisics.points.at_id(celoId)->setVirtual(true);
+    g->phisics.points.at_id(celoId)->virtAvgPoints.push_back(*ids.at_index(2));
+    g->phisics.points.at_id(celoId)->virtAvgPoints.push_back(*ids.at_index(3));
+    g->phisics.points.at_id(celoId)->ownership = forPlayerID;
+
     // linke med vsemi
     for (int i = 0; i < 8; ++i) {
         g->phisics.createNewLinkBetween(*ids.at_index(i), *ids.at_index((i + 1) % 8), spring_hardness, spring_dampness);
@@ -190,7 +197,7 @@ void Generator::planets(unsigned long seed, int count = 10) {
         do {
             pos.x = (((rand() % 201) - 100) / 100.) * r;
             pos.y = (((rand() % 201) - 100) / 100.) * r;
-        } while (collisionPointCircle(pos, g->gameArea)); // generera jih samo v playArea (krog)
+        } while (!collisionPointCircle(pos, g->gameArea)); // generera jih samo v playArea (krog)
 
         int id = g->planets.push_back(tmp);
         Planet *p = g->planets.at_id(id);
@@ -730,6 +737,10 @@ void Generator::asteroids2(int count, double radius, Point origin = {0, 0}) {
 
         for (int j = 0; j < Conn.size(); ++j) {
             int lid = g->phisics.createNewLinkBetween(*PIDs.at_index(Conn.at_index(j)->a), *PIDs.at_index(Conn.at_index(j)->b), GENERATION_ASTEROID_SPRING_KOEF, GENERATION_ASTEROID_DAMP_KOEF);
+            InventoryEntry loot;
+            loot.count = 1;
+            loot.ID = ore_rock;
+            g->phisics.links.at_id(lid)->loot = loot;
             // g->phisics.createNewLinkObst(lid);
         }
 

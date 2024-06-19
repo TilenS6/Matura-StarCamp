@@ -52,7 +52,9 @@ void PhRocketThr::update(double dt) {
     double dir = atan2(attached.y - facing.y, attached.x - facing.x) + PI + dirOffset;
 
     double koef;
-    double currentThrust = (w->fuelConts.at_id(fuelContId)->take(fuelConsumption * dt * power, &koef) * fuelForceMulti) / dt;
+    FuelCont *fc = w->fuelConts.at_id(fuelContId);
+    if (fc == nullptr) return;
+    double currentThrust = (fc->take(fuelConsumption * dt * power, &koef) * fuelForceMulti) / dt;
 
     p1->force += {cos(dir) * currentThrust, sin(dir) * currentThrust};
 

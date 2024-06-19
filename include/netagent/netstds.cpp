@@ -24,25 +24,25 @@ update (na vsake __ sek):
 
 
 FastCont<__>:
-	st(uint32_T), [id, data],...
+   st(uint32_T), [id, data],...
 
 
 
 packet:
-	HEADER - req/data, type
-	BODY - data
-	TRAILER - /
+   HEADER - req/data, type
+   BODY - data
+   TRAILER - /
 
 */
 
 enum {
-	NETSTD_HEADER_REQUEST,
-	NETSTD_HEADER_DATA,
+    NETSTD_HEADER_REQUEST,
+    NETSTD_HEADER_DATA,
 };
 
 enum {
-	NETSTD_INIT,
-	NETSTD_UPDATE_ALL,
+    NETSTD_INIT,
+    NETSTD_UPDATE_ALL,
     NETSTD_UPDATE_PLAYER_CONTROLS,
     NETSTD_PICKUP_ITEM,
     NETSTD_LOOT,
@@ -53,5 +53,7 @@ enum {
     NETSTD_SITDOWN,
     NETSTD_STANDUP,
     NETSTD_PROJECTILE,
-	NETSTD_BYE,
+    NETSTD_INVENTORY,
+    NETSTD_INVENTORY_DEMO,
+    NETSTD_BYE,
 };

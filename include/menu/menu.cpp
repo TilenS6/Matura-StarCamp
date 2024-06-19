@@ -1,21 +1,23 @@
 #include "menu/menu.h"
 
 template <typename... Args>
-int Menu::chose(SDL_Renderer* r, string s[], uint8_t n, string title, string qeMenu[], uint8_t qeMenuN, uint8_t highlighted, Args... args) {
+int Menu::chose(SDL_Renderer *r, int *w, int *h, string s[], uint8_t n, string title, string qeMenu[], uint8_t qeMenuN, uint8_t highlighted, Args... args) {
     int W, H;
     SDL_GetRendererOutputSize(r, &W, &H);
     int btnW = 200, btnH = 50, qeBtnW = 100, qeBtnH = 50;
 
+redef:
     btns.clear();
     rects.clear();
     texts.clear();
     inputs.clear();
     btns.reset();
+    texts.reset();
 
     // TITLE
-    TTF_Font* font = TTF_OpenFont("fonts/nasalization-free/nasalization-rg.ttf", 75);
-    SDL_Surface* textSurface = TTF_RenderText_Blended(font, title.c_str(), SDL_Color({ 255, 255, 255 })); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
-    SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(r, textSurface);
+    TTF_Font *font = TTF_OpenFont("fonts/nasalization-free/nasalization-rg.ttf", 75);
+    SDL_Surface *textSurface = TTF_RenderText_Blended(font, title.c_str(), SDL_Color({255, 255, 255})); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
+    SDL_Texture *titleTexture = SDL_CreateTextureFromSurface(r, textSurface);
     SDL_FreeSurface(textSurface);
 
     SDL_Rect titleTextureRect;
@@ -27,11 +29,11 @@ int Menu::chose(SDL_Renderer* r, string s[], uint8_t n, string title, string qeM
 
     // QE
     font = TTF_OpenFont("fonts/nasalization-free/nasalization-rg.ttf", 30);
-    textSurface = TTF_RenderText_Blended(font, "Q", SDL_Color({ MENU_COLOUR1 })); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
-    SDL_Texture* qTx = SDL_CreateTextureFromSurface(r, textSurface);
+    textSurface = TTF_RenderText_Blended(font, "Q", SDL_Color({MENU_COLOUR1})); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
+    SDL_Texture *qTx = SDL_CreateTextureFromSurface(r, textSurface);
     SDL_FreeSurface(textSurface);
-    textSurface = TTF_RenderText_Blended(font, "E", SDL_Color({ MENU_COLOUR1 })); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
-    SDL_Texture* eTx = SDL_CreateTextureFromSurface(r, textSurface);
+    textSurface = TTF_RenderText_Blended(font, "E", SDL_Color({MENU_COLOUR1})); // use TTF_RenderText_Solid != TTF_RenderText_Blended for aliesed (stairs) edges
+    SDL_Texture *eTx = SDL_CreateTextureFromSurface(r, textSurface);
     SDL_FreeSurface(textSurface);
 
     SDL_Rect qTxRect;
@@ -49,7 +51,7 @@ int Menu::chose(SDL_Renderer* r, string s[], uint8_t n, string title, string qeM
     for (uint8_t i = 0; i < n; ++i) {
         Button tmp;
         int id = btns.push_back(tmp);
-        Button* p = btns.at_id(id);
+        Button *p = btns.at_id(id);
         p->move(70, (btnH * (i + 3)) * 1.3, btnW, btnH); // na sredino ekrana (W - btnW) / 2
         p->changeStyle(0);                               // classic
         p->changeText(r, s[i]);
@@ -57,7 +59,7 @@ int Menu::chose(SDL_Renderer* r, string s[], uint8_t n, string title, string qeM
     for (uint8_t i = 0; i < qeMenuN; ++i) {
         Button tmp;
         int id = btns.push_back(tmp);
-        Button* p = btns.at_id(id);
+        Button *p = btns.at_id(id);
         p->move(qTxRect.x + qTxRect.w + 40 + qeBtnW * (i * 1.5), qTxRect.y + ((qTxRect.h - qeBtnH) / 2), qeBtnW, qeBtnH); // na sredino ekrana (W - btnW) / 2
         p->changeStyle(1);                                                                                                // underlined
         p->changeText(r, qeMenu[i]);
@@ -66,7 +68,7 @@ int Menu::chose(SDL_Renderer* r, string s[], uint8_t n, string title, string qeM
             p->highlighted = true;
     }
 
-    handleAditionalArgs(args...);
+    handleAdditionalArgs(args...);
 
     // LOOP
     Mouse m;
@@ -105,6 +107,18 @@ int Menu::chose(SDL_Renderer* r, string s[], uint8_t n, string title, string qeM
                     break;
                 }
 
+                break;
+
+            case SDL_WINDOWEVENT:
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                    // cout << "resizan na " << event.window.data1 << ", " << event.window.data2 << endl;
+                    W = event.window.data1;
+                    H = event.window.data2;
+                    *w = W;
+                    *h = H;
+                    return -2; // qwe_game
+                }
+            default:
                 break;
             }
         }
@@ -183,27 +197,27 @@ int Menu::chose(SDL_Renderer* r, string s[], uint8_t n, string title, string qeM
     return -1;
 }
 
-void Menu::handleAditionalArgs() {};
+void Menu::handleAdditionalArgs() {};
 
 template <typename... Args>
-void Menu::handleAditionalArgs(Button* btn, Args... args) {
+void Menu::handleAdditionalArgs(Button *btn, Args... args) {
     btns.push_back(*btn);
-    handleAditionalArgs(args...);
+    handleAdditionalArgs(args...);
 }
 
 template <typename... Args>
-void Menu::handleAditionalArgs(MenuRect* rect, Args... args) {
+void Menu::handleAdditionalArgs(MenuRect *rect, Args... args) {
     rects.push_back(*rect);
-    handleAditionalArgs(args...);
+    handleAdditionalArgs(args...);
 }
 
 template <typename... Args>
-void Menu::handleAditionalArgs(Text* text, Args... args) {
+void Menu::handleAdditionalArgs(Text *text, Args... args) {
     texts.push_back(*text);
-    handleAditionalArgs(args...);
+    handleAdditionalArgs(args...);
 }
 template <typename... Args>
-void Menu::handleAditionalArgs(Input* input, Args... args) {
+void Menu::handleAdditionalArgs(Input *input, Args... args) {
     inputs.push_back(*input);
-    handleAditionalArgs(args...);
+    handleAdditionalArgs(args...);
 }

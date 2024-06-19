@@ -57,3 +57,6 @@ void Text::render(SDL_Renderer *r) {
 
     SDL_RenderCopy(r, text, NULL, &textRect);
 }
+void Text::resetAnimation() {
+    t.interval();
+}

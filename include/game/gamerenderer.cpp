@@ -5,7 +5,7 @@ void GameRenderer::init() {
         cout << "Error initializing SDL: " << SDL_GetError() << endl;
         return;
     }
-    wind = SDL_CreateWindow("StarCamp", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0); // SDL_WINDOW_BORDERLESS namesto 0
+    wind = SDL_CreateWindow("StarCamp", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_RESIZABLE); // SDL_WINDOW_BORDERLESS namesto 0 (zraven SDL_WINDOW_RESIZABLE)
     if (!wind) {
         cout << "Error creating window: " << SDL_GetError() << endl;
         SDL_Quit();
