@@ -80,6 +80,9 @@
 
                 "-static-libstdc++",
                 "-static-libgcc",
+
+                // CMD-less app
+                // "-mwindows",
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
